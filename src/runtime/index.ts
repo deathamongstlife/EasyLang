@@ -78,6 +78,13 @@ export class Runtime {
   }
 
   /**
+   * Get a variable from the global environment (for testing purposes)
+   */
+  getVariable(name: string): RuntimeValue {
+    return this.globalEnv.lookup(name);
+  }
+
+  /**
    * Execute the program
    */
   async execute(): Promise<void> {
