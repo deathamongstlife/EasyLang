@@ -15,6 +15,11 @@ import {
   ReturnStatement,
   BlockStatement,
   ExpressionStatement,
+  ListenStatement,
+  UseStatement,
+  SendCommand,
+  ReplyCommand,
+  ReactCommand,
   BinaryExpression,
   UnaryExpression,
   CallExpression,
@@ -42,20 +47,34 @@ import {
   isFunction,
   isNativeFunction,
   isReturn,
+  isPython,
   isTruthy,
   valuesEqual,
   valueToString,
+  makePython,
 } from './values';
 import { RuntimeError, TypeError, UndefinedFunctionError } from '../utils/errors';
 import { logger } from '../utils/logger';
+import { DiscordManager } from '../discord';
+import { send, reply, react } from '../discord/commands';
+import { EventManager } from '../discord/events';
+import { PythonBridge } from '../python';
+import { PythonProxy } from '../python/proxy';
 
 export class Runtime {
   private program: Program;
   private globalEnv: Environment;
+  public discordManager: DiscordManager;
+  private eventManager: EventManager;
+  public pythonBridge: PythonBridge;
+  private pythonProxies: Map<string, PythonProxy> = new Map();
 
   constructor(program: Program) {
     this.program = program;
-    this.globalEnv = createGlobalEnvironment();
+    this.discordManager = new DiscordManager();
+    this.eventManager = new EventManager();
+    this.pythonBridge = new PythonBridge();
+    this.globalEnv = createGlobalEnvironment(this.discordManager);
   }
 
   /**
@@ -64,6 +83,13 @@ export class Runtime {
   async execute(): Promise<void> {
     logger.debug('Runtime: Starting execution');
     try {
+      // Initialize Python bridge (optional - will fail silently if Python not available)
+      try {
+        await this.pythonBridge.initialize();
+      } catch (error: any) {
+        logger.debug(`Python bridge not available: ${error.message}`);
+      }
+
       for (const statement of this.program.body) {
         await this.evaluateStatement(statement, this.globalEnv);
       }
@@ -74,6 +100,9 @@ export class Runtime {
         throw error;
       }
       throw error;
+    } finally {
+      // Cleanup Python bridge
+      await this.pythonBridge.cleanup();
     }
   }
 
@@ -98,6 +127,16 @@ export class Runtime {
         return this.evaluateBlockStatement(node as BlockStatement, env);
       case 'ExpressionStatement':
         return this.evaluateExpressionStatement(node as ExpressionStatement, env);
+      case 'ListenStatement':
+        return this.evaluateListenStatement(node as ListenStatement, env);
+      case 'UseStatement':
+        return this.evaluateUseStatement(node as UseStatement, env);
+      case 'SendCommand':
+        return this.evaluateSendCommand(node as SendCommand, env);
+      case 'ReplyCommand':
+        return this.evaluateReplyCommand(node as ReplyCommand, env);
+      case 'ReactCommand':
+        return this.evaluateReactCommand(node as ReactCommand, env);
       default:
         throw new RuntimeError(
           `Unknown statement type: ${node.type}`,
@@ -547,6 +586,46 @@ export class Runtime {
   ): Promise<RuntimeValue> {
     const object = await this.evaluateExpression(node.object, env);
 
+    // Python module access
+    if (isPython(object)) {
+      let propertyName: string;
+
+      if (node.computed) {
+        const property = await this.evaluateExpression(node.property, env);
+        propertyName = valueToString(property);
+      } else {
+        if (node.property.type !== 'Identifier') {
+          throw new RuntimeError(
+            'Invalid property access',
+            node.position?.line,
+            node.position?.column
+          );
+        }
+        propertyName = (node.property as Identifier).name;
+      }
+
+      // Get proxy for this module
+      const proxy = this.pythonProxies.get(object.moduleName);
+      if (!proxy) {
+        throw new RuntimeError(
+          `Python module proxy not found for '${object.moduleName}'`,
+          node.position?.line,
+          node.position?.column
+        );
+      }
+
+      // Get attribute from Python
+      try {
+        return await proxy.getAttribute([propertyName]);
+      } catch (error: any) {
+        throw new RuntimeError(
+          error.message,
+          node.position?.line,
+          node.position?.column
+        );
+      }
+    }
+
     // Array access
     if (isArray(object)) {
       const property = await this.evaluateExpression(node.property, env);
@@ -696,6 +775,131 @@ export class Runtime {
       node.position?.line,
       node.position?.column
     );
+  }
+
+  /**
+   * Evaluate a listen statement (Discord event handler)
+   */
+  private async evaluateListenStatement(
+    node: ListenStatement,
+    env: Environment
+  ): Promise<RuntimeValue> {
+    const eventName = node.event;
+    const paramName = node.parameter;
+
+    // Create a handler function that will be called when the event occurs
+    const handler = async (...eventArgs: any[]) => {
+      // Create new environment for the handler
+      const handlerEnv = env.extend();
+
+      // Convert Discord.js event args to RuntimeValue
+      const runtimeArg = this.eventManager['convertEventArgs'](eventName, eventArgs)[0];
+
+      // Bind the parameter
+      handlerEnv.define(paramName, runtimeArg);
+
+      // Execute the handler body
+      try {
+        await this.evaluateBlockStatement(node.body, handlerEnv);
+      } catch (error: any) {
+        logger.error(`Error in ${eventName} handler: ${error.message}`);
+        if (error instanceof RuntimeError) {
+          logger.error(error.formatError());
+        }
+      }
+    };
+
+    // Register the handler with Discord manager
+    this.discordManager.registerEventHandler(eventName, handler);
+
+    logger.debug(`Registered listener for event '${eventName}'`);
+    return makeNull();
+  }
+
+  /**
+   * Evaluate a use statement (Python module import)
+   */
+  private async evaluateUseStatement(node: UseStatement, env: Environment): Promise<RuntimeValue> {
+    const moduleName = node.module;
+    const alias = node.alias;
+
+    try {
+      // Import the Python module
+      await this.pythonBridge.importModule(moduleName);
+
+      // Create a proxy for the module
+      const proxy = new PythonProxy(moduleName, this.pythonBridge);
+      this.pythonProxies.set(moduleName, proxy);
+
+      // Create a Python value and store in environment
+      const proxyObject = proxy.createProxy();
+      const pythonValue = makePython(moduleName, proxyObject);
+
+      env.declare(alias, pythonValue);
+
+      logger.debug(`Imported Python module '${moduleName}' as '${alias}'`);
+      return makeNull();
+    } catch (error: any) {
+      throw new RuntimeError(
+        error.message,
+        node.position?.line,
+        node.position?.column
+      );
+    }
+  }
+
+  /**
+   * Evaluate a send command
+   */
+  private async evaluateSendCommand(node: SendCommand, env: Environment): Promise<RuntimeValue> {
+    const target = await this.evaluateExpression(node.target, env);
+    const message = await this.evaluateExpression(node.message, env);
+
+    try {
+      return await send(target, message);
+    } catch (error: any) {
+      throw new RuntimeError(
+        error.message,
+        node.position?.line,
+        node.position?.column
+      );
+    }
+  }
+
+  /**
+   * Evaluate a reply command
+   */
+  private async evaluateReplyCommand(node: ReplyCommand, env: Environment): Promise<RuntimeValue> {
+    const target = await this.evaluateExpression(node.target, env);
+    const message = await this.evaluateExpression(node.message, env);
+
+    try {
+      return await reply(target, message);
+    } catch (error: any) {
+      throw new RuntimeError(
+        error.message,
+        node.position?.line,
+        node.position?.column
+      );
+    }
+  }
+
+  /**
+   * Evaluate a react command
+   */
+  private async evaluateReactCommand(node: ReactCommand, env: Environment): Promise<RuntimeValue> {
+    const target = await this.evaluateExpression(node.target, env);
+    const emoji = await this.evaluateExpression(node.emoji, env);
+
+    try {
+      return await react(target, emoji);
+    } catch (error: any) {
+      throw new RuntimeError(
+        error.message,
+        node.position?.line,
+        node.position?.column
+      );
+    }
   }
 }
 

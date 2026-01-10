@@ -186,23 +186,70 @@ print(data)
 
 ## Discord API
 
-- `send channel message` - Send message to channel
-- `reply message text` - Reply to a message
-- `react message emoji` - Add reaction to message
-- `listen event (params) { }` - Listen for Discord events
-- `bot_start(token)` - Start the Discord bot
+EzLang provides first-class Discord bot support with simple, intuitive syntax:
+
+### Commands
+
+- `send channel message` - Send a new message to a channel
+- `reply message text` - Reply to a message (mentions the author)
+- `react message emoji` - Add an emoji reaction to a message
+
+### Functions
+
+- `bot_start(token)` - Initialize and start the Discord bot
+
+### Event Listeners
+
+Use the `listen` statement to handle Discord events:
+
+```ezlang
+listen "eventName" (parameter) {
+    // Event handler code
+}
+```
+
+**Supported Events:**
+- `ready` - Bot connected and ready (parameter: client)
+- `messageCreate` - New message received (parameter: message)
+- `interactionCreate` - Interaction received (parameter: interaction)
+
+**Message Object Properties:**
+- `message.content` - Message text
+- `message.id` - Message ID
+- `message.author` - Author object (has: id, username, tag, bot)
+- `message.channel` - Channel object
+- `message.channelId` - Channel ID
+- `message.guildId` - Server/Guild ID
+
+For complete Discord integration documentation, see [DISCORD.md](DISCORD.md).
 
 ## Examples
 
-See the `examples/` directory for complete bot examples:
+See the `examples/` directory for complete examples:
 
-- `hello-bot.ez` - Simple greeting bot
-- `moderation.ez` - Moderation commands
-- `advanced.ez` - Advanced features showcase
+**Core Language Examples:**
+- `01-hello-world.ezlang` - Basic print statements
+- `02-variables.ezlang` - Variable declarations and types
+- `03-functions.ezlang` - Function definitions and calls
+- `04-control-flow.ezlang` - If/else statements
+- `05-loops.ezlang` - For and while loops
+- `06-arrays.ezlang` - Array manipulation
+- `07-factorial.ezlang` - Recursive functions
+
+**Discord Bot Examples:**
+- `discord-hello-bot.ezlang` - Simple command bot with reactions
+
+**Python Integration Examples:**
+- `python-integration.ezlang` - Comprehensive Python package usage
 
 ## Documentation
 
 - [Language Specification](docs/language-spec.md)
+- [Discord Integration Guide](DISCORD.md)
+- [Python Integration Guide](PYTHON.md)
+- [CLI Documentation](CLI.md)
+- [REPL Documentation](REPL.md)
+- [Runtime Documentation](RUNTIME.md)
 - [API Reference](docs/api-reference.md)
 - [Extension Development Guide](docs/extension-guide.md)
 
@@ -296,12 +343,191 @@ new Runtime(ast).execute();
 - Complex algorithms (FizzBuzz)
 - Closures and scope
 
+### ✅ Phase 3: Discord.js Integration (COMPLETE)
+
+Full Discord bot functionality is now implemented! See [DISCORD.md](DISCORD.md) for complete documentation.
+
+**Implemented:**
+- DiscordManager class for bot lifecycle management
+- Event system for Discord events (ready, messageCreate, interactionCreate)
+- Discord commands: `send`, `reply`, `react`
+- Built-in `bot_start()` function
+- Event handlers with `listen` statement
+- Automatic conversion of Discord.js objects to RuntimeValues
+- Error handling for Discord operations
+- Message and user property access
+
+**Create your first Discord bot:**
+
+```ezlang
+var token = get_argument("DISCORD_TOKEN", "")
+
+if token == "" {
+    print("Error: Please provide DISCORD_TOKEN")
+} else {
+    listen "ready" (client) {
+        print("Bot is online!")
+        print("Logged in as:", client.user.tag)
+    }
+
+    listen "messageCreate" (message) {
+        if message.author.bot == false {
+            if message.content == "!hello" {
+                reply message "Hello! I'm an EzLang bot! 👋"
+            }
+        }
+    }
+
+    bot_start(token)
+}
+```
+
+**Run your bot:**
+
+```bash
+ezlang examples/discord-hello-bot.ezlang DISCORD_TOKEN=your_token_here
+```
+
+**Features:**
+- Listen to Discord events with simple syntax
+- Reply to messages and add reactions
+- Access message content and author information
+- Bot lifecycle management (ready event)
+- Proper error handling with helpful messages
+
+See `examples/discord-hello-bot.ezlang` for a complete working example!
+
+### ✅ Phase 4: CLI & REPL (COMPLETE)
+
+Full command-line interface and interactive REPL are now implemented! See [CLI.md](CLI.md) and [REPL.md](REPL.md) for complete documentation.
+
+**Implemented:**
+- CLI with Commander.js framework
+- Multiple commands: `run`, `repl`, `check`, `version`, `help`
+- Interactive REPL with persistent history
+- Multi-line input support for functions and blocks
+- Color-coded output for different value types
+- Special REPL commands: `.help`, `.clear`, `.vars`, `.history`, `.exit`
+- Command history saved to `~/.ezlang_history`
+- Proper error handling and display
+- Non-interactive mode for piped input
+- Comprehensive test scripts
+
+**Using the CLI:**
+
+```bash
+# Run a file
+ezlang run examples/01-variables-arithmetic.ezlang
+
+# Check syntax
+ezlang check mybot.ezlang
+
+# Start interactive REPL
+ezlang repl
+
+# Show version
+ezlang version
+
+# Get help
+ezlang help
+```
+
+**REPL Features:**
+- Line-by-line code execution
+- Variable persistence between commands
+- Multi-line input for functions, if statements, loops
+- Color-coded output (numbers, strings, booleans, arrays, functions)
+- Special commands (`.help`, `.clear`, `.vars`, `.history`, `.exit`)
+- Command history with up/down arrow navigation
+- Persistent history across sessions
+- Graceful error handling
+
+**Example REPL Session:**
+
+```
+Welcome to EzLang REPL v1.0.0
+Type .help for commands, .exit to quit
+
+> var x = 10
+> var y = 20
+> x + y
+30
+> function add(a, b) {
+... return a + b
+... }
+> add(5, 3)
+8
+> .vars
+Defined Variables:
+  x = 10
+  y = 20
+  add = <function add>
+> .exit
+Goodbye!
+```
+
+### ✅ Phase 5: Python Bridge (COMPLETE)
+
+Full Python package integration is now implemented! See [PYTHON.md](PYTHON.md) for complete documentation.
+
+**Implemented:**
+- Python IPC bridge server
+- TypeScript IPC client for communication
+- PythonBridge manager for process lifecycle
+- PythonProxy for seamless object mapping
+- Automatic data type conversion between EzLang and Python
+- Support for importing any Python module
+- Function calls with argument passing
+- Attribute and constant access
+- Error handling with helpful messages
+
+**Using Python Packages:**
+
+```ezlang
+// Import Python modules
+use "math" as math
+use "random" as random
+use "requests" as requests
+
+// Use math functions
+var pi = math.pi
+var sqrt_result = math.sqrt(16)
+print("Square root of 16:", sqrt_result)
+
+// Generate random numbers
+var rand_num = random.randint(1, 100)
+print("Random number:", rand_num)
+
+// Make HTTP requests
+var response = requests.get("https://api.github.com")
+var data = response.json()
+print("GitHub API response:", data)
+```
+
+**Supported Python Packages:**
+- Standard library modules (math, random, json, datetime, os, pathlib, etc.)
+- Third-party packages (requests, numpy, pandas, beautifulsoup4, etc.)
+- Any Python package that can be imported with `import`
+
+**Requirements:**
+- Python 3.6 or later
+- `ipc` package: `pip install ipc`
+
+**Test Python Integration:**
+
+```bash
+# Install Python dependencies
+pip install ipc
+
+# Run the example
+ezlang run examples/python-integration.ezlang
+```
+
+See `examples/python-integration.ezlang` for a comprehensive demonstration of Python integration features!
+
 ### 📋 Future Phases
 
-- Phase 3: Discord Integration
-- Phase 4: Python Bridge
-- Phase 5: CLI & REPL
-- Phase 6: Documentation & Examples
+- Phase 6: Additional Features & Optimizations
 
 ## Development Commands
 

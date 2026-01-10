@@ -1,0 +1,52 @@
+// EzLang Python Integration Test
+// This file demonstrates how to use Python packages in EzLang
+
+print("Testing Python Integration")
+print("=" * 30)
+
+// Test math module
+use "math" as math
+
+print("\n📐 Math Module:")
+print("Pi:", math.pi)
+print("Square root of 16:", math.sqrt(16))
+print("2^8:", math.pow(2, 8))
+
+var angle = 90
+var radians = math.radians(angle)
+print("Sine of 90°:", math.sin(radians))
+
+// Test random module
+use "random" as random
+
+print("\n🎲 Random Module:")
+print("Random integer (1-100):", random.randint(1, 100))
+print("Random float:", random.random())
+
+var items = [1, 2, 3, 4, 5]
+var choice = random.choice(items)
+print("Random choice from", items, ":", choice)
+
+// Test json module
+use "json" as json
+
+print("\n📄 JSON Module:")
+var data = {"name": "EzLang", "version": "1.0.0"}
+var json_str = json.dumps(data)
+print("JSON string:", json_str)
+
+// Test datetime module
+use "datetime" as datetime
+
+print("\n📅 DateTime Module:")
+var now = datetime.datetime.now()
+print("Current time:", now)
+
+// Test os module
+use "os" as os
+
+print("\n💻 OS Module:")
+print("Current directory:", os.getcwd())
+print("Platform:", os.name)
+
+print("\n✅ Python integration test complete!")

@@ -90,6 +90,15 @@ export interface ReturnValue extends RuntimeValue {
 }
 
 /**
+ * Python module proxy value
+ */
+export interface PythonValue extends RuntimeValue {
+  type: 'python';
+  moduleName: string;
+  proxy: ObjectValue;
+}
+
+/**
  * Helper functions to create runtime values
  */
 
@@ -137,6 +146,10 @@ export function makeReturn(value: RuntimeValue): ReturnValue {
   return { type: 'return', value };
 }
 
+export function makePython(moduleName: string, proxy: ObjectValue): PythonValue {
+  return { type: 'python', moduleName, proxy };
+}
+
 /**
  * Type guard functions
  */
@@ -175,6 +188,10 @@ export function isNativeFunction(value: RuntimeValue): value is NativeFunctionVa
 
 export function isReturn(value: RuntimeValue): value is ReturnValue {
   return value.type === 'return';
+}
+
+export function isPython(value: RuntimeValue): value is PythonValue {
+  return value.type === 'python';
 }
 
 /**
@@ -269,6 +286,9 @@ export function valueToString(value: RuntimeValue): string {
   }
   if (isNativeFunction(value)) {
     return `<native function ${value.name}>`;
+  }
+  if (isPython(value)) {
+    return `<Python module ${value.moduleName}>`;
   }
   return '<unknown>';
 }

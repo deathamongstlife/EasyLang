@@ -110,4 +110,24 @@ export class Environment {
   define(name: string, value: RuntimeValue): void {
     this.variables.set(name, value);
   }
+
+  /**
+   * Get all variables from current scope and all parent scopes
+   * Used for REPL .vars command
+   */
+  getAll(): Record<string, RuntimeValue> {
+    const result: Record<string, RuntimeValue> = {};
+
+    // Get variables from parent first (so current scope can override)
+    if (this.parent) {
+      Object.assign(result, this.parent.getAll());
+    }
+
+    // Add variables from current scope
+    for (const [name, value] of this.variables.entries()) {
+      result[name] = value;
+    }
+
+    return result;
+  }
 }

@@ -9,12 +9,16 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
+    "dev": "npm run build && node dist/index.js repl",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:lexer": "ts-node src/test.ts",
     "test:runtime": "ts-node src/test-runtime.ts",
+    "test:discord": "ts-node src/test-discord.ts",
+    "start:repl": "npm run build && node dist/index.js repl",
+    "test:repl": "npm run build && echo 'var x = 10\nvar y = 20\nprint(x + y)' | node dist/index.js repl",
+    "test:cli": "./test-cli.sh",
     "lint": "eslint src --ext .ts",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run build"

@@ -1,0 +1,55 @@
+// Simple Discord bot that responds to commands
+// Usage: ezlang discord-hello-bot.ezlang DISCORD_TOKEN=your_token_here
+
+var token = get_argument("DISCORD_TOKEN", "")
+
+if token == "" {
+    print("Error: Please provide DISCORD_TOKEN")
+    print("Usage: ezlang discord-hello-bot.ezlang DISCORD_TOKEN=your_token")
+} else {
+    // Listen for ready event
+    listen "ready" (client) {
+        print("✅ Bot is online!")
+        print("Logged in as:", client.user.tag)
+        print("Serving", client.guildCount, "guilds")
+        print("")
+        print("Try these commands:")
+        print("  !hello - Get a greeting")
+        print("  !ping  - Test bot response")
+        print("  !help  - Show available commands")
+    }
+
+    // Listen for messages
+    listen "messageCreate" (message) {
+        // Ignore bot messages to prevent loops
+        if message.author.bot == false {
+            // !hello command
+            if message.content == "!hello" {
+                reply message "Hello! I'm an EzLang bot! 👋"
+            }
+
+            // !ping command
+            if message.content == "!ping" {
+                reply message "Pong! 🏓"
+            }
+
+            // !help command
+            if message.content == "!help" {
+                reply message "Available commands: !hello, !ping, !help"
+            }
+
+            // !react command - demonstrates reactions
+            if message.content == "!react" {
+                react message "👍"
+                react message "🎉"
+                react message "✨"
+            }
+        }
+    }
+
+    print("Starting Discord bot...")
+    print("Press Ctrl+C to stop")
+    print("")
+
+    bot_start(token)
+}

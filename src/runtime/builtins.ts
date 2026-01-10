@@ -9,6 +9,7 @@ import {
   makeString,
   makeNull,
   makeArray,
+  makeBoolean,
   makeNativeFunction,
   isString,
   isArray,
@@ -16,6 +17,7 @@ import {
   valueToString,
 } from './values';
 import { RuntimeError, TypeError } from '../utils/errors';
+import { DiscordManager } from '../discord';
 
 /**
  * print(...args) - Print values to console
@@ -235,9 +237,37 @@ const popFunction = makeNativeFunction('pop', async (args: RuntimeValue[]) => {
 });
 
 /**
+ * Create bot_start function with access to Discord manager
+ */
+function createBotStartFunction(discordManager: DiscordManager) {
+  return makeNativeFunction('bot_start', async (args: RuntimeValue[]) => {
+    if (args.length !== 1) {
+      throw new RuntimeError(`bot_start() expects 1 argument (token), got ${args.length}`);
+    }
+
+    const tokenArg = args[0];
+    if (!isString(tokenArg)) {
+      throw new TypeError(`bot_start() expects a string token, got ${tokenArg.type}`);
+    }
+
+    try {
+      // Initialize and start the Discord bot
+      discordManager.initialize(tokenArg.value);
+      await discordManager.start();
+
+      // Keep the process running
+      // The bot will run until the process is terminated
+      return makeBoolean(true);
+    } catch (error: any) {
+      throw new RuntimeError(`Failed to start bot: ${error.message}`);
+    }
+  });
+}
+
+/**
  * Create and populate the global environment with built-in functions
  */
-export function createGlobalEnvironment(): Environment {
+export function createGlobalEnvironment(discordManager: DiscordManager): Environment {
   const env = new Environment();
 
   // Register all built-in functions
@@ -252,6 +282,9 @@ export function createGlobalEnvironment(): Environment {
   env.define('num', numFunction);
   env.define('push', pushFunction);
   env.define('pop', popFunction);
+
+  // Discord bot functions
+  env.define('bot_start', createBotStartFunction(discordManager));
 
   return env;
 }
