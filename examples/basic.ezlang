@@ -1,0 +1,48 @@
+// Example EzLang program demonstrating basic syntax
+
+// Variable declarations
+var botName = "EzBot"
+var version = 1.0
+var commands = ["ping", "help", "greet"]
+
+// Function declaration
+function greet(name) {
+    return "Hello, " + name + "!"
+}
+
+// Control flow
+var age = 25
+if age >= 18 {
+    print("Adult")
+} else {
+    print("Minor")
+}
+
+// For loop
+for cmd in commands {
+    print(cmd)
+}
+
+// While loop
+var count = 0
+while count < 5 {
+    print(count)
+    count = count + 1
+}
+
+// Discord event listener
+listen "messageCreate" (msg) {
+    if msg.content == "!ping" {
+        reply msg "Pong!"
+    }
+}
+
+// Python integration
+use "requests" as requests
+
+// Array operations
+var numbers = [1, 2, 3, 4, 5]
+var first = numbers[0]
+var len = length(numbers)
+
+print("Bot initialized: " + botName)

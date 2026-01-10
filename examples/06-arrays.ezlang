@@ -1,0 +1,8 @@
+// Test 6: Arrays
+var items = [1, 2, 3, 4, 5]
+print("Array:", items)
+print("Length:", length(items))
+
+for item in items {
+    print("Item:", item)
+}

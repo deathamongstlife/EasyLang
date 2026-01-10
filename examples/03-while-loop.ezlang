@@ -1,0 +1,6 @@
+// Test 3: While loop
+var count = 0
+while count < 5 {
+    print("Count:", count)
+    count = count + 1
+}

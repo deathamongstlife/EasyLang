@@ -225,7 +225,85 @@ ezlang version
 ezlang --help
 ```
 
-## Development
+## Development Status
+
+### ✅ Phase 1: Core Language Processing (COMPLETE)
+
+The lexer and parser are fully implemented and tested. See [PHASE1_COMPLETE.md](PHASE1_COMPLETE.md) for details.
+
+**Implemented:**
+- Lexer with full tokenization support
+- Parser with recursive descent parsing
+- Complete AST node definitions
+- Operator precedence handling
+- Error handling with position tracking
+- Support for all planned syntax
+
+**Test the implementation:**
+
+```bash
+# Run basic lexer/parser tests
+npm run test:lexer
+
+# Parse the example file
+npx ts-node src/test-example.ts
+
+# Build the project
+npm run build
+```
+
+### ✅ Phase 2: Interpreter & Runtime (COMPLETE)
+
+The runtime interpreter is fully implemented and tested. See [RUNTIME.md](RUNTIME.md) for complete documentation.
+
+**Implemented:**
+- Runtime value types (Number, String, Boolean, Null, Array, Object, Function)
+- Variable scoping with lexical closures
+- Expression evaluation (binary, unary, calls, member access)
+- Statement execution (if/else, while, for...in, functions, return)
+- Built-in functions (print, length, random, wait, range, type, str, num, push, pop)
+- Control flow (conditionals, loops, function calls)
+- Type coercion and equality checking
+- Error handling with position tracking
+- Async/await support
+
+**Test the implementation:**
+
+```bash
+# Run comprehensive runtime tests
+npm run test:runtime
+
+# Try example programs
+npx ts-node -e "
+const { Lexer } = require('./src/lexer');
+const { Parser } = require('./src/parser');
+const { Runtime } = require('./src/runtime');
+const fs = require('fs');
+
+const code = fs.readFileSync('examples/07-factorial.ezlang', 'utf-8');
+const tokens = new Lexer(code).tokenize();
+const ast = new Parser(tokens).parse();
+new Runtime(ast).execute();
+"
+```
+
+**Example programs in `examples/` directory:**
+- Variables and arithmetic
+- Function declarations and calls
+- Control flow (if/else, while, for)
+- Arrays and iteration
+- Recursive functions (factorial)
+- Complex algorithms (FizzBuzz)
+- Closures and scope
+
+### 📋 Future Phases
+
+- Phase 3: Discord Integration
+- Phase 4: Python Bridge
+- Phase 5: CLI & REPL
+- Phase 6: Documentation & Examples
+
+## Development Commands
 
 ```bash
 # Install dependencies
@@ -240,8 +318,11 @@ npm run test:coverage
 # Build the project
 npm run build
 
-# Run in development mode
-npm run dev
+# Test lexer and parser
+npm run test:lexer
+
+# Test runtime/interpreter
+npm run test:runtime
 ```
 
 ## Testing

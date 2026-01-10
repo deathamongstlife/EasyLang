@@ -1,0 +1,5 @@
+// Test 1: Variables and arithmetic
+var x = 10
+var y = 20
+var sum = x + y
+print("Sum:", sum)
