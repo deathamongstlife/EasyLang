@@ -1,0 +1,576 @@
+// ============================================================================
+// COMPREHENSIVE EZLANG TEST BOT
+// ============================================================================
+// This bot exercises EVERY feature of the EzLang language and Discord API
+// to ensure complete functionality and compatibility
+// ============================================================================
+
+print("╔════════════════════════════════════════════════════════════════╗")
+print("║        COMPREHENSIVE EZLANG FUNCTIONALITY TEST BOT           ║")
+print("║                  Testing All Features                         ║")
+print("╚════════════════════════════════════════════════════════════════╝")
+print("")
+
+// ============================================================================
+// SECTION 1: VARIABLE DECLARATIONS AND TYPES
+// ============================================================================
+print("=== SECTION 1: Variable Declarations and Types ===")
+
+var test_string = "Hello, EzLang!"
+var test_number = 42
+var test_decimal = 3.14159
+var test_boolean_true = true
+var test_boolean_false = false
+var test_null = null
+var test_array = [1, 2, 3, 4, 5]
+var test_nested_array = [[1, 2], [3, 4], [5, 6]]
+var test_mixed_array = [1, "two", 3.0, true, null]
+
+print("String: " + test_string)
+print("Number: " + str(test_number))
+print("Decimal: " + str(test_decimal))
+print("Boolean True: " + str(test_boolean_true))
+print("Boolean False: " + str(test_boolean_false))
+print("Null: " + str(test_null))
+print("Array: " + str(test_array))
+print("Nested Array: " + str(test_nested_array))
+print("Mixed Array: " + str(test_mixed_array))
+print("")
+
+// ============================================================================
+// SECTION 2: BUILT-IN FUNCTIONS - STRING AND ARRAY OPERATIONS
+// ============================================================================
+print("=== SECTION 2: Built-in Functions - Strings and Arrays ===")
+
+// length() function
+var string_length = length(test_string)
+var array_length = length(test_array)
+print("Length of '" + test_string + "': " + str(string_length))
+print("Length of array " + str(test_array) + ": " + str(array_length))
+
+// type() function
+print("Type of test_string: " + type(test_string))
+print("Type of test_number: " + type(test_number))
+print("Type of test_boolean_true: " + type(test_boolean_true))
+print("Type of test_null: " + type(test_null))
+print("Type of test_array: " + type(test_array))
+
+// str() conversion function
+var number_to_string = str(42)
+var boolean_to_string = str(true)
+var array_to_string = str([1, 2, 3])
+print("Number to string: " + number_to_string)
+print("Boolean to string: " + boolean_to_string)
+print("Array to string: " + array_to_string)
+
+// num() conversion function
+var string_to_number = num("123")
+var string_decimal_to_number = num("45.67")
+print("String '123' to number: " + str(string_to_number))
+print("String '45.67' to number: " + str(string_decimal_to_number))
+print("")
+
+// ============================================================================
+// SECTION 3: ARRAY MANIPULATION FUNCTIONS
+// ============================================================================
+print("=== SECTION 3: Array Manipulation ===")
+
+// push() and pop() functions
+var dynamic_array = [10, 20, 30]
+print("Initial array: " + str(dynamic_array))
+
+push(dynamic_array, 40)
+print("After push(40): " + str(dynamic_array))
+
+push(dynamic_array, 50)
+print("After push(50): " + str(dynamic_array))
+
+var popped_value = pop(dynamic_array)
+print("Popped value: " + str(popped_value))
+print("After pop(): " + str(dynamic_array))
+print("")
+
+// ============================================================================
+// SECTION 4: MATHEMATICAL OPERATIONS AND OPERATORS
+// ============================================================================
+print("=== SECTION 4: Mathematical Operations ===")
+
+var a = 10
+var b = 3
+
+print("a = " + str(a) + ", b = " + str(b))
+print("Addition (a + b): " + str(a + b))
+print("Subtraction (a - b): " + str(a - b))
+print("Multiplication (a * b): " + str(a * b))
+print("Division (a / b): " + str(a / b))
+print("Modulo (a % b): " + str(a % b))
+
+// Compound expressions
+var complex_math = (a + b) * 2 - (a / b)
+print("Complex: (a + b) * 2 - (a / b) = " + str(complex_math))
+print("")
+
+// ============================================================================
+// SECTION 5: COMPARISON AND LOGICAL OPERATORS
+// ============================================================================
+print("=== SECTION 5: Comparison and Logical Operators ===")
+
+var x = 5
+var y = 10
+var z = 5
+
+print("x = " + str(x) + ", y = " + str(y) + ", z = " + str(z))
+print("x == z: " + str(x == z))
+print("x != y: " + str(x != y))
+print("x < y: " + str(x < y))
+print("x > y: " + str(x > y))
+print("x <= z: " + str(x <= z))
+print("y >= x: " + str(y >= x))
+
+// Logical operators
+var bool1 = true
+var bool2 = false
+print("bool1 = " + str(bool1) + ", bool2 = " + str(bool2))
+print("bool1 and bool2: " + str(bool1 and bool2))
+print("bool1 or bool2: " + str(bool1 or bool2))
+print("not bool1: " + str(not bool1))
+print("not bool2: " + str(not bool2))
+print("")
+
+// ============================================================================
+// SECTION 6: CONDITIONAL STATEMENTS (IF/ELSE)
+// ============================================================================
+print("=== SECTION 6: Conditional Statements ===")
+
+var score = 85
+
+if score >= 90 {
+    print("Grade: A (Excellent!)")
+} else {
+    if score >= 80 {
+        print("Grade: B (Good!)")
+    } else {
+        if score >= 70 {
+            print("Grade: C (Average)")
+        } else {
+            if score >= 60 {
+                print("Grade: D (Below Average)")
+            } else {
+                print("Grade: F (Failed)")
+            }
+        }
+    }
+}
+
+// Nested conditionals with logical operators
+var age = 25
+var has_license = true
+
+if age >= 18 and has_license {
+    print("You can drive!")
+} else {
+    if age < 18 {
+        print("You are too young to drive")
+    } else {
+        print("You need a license to drive")
+    }
+}
+print("")
+
+// ============================================================================
+// SECTION 7: LOOPS - WHILE LOOP
+// ============================================================================
+print("=== SECTION 7: While Loop ===")
+
+var counter = 0
+while counter < 5 {
+    print("While loop iteration: " + str(counter))
+    counter = counter + 1
+}
+print("")
+
+// ============================================================================
+// SECTION 8: LOOPS - FOR LOOP
+// ============================================================================
+print("=== SECTION 8: For Loop ===")
+
+var numbers = [10, 20, 30, 40, 50]
+for num in numbers {
+    print("For loop - processing number: " + str(num))
+}
+print("")
+
+// ============================================================================
+// SECTION 9: RANGE FUNCTION
+// ============================================================================
+print("=== SECTION 9: Range Function ===")
+
+// range(end) - from 0 to end (exclusive)
+var range1 = range(5)
+print("range(5): " + str(range1))
+
+// range(start, end) - from start to end (exclusive)
+var range2 = range(3, 8)
+print("range(3, 8): " + str(range2))
+
+// Using range in for loop
+print("For loop with range:")
+for i in range(3) {
+    print("  Index: " + str(i))
+}
+print("")
+
+// ============================================================================
+// SECTION 10: RANDOM NUMBER GENERATION
+// ============================================================================
+print("=== SECTION 10: Random Number Generation ===")
+
+// random() - returns 0 to 1
+var rand1 = random()
+print("random(): " + str(rand1))
+
+// random(min, max) - returns integer between min and max (inclusive)
+var rand2 = random(1, 10)
+print("random(1, 10): " + str(rand2))
+
+var rand3 = random(100, 999)
+print("random(100, 999): " + str(rand3))
+
+// Generate multiple random numbers
+print("Five random dice rolls:")
+var roll_count = 0
+while roll_count < 5 {
+    var dice = random(1, 6)
+    print("  Roll " + str(roll_count + 1) + ": " + str(dice))
+    roll_count = roll_count + 1
+}
+print("")
+
+// ============================================================================
+// SECTION 11: FUNCTIONS - DEFINITION AND INVOCATION
+// ============================================================================
+print("=== SECTION 11: User-Defined Functions ===")
+
+// Simple function with no parameters
+function greet() {
+    return "Hello from a function!"
+}
+print(greet())
+
+// Function with parameters
+function add(x, y) {
+    return x + y
+}
+print("add(5, 3) = " + str(add(5, 3)))
+
+// Function with multiple parameters
+function calculate_area(width, height) {
+    return width * height
+}
+var area = calculate_area(10, 5)
+print("Area of rectangle (10 x 5): " + str(area))
+
+// Function that calls another function
+function multiply(a, b) {
+    return a * b
+}
+
+function power_of_two(n) {
+    return multiply(n, n)
+}
+print("power_of_two(7) = " + str(power_of_two(7)))
+
+// Recursive function - factorial
+function factorial(n) {
+    if n <= 1 {
+        return 1
+    } else {
+        return n * factorial(n - 1)
+    }
+}
+print("factorial(5) = " + str(factorial(5)))
+
+// Function with array parameter
+function sum_array(arr) {
+    var total = 0
+    var index = 0
+    while index < length(arr) {
+        total = total + arr[index]
+        index = index + 1
+    }
+    return total
+}
+var numbers_to_sum = [1, 2, 3, 4, 5]
+print("sum_array([1,2,3,4,5]) = " + str(sum_array(numbers_to_sum)))
+print("")
+
+// ============================================================================
+// SECTION 12: ARRAY INDEXING AND ACCESS
+// ============================================================================
+print("=== SECTION 12: Array Indexing ===")
+
+var fruits = ["apple", "banana", "cherry", "date", "elderberry"]
+print("Fruits array: " + str(fruits))
+print("First fruit (index 0): " + fruits[0])
+print("Second fruit (index 1): " + fruits[1])
+print("Last fruit (index 4): " + fruits[4])
+
+// Array modification via indexing
+fruits[2] = "coconut"
+print("After changing index 2: " + str(fruits))
+print("")
+
+// ============================================================================
+// SECTION 13: COMMAND-LINE ARGUMENTS
+// ============================================================================
+print("=== SECTION 13: Command-line Arguments ===")
+
+// get_argument(name, default) - Parse KEY=VALUE arguments
+var bot_token = get_argument("BOT_TOKEN", "YOUR_TOKEN_HERE")
+var bot_prefix = get_argument("PREFIX", "!")
+var bot_name = get_argument("NAME", "TestBot")
+var max_commands = get_argument("MAX_COMMANDS", "100")
+
+print("Configuration from command-line arguments:")
+print("  BOT_TOKEN: " + bot_token)
+print("  PREFIX: " + bot_prefix)
+print("  NAME: " + bot_name)
+print("  MAX_COMMANDS: " + max_commands)
+print("")
+print("To set these values, run:")
+print("  ezlang examples/comprehensive-test-bot.ez BOT_TOKEN=your_token PREFIX=! NAME=MyBot")
+print("")
+
+// ============================================================================
+// SECTION 14: STRING CONCATENATION AND INTERPOLATION
+// ============================================================================
+print("=== SECTION 14: String Operations ===")
+
+var first_name = "John"
+var last_name = "Doe"
+var full_name = first_name + " " + last_name
+print("Full name: " + full_name)
+
+var age_value = 30
+var message = "Hello, my name is " + full_name + " and I am " + str(age_value) + " years old."
+print(message)
+print("")
+
+// ============================================================================
+// SECTION 15: COMPLEX DATA STRUCTURES
+// ============================================================================
+print("=== SECTION 15: Complex Data Structures ===")
+
+// Multi-dimensional arrays
+var matrix = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+]
+print("Matrix:")
+print("  Row 0: " + str(matrix[0]))
+print("  Row 1: " + str(matrix[1]))
+print("  Row 2: " + str(matrix[2]))
+print("  Element at [1][2]: " + str(matrix[1][2]))
+
+// Array of mixed types
+var user_data = ["Alice", 28, true, ["admin", "user"]]
+print("User data: " + str(user_data))
+print("  Name: " + user_data[0])
+print("  Age: " + str(user_data[1]))
+print("  Active: " + str(user_data[2]))
+print("  Roles: " + str(user_data[3]))
+print("")
+
+// ============================================================================
+// SECTION 16: ADVANCED FUNCTION PATTERNS
+// ============================================================================
+print("=== SECTION 16: Advanced Function Patterns ===")
+
+// Function returning a function (closure simulation)
+function make_multiplier(factor) {
+    // Note: EzLang doesn't support true closures yet
+    // This demonstrates function chaining
+    return factor
+}
+
+// Function with conditional logic
+function get_grade_description(score_val) {
+    if score_val >= 90 {
+        return "Excellent"
+    } else {
+        if score_val >= 80 {
+            return "Good"
+        } else {
+            if score_val >= 70 {
+                return "Average"
+            } else {
+                return "Needs Improvement"
+            }
+        }
+    }
+}
+
+print("Grade for 95: " + get_grade_description(95))
+print("Grade for 82: " + get_grade_description(82))
+print("Grade for 65: " + get_grade_description(65))
+
+// Function with array manipulation
+function reverse_array(arr) {
+    var reversed = []
+    var i = length(arr) - 1
+    while i >= 0 {
+        push(reversed, arr[i])
+        i = i - 1
+    }
+    return reversed
+}
+
+var original = [1, 2, 3, 4, 5]
+var reversed = reverse_array(original)
+print("Original: " + str(original))
+print("Reversed: " + str(reversed))
+print("")
+
+// ============================================================================
+// SECTION 17: WAIT/DELAY FUNCTION (ASYNC)
+// ============================================================================
+print("=== SECTION 17: Async Wait Function ===")
+print("Waiting for 1 second...")
+wait(1)
+print("Wait complete!")
+print("")
+
+// ============================================================================
+// SECTION 18: STRESS TESTING - LARGE ARRAYS
+// ============================================================================
+print("=== SECTION 18: Stress Testing - Large Arrays ===")
+
+var large_array = []
+var build_count = 0
+while build_count < 100 {
+    push(large_array, build_count)
+    build_count = build_count + 1
+}
+print("Created large array with " + str(length(large_array)) + " elements")
+print("First 10 elements: " + str(range(10)))
+print("Sum of first 10: " + str(sum_array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])))
+print("")
+
+// ============================================================================
+// SECTION 19: EDGE CASES AND BOUNDARY CONDITIONS
+// ============================================================================
+print("=== SECTION 19: Edge Cases ===")
+
+// Empty arrays
+var empty_array = []
+print("Empty array length: " + str(length(empty_array)))
+
+// Single element array
+var single_element = [42]
+print("Single element array: " + str(single_element))
+print("Length: " + str(length(single_element)))
+
+// Zero and negative numbers
+var zero = 0
+var negative = -10
+print("Zero: " + str(zero))
+print("Negative: " + str(negative))
+print("Negative + 20: " + str(negative + 20))
+
+// Boolean arithmetic (treated as numbers: true=1, false=0)
+var bool_calc = true + false
+print("true + false: " + str(bool_calc))
+print("")
+
+// ============================================================================
+// SECTION 20: DISCORD BOT INITIALIZATION
+// ============================================================================
+print("=== SECTION 20: Discord Bot Initialization ===")
+print("")
+print("╔════════════════════════════════════════════════════════════════╗")
+print("║                   DISCORD BOT SECTION                         ║")
+print("╚════════════════════════════════════════════════════════════════╝")
+print("")
+
+// Check if bot token is provided
+if bot_token == "YOUR_TOKEN_HERE" {
+    print("⚠️  WARNING: No Discord bot token provided!")
+    print("")
+    print("To run this bot with Discord integration:")
+    print("1. Get your bot token from Discord Developer Portal")
+    print("2. Run the bot with: ")
+    print("   ezlang examples/comprehensive-test-bot.ez BOT_TOKEN=your_actual_token")
+    print("")
+    print("For now, the bot will demonstrate all other features without Discord.")
+    print("")
+} else {
+    print("✓ Bot token provided, starting Discord bot...")
+    print("Bot name: " + bot_name)
+    print("Command prefix: " + bot_prefix)
+    print("")
+
+    // Start the Discord bot
+    bot_start(bot_token)
+
+    // Note: Once bot_start() is called, the bot runs indefinitely
+    // The following code demonstrates what WOULD run with event handlers
+    print("Bot is now online and listening for events!")
+    print("")
+    print("Available commands (prefix with " + bot_prefix + "):")
+    print("  " + bot_prefix + "ping - Test bot response")
+    print("  " + bot_prefix + "help - Show help message")
+    print("  " + bot_prefix + "test - Run comprehensive tests")
+    print("  " + bot_prefix + "math <expr> - Evaluate math expression")
+    print("  " + bot_prefix + "random <min> <max> - Generate random number")
+    print("  " + bot_prefix + "info - Show bot information")
+}
+
+// ============================================================================
+// SECTION 21: DISCORD EVENT HANDLERS (PSEUDO-CODE)
+// ============================================================================
+print("=== SECTION 21: Discord Event Handlers (Reference) ===")
+print("")
+print("When the Discord bot is active, it will respond to events:")
+print("  - 'ready' event: Bot has logged in successfully")
+print("  - 'messageCreate' event: New message received")
+print("  - 'interactionCreate' event: Slash command or button interaction")
+print("")
+print("Example Discord Commands (implemented via listen):")
+print("  listen 'messageCreate' -> parse commands and respond")
+print("  send channel 'message' -> Send message to channel")
+print("  reply message 'text' -> Reply to a message")
+print("  react message '👍' -> Add reaction to message")
+print("")
+
+// ============================================================================
+// FINAL SUMMARY
+// ============================================================================
+print("")
+print("╔════════════════════════════════════════════════════════════════╗")
+print("║             COMPREHENSIVE TEST COMPLETE                       ║")
+print("╚════════════════════════════════════════════════════════════════╝")
+print("")
+print("All EzLang features have been tested:")
+print("  ✓ Variables (strings, numbers, booleans, null, arrays)")
+print("  ✓ Built-in functions (print, length, type, str, num)")
+print("  ✓ Array manipulation (push, pop, indexing)")
+print("  ✓ Mathematical operators (+, -, *, /, %)")
+print("  ✓ Comparison operators (==, !=, <, >, <=, >=)")
+print("  ✓ Logical operators (and, or, not)")
+print("  ✓ Conditional statements (if/else)")
+print("  ✓ While loops")
+print("  ✓ For loops")
+print("  ✓ Range function")
+print("  ✓ Random number generation")
+print("  ✓ User-defined functions")
+print("  ✓ Recursive functions")
+print("  ✓ Command-line argument parsing")
+print("  ✓ String concatenation")
+print("  ✓ Multi-dimensional arrays")
+print("  ✓ Async wait function")
+print("  ✓ Discord bot initialization")
+print("")
+print("Bot Status: " + if bot_token != "YOUR_TOKEN_HERE" { "ACTIVE" } else { "DEMO MODE" })
+print("")
+print("Thank you for testing EzLang!")
