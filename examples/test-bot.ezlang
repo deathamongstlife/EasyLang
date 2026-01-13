@@ -1,0 +1,90 @@
+// Simple Discord Test Bot
+//
+// This bot demonstrates basic Discord bot functionality in EzLang
+//
+// Usage:
+//   bun run ezlang run examples/test-bot.ezlang DISCORD_TOKEN=your_token_here
+//
+// Features:
+//   - Responds to !ping with "Pong!"
+//   - Responds to !hello with a greeting
+//   - Echoes back messages with !echo command
+//   - Reacts with 👍 to messages containing "thanks"
+//   - Ignores messages from other bots
+
+// Get Discord bot token from command-line arguments
+var token = get_argument("DISCORD_TOKEN", "")
+
+// Check if token was provided
+if token == "" {
+    print("❌ Error: Discord token not provided")
+    print("")
+    print("Usage:")
+    print("  bun run ezlang run examples/test-bot.ezlang DISCORD_TOKEN=your_token")
+    print("")
+    print("Get your bot token from:")
+    print("  https://discord.com/developers/applications")
+} else {
+    // Listen for the ready event - bot has connected to Discord
+    listen "ready" (client) {
+        print("✅ Bot is online and ready!")
+        print("Logged in as:", client.user.tag)
+        print("Bot ID:", client.user.id)
+        print("Serving", client.guildCount, "server(s)")
+        print("")
+        print("Available commands:")
+        print("  !ping         - Responds with 'Pong!'")
+        print("  !hello        - Sends a greeting")
+        print("  !echo <text>  - Echoes back your message")
+        print("  Say 'thanks'  - Bot reacts with 👍")
+        print("")
+    }
+
+    // Listen for incoming messages
+    listen "messageCreate" (message) {
+        // Important: Ignore messages from bots to prevent infinite loops
+        // and responding to other bots
+        if message.author.bot == true {
+            // Skip processing bot messages
+        } else {
+            // Get the message content
+            var content = message.content
+
+            // Command: !ping
+            // Simple ping-pong response to test if bot is working
+            if content == "!ping" {
+                reply message "Pong! 🏓"
+            }
+
+            // Command: !hello
+            // Send a friendly greeting to the user
+            if content == "!hello" {
+                reply message "Hello there! 👋 I'm a test bot written in EzLang!"
+            }
+
+            // Command: !echo <message>
+            // Echo back whatever the user says after !echo
+            // Uses string_starts_with to check if message begins with !echo
+            if string_starts_with(content, "!echo ") == true {
+                // Extract the message after "!echo " (6 characters)
+                var echo_text = string_slice(content, 6, string_length(content))
+
+                // Reply with the echoed text
+                reply message echo_text
+            }
+
+            // Auto-reaction: React with 👍 when someone says "thanks"
+            // Uses string_includes to check if "thanks" appears anywhere in message
+            if string_includes(content, "thanks") == true {
+                react message "👍"
+            }
+        }
+    }
+
+    print("🤖 Starting Discord Test Bot...")
+    print("Press Ctrl+C to stop")
+    print("")
+
+    // Start the bot with the provided token
+    bot_start(token)
+}

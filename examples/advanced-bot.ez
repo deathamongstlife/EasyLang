@@ -1,0 +1,78 @@
+// Advanced EzLang Discord Bot Example
+// Demonstrates more complex bot features including commands and message handling
+
+print("=== Advanced EzLang Discord Bot ===")
+print("Initializing bot with advanced features...")
+
+// Bot configuration
+var bot_token = "YOUR_DISCORD_BOT_TOKEN_HERE"
+var prefix = "!"
+var bot_name = "EzBot"
+
+// Command list
+var commands = ["ping", "help", "info", "random"]
+
+print("Bot Name: " + bot_name)
+print("Command Prefix: " + prefix)
+print("Available Commands: " + str(length(commands)))
+
+// Display all available commands
+var i = 0
+while i < length(commands) {
+    print("  - " + prefix + get_argument(commands, i))
+    i = i + 1
+}
+
+// Helper functions for bot logic
+func greet(name) {
+    return "Hello, " + name + "! Welcome to " + bot_name
+}
+
+func generate_random_number(min, max) {
+    var range_size = max - min + 1
+    return min + random(range_size)
+}
+
+func get_bot_info() {
+    return bot_name + " - Powered by EzLang v1.0"
+}
+
+// Command handler simulation
+func handle_command(cmd) {
+    if cmd == "ping" {
+        return "Pong!"
+    }
+    if cmd == "help" {
+        return "Available commands: " + str(commands)
+    }
+    if cmd == "info" {
+        return get_bot_info()
+    }
+    if cmd == "random" {
+        var num = generate_random_number(1, 100)
+        return "Random number: " + str(num)
+    }
+    return "Unknown command: " + cmd
+}
+
+// Test command handlers
+print("\n=== Testing Command Handlers ===")
+print("Test 'ping': " + handle_command("ping"))
+print("Test 'help': " + handle_command("help"))
+print("Test 'info': " + handle_command("info"))
+print("Test 'random': " + handle_command("random"))
+
+// Start the Discord bot
+print("\n=== Starting Discord Bot ===")
+print("Note: Replace bot_token with your actual Discord bot token")
+print("The bot will connect to Discord and listen for messages...")
+
+// Uncomment the line below when you have a valid token
+// bot_start(bot_token)
+
+print("\nBot setup complete!")
+print("To run this bot with a real token:")
+print("1. Get a bot token from Discord Developer Portal")
+print("2. Replace 'YOUR_DISCORD_BOT_TOKEN_HERE' with your token")
+print("3. Uncomment the bot_start() line")
+print("4. Run: ezlang examples/advanced-bot.ez")

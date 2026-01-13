@@ -219,11 +219,15 @@ export function valuesEqual(a: RuntimeValue, b: RuntimeValue): boolean {
     if (isString(a) && isString(b)) return a.value === b.value;
     if (isBoolean(a) && isBoolean(b)) return a.value === b.value;
     if (isArray(a) && isArray(b)) {
-      // Array equality by reference (same array object)
-      return a === b;
+      // Array equality by deep comparison
+      if (a.elements.length !== b.elements.length) return false;
+      for (let i = 0; i < a.elements.length; i++) {
+        if (!valuesEqual(a.elements[i], b.elements[i])) return false;
+      }
+      return true;
     }
     if (isObject(a) && isObject(b)) {
-      // Object equality by reference
+      // Object equality by reference (for now, deep comparison is complex)
       return a === b;
     }
     if (isFunction(a) && isFunction(b)) {

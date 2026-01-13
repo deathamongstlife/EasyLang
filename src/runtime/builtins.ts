@@ -134,7 +134,7 @@ const rangeFunction = makeNativeFunction('range', async (args: RuntimeValue[]) =
 
 /**
  * get_argument(name, default) - Get command-line argument
- * For now, this is a placeholder that returns the default value
+ * Parses command-line arguments in KEY=VALUE format from process.argv
  */
 const getArgumentFunction = makeNativeFunction('get_argument', async (args: RuntimeValue[]) => {
   if (args.length < 1 || args.length > 2) {
@@ -146,9 +146,32 @@ const getArgumentFunction = makeNativeFunction('get_argument', async (args: Runt
     throw new TypeError(`get_argument() expects a string as first argument, got ${nameArg.type}`);
   }
 
-  // For now, return default value or null
-  // In a full implementation, this would check process.argv or similar
+  const key = nameArg.value;
   const defaultValue = args.length === 2 ? args[1] : makeNull();
+
+  // Search through process.argv for KEY=VALUE arguments
+  // Skip the first two args (node executable and script path)
+  for (let i = 2; i < process.argv.length; i++) {
+    const arg = process.argv[i];
+
+    // Check if argument contains '='
+    const equalIndex = arg.indexOf('=');
+    if (equalIndex === -1) {
+      continue; // Skip arguments without '='
+    }
+
+    // Split into key and value
+    const argKey = arg.substring(0, equalIndex);
+    const argValue = arg.substring(equalIndex + 1);
+
+    // Match the key (case-sensitive)
+    if (argKey === key) {
+      // Return the value, even if it's empty
+      return makeString(argValue);
+    }
+  }
+
+  // Key not found, return default value
   return defaultValue;
 });
 
@@ -258,8 +281,9 @@ function createBotStartFunction(discordManager: DiscordManager) {
       // Keep the process running
       // The bot will run until the process is terminated
       return makeBoolean(true);
-    } catch (error: any) {
-      throw new RuntimeError(`Failed to start bot: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new RuntimeError(`Failed to start bot: ${errorMessage}`);
     }
   });
 }

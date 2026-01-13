@@ -1,0 +1,21 @@
+// EzLang Discord Bot Example
+// This is a simple test bot that demonstrates basic Discord bot functionality
+
+// Print welcome message
+print("Starting EzLang Discord Bot...")
+
+// Bot configuration
+var bot_token = "YOUR_DISCORD_BOT_TOKEN_HERE"
+var prefix = "!"
+
+// Start the bot with the token
+bot_start(bot_token)
+
+print("Bot is now running!")
+print("Listening for commands with prefix: " + prefix)
+
+// The bot will automatically respond to Discord events
+// You can add command handlers and event listeners here
+
+// Example: The bot will log when it receives messages
+// and can respond to commands starting with the prefix

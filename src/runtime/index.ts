@@ -93,8 +93,9 @@ export class Runtime {
       // Initialize Python bridge (optional - will fail silently if Python not available)
       try {
         await this.pythonBridge.initialize();
-      } catch (error: any) {
-        logger.debug(`Python bridge not available: ${error.message}`);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.debug(`Python bridge not available: ${errorMessage}`);
       }
 
       for (const statement of this.program.body) {
@@ -624,9 +625,10 @@ export class Runtime {
       // Get attribute from Python
       try {
         return await proxy.getAttribute([propertyName]);
-      } catch (error: any) {
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         throw new RuntimeError(
-          error.message,
+          errorMessage,
           node.position?.line,
           node.position?.column
         );
@@ -795,7 +797,7 @@ export class Runtime {
     const paramName = node.parameter;
 
     // Create a handler function that will be called when the event occurs
-    const handler = async (...eventArgs: any[]) => {
+    const handler = async (...eventArgs: unknown[]) => {
       // Create new environment for the handler
       const handlerEnv = env.extend();
 
@@ -808,8 +810,9 @@ export class Runtime {
       // Execute the handler body
       try {
         await this.evaluateBlockStatement(node.body, handlerEnv);
-      } catch (error: any) {
-        logger.error(`Error in ${eventName} handler: ${error.message}`);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error(`Error in ${eventName} handler: ${errorMessage}`);
         if (error instanceof RuntimeError) {
           logger.error(error.formatError());
         }
@@ -846,9 +849,10 @@ export class Runtime {
 
       logger.debug(`Imported Python module '${moduleName}' as '${alias}'`);
       return makeNull();
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       throw new RuntimeError(
-        error.message,
+        errorMessage,
         node.position?.line,
         node.position?.column
       );
@@ -864,9 +868,10 @@ export class Runtime {
 
     try {
       return await send(target, message);
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       throw new RuntimeError(
-        error.message,
+        errorMessage,
         node.position?.line,
         node.position?.column
       );
@@ -882,9 +887,10 @@ export class Runtime {
 
     try {
       return await reply(target, message);
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       throw new RuntimeError(
-        error.message,
+        errorMessage,
         node.position?.line,
         node.position?.column
       );
@@ -900,9 +906,10 @@ export class Runtime {
 
     try {
       return await react(target, emoji);
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       throw new RuntimeError(
-        error.message,
+        errorMessage,
         node.position?.line,
         node.position?.column
       );

@@ -19,7 +19,6 @@ export const KEYWORDS = new Set([
   'send',
   'reply',
   'react',
-  'bot_start',
 
   // Python integration
   'use',
@@ -51,7 +50,6 @@ export const DISCORD_COMMANDS = new Set([
   'reply',
   'react',
   'listen',
-  'bot_start',
 ]);
 
 /**

@@ -1,0 +1,57 @@
+// Example: Using command-line arguments with get_argument()
+//
+// Run this example with:
+//   ezlang run command-line-args.ezlang TOKEN=abc123 PORT=3000 DEBUG=true
+//
+// The get_argument() function allows you to pass configuration values
+// to your EzLang programs from the command line in KEY=VALUE format.
+
+print("=== Command-Line Arguments Example ===\n")
+
+// Example 1: Get argument with default value
+var token = get_argument("TOKEN", "default_token")
+print("TOKEN:", token)
+
+// Example 2: Get numeric argument (returned as string)
+var port = get_argument("PORT", "8080")
+print("PORT:", port)
+
+// Example 3: Get boolean-like argument (returned as string)
+var debug = get_argument("DEBUG", "false")
+print("DEBUG:", debug)
+
+// Example 4: Get argument without default (returns null if not found)
+var optional = get_argument("OPTIONAL")
+print("OPTIONAL:", optional)
+
+// Example 5: Use in conditional logic
+var env = get_argument("ENV", "development")
+print("\nEnvironment:", env)
+
+if env == "production" {
+    print("Running in production mode")
+} else {
+    print("Running in development mode")
+}
+
+// Example 6: Convert to number for calculations
+var max_users_str = get_argument("MAX_USERS", "100")
+var max_users = num(max_users_str)
+print("\nMaximum users allowed:", max_users)
+
+// Example 7: Discord bot token example
+print("\n=== Discord Bot Configuration ===")
+var discord_token = get_argument("DISCORD_TOKEN", "YOUR_TOKEN_HERE")
+print("Bot token:", discord_token)
+
+if discord_token == "YOUR_TOKEN_HERE" {
+    print("Warning: Using default token. Pass DISCORD_TOKEN=your_token to use a real token.")
+} else {
+    print("Ready to start bot with provided token")
+    // Uncomment to actually start the bot:
+    // bot_start(discord_token)
+}
+
+print("\n=== Tip ===")
+print("Run with arguments like this:")
+print("  ezlang run command-line-args.ezlang TOKEN=abc123 PORT=3000 DEBUG=true")

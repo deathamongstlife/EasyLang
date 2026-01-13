@@ -88,10 +88,11 @@ export class PythonBridge {
       await this.ipcClient.connect();
 
       logger.info('Python bridge initialized successfully');
-    } catch (error: any) {
+    } catch (error) {
       this.initializationFailed = true;
-      this.failureReason = error.message;
-      logger.warn(`Python bridge initialization failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.failureReason = errorMessage;
+      logger.warn(`Python bridge initialization failed: ${errorMessage}`);
       logger.warn('Python integration features will be disabled');
     }
   }
@@ -125,9 +126,10 @@ export class PythonBridge {
 
       this.importedModules.add(moduleName);
       logger.debug(`Imported Python module: ${moduleName}`);
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       throw new RuntimeError(
-        `Error importing Python module '${moduleName}': ${error.message}`,
+        `Error importing Python module '${moduleName}': ${errorMessage}`,
         undefined,
         undefined
       );
@@ -137,7 +139,7 @@ export class PythonBridge {
   /**
    * Call a Python function
    */
-  async callFunction(moduleName: string, functionName: string, args: any[]): Promise<any> {
+  async callFunction(moduleName: string, functionName: string, args: unknown[]): Promise<unknown> {
     if (!this.isInitialized()) {
       throw new RuntimeError(
         `Python bridge not available: ${this.failureReason}`,
@@ -170,9 +172,10 @@ export class PythonBridge {
       }
 
       return response.result;
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       throw new RuntimeError(
-        `Error calling Python function '${moduleName}.${functionName}': ${error.message}`,
+        `Error calling Python function '${moduleName}.${functionName}': ${errorMessage}`,
         undefined,
         undefined
       );
@@ -214,9 +217,10 @@ export class PythonBridge {
       }
 
       return response.result;
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       throw new RuntimeError(
-        `Error getting Python attribute '${moduleName}.${attrPath.join('.')}': ${error.message}`,
+        `Error getting Python attribute '${moduleName}.${attrPath.join('.')}': ${errorMessage}`,
         undefined,
         undefined
       );

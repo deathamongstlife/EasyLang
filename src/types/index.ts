@@ -43,5 +43,5 @@ export interface Scope {
 export interface FunctionSignature {
   name: string;
   parameters: string[];
-  body: any; // AST node
+  body: unknown; // BlockStatement AST node - use unknown as we want to avoid circular dependency
 }

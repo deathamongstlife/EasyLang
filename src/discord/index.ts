@@ -76,16 +76,20 @@ export class DiscordManager {
       logger.info('Logging in to Discord...');
       await this.client.login(this.token);
       logger.info('Discord bot login successful');
-    } catch (error: any) {
+    } catch (error) {
       // Provide helpful error messages for common issues
-      if (error.code === 'TokenInvalid') {
+      const isError = error instanceof Error;
+      const errorCode = isError && 'code' in error ? (error as Error & { code: string }).code : null;
+      const errorMessage = isError ? error.message : String(error);
+
+      if (errorCode === 'TokenInvalid') {
         throw new RuntimeError('Invalid Discord token. Please check your bot token.');
-      } else if (error.code === 'DisallowedIntents') {
+      } else if (errorCode === 'DisallowedIntents') {
         throw new RuntimeError(
           'Missing required intents. Enable "Message Content Intent" in Discord Developer Portal.'
         );
       } else {
-        throw new RuntimeError(`Failed to login to Discord: ${error.message}`);
+        throw new RuntimeError(`Failed to login to Discord: ${errorMessage}`);
       }
     }
   }
@@ -160,8 +164,8 @@ export class DiscordManager {
     if (!handlers || handlers.length === 0) return;
 
     // Setup the event listener
-    this.client.on(event, (...args: any[]) => {
-      this.executeEventHandlers(event, ...args);
+    this.client.on(event, (...args: unknown[]) => {
+      void this.executeEventHandlers(event, ...args);
     });
 
     logger.debug(`Setup Discord event listener for '${event}'`);
@@ -172,15 +176,18 @@ export class DiscordManager {
    * @param event - Event name
    * @param args - Event arguments
    */
-  private async executeEventHandlers(event: string, ...args: any[]): Promise<void> {
+  private async executeEventHandlers(event: string, ...args: unknown[]): Promise<void> {
     const handlers = this.eventHandlers.get(event);
-    if (!handlers || handlers.length === 0) return;
+    if (!handlers || handlers.length === 0) {
+      return;
+    }
 
     for (const handler of handlers) {
       try {
         await handler(...args);
-      } catch (error: any) {
-        logger.error(`Error in ${event} handler: ${error.message}`);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error(`Error in ${event} handler: ${errorMessage}`);
       }
     }
   }

@@ -34,8 +34,8 @@ export async function send(
     throw new RuntimeError('Invalid channel object');
   }
 
-  const channel = (channelProp as any).__rawValue;
-  if (!channel || typeof channel.send !== 'function') {
+  const channel = (channelProp as unknown as { __rawValue: unknown }).__rawValue;
+  if (!channel || typeof (channel as { send?: unknown }).send !== 'function') {
     throw new RuntimeError('Channel does not support sending messages');
   }
 
@@ -46,10 +46,11 @@ export async function send(
 
   try {
     logger.debug(`Sending message to channel: ${messageValue.value}`);
-    await channel.send(messageValue.value);
+    await (channel as { send: (message: string) => Promise<unknown> }).send(messageValue.value);
     return makeNull();
-  } catch (error: any) {
-    throw new RuntimeError(`Failed to send message: ${error.message}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to send message: ${errorMessage}`);
   }
 }
 
@@ -80,8 +81,8 @@ export async function reply(
     throw new RuntimeError('Invalid message object');
   }
 
-  const message = (messageProp as any).__rawValue;
-  if (!message || typeof message.reply !== 'function') {
+  const message = (messageProp as unknown as { __rawValue: unknown }).__rawValue;
+  if (!message || typeof (message as { reply?: unknown }).reply !== 'function') {
     throw new RuntimeError('Message does not support replies');
   }
 
@@ -92,10 +93,11 @@ export async function reply(
 
   try {
     logger.debug(`Replying to message: ${textValue.value}`);
-    await message.reply(textValue.value);
+    await (message as { reply: (text: string) => Promise<unknown> }).reply(textValue.value);
     return makeNull();
-  } catch (error: any) {
-    throw new RuntimeError(`Failed to reply to message: ${error.message}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to reply to message: ${errorMessage}`);
   }
 }
 
@@ -127,8 +129,8 @@ export async function react(
     throw new RuntimeError('Invalid message object');
   }
 
-  const message = (messageProp as any).__rawValue;
-  if (!message || typeof message.react !== 'function') {
+  const message = (messageProp as unknown as { __rawValue: unknown }).__rawValue;
+  if (!message || typeof (message as { react?: unknown }).react !== 'function') {
     throw new RuntimeError('Message does not support reactions');
   }
 
@@ -139,11 +141,12 @@ export async function react(
 
   try {
     logger.debug(`Reacting to message with: ${emojiValue.value}`);
-    await message.react(emojiValue.value);
+    await (message as { react: (emoji: string) => Promise<unknown> }).react(emojiValue.value);
     return makeBoolean(true);
-  } catch (error: any) {
+  } catch (error) {
     // Some errors are expected (invalid emoji, permissions)
-    logger.warn(`Failed to react to message: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.warn(`Failed to react to message: ${errorMessage}`);
     return makeBoolean(false);
   }
 }
