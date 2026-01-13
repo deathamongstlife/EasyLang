@@ -3,8 +3,20 @@
  * Converts Discord.js events to EzLang RuntimeValues
  */
 
-import { Client, Message, User, Channel, Interaction } from 'discord.js';
-import { RuntimeValue, makeString, makeBoolean, makeObject, ObjectValue } from '../runtime/values';
+import {
+  Client,
+  Message,
+  User,
+  Channel,
+  Interaction,
+  Guild,
+  GuildMember,
+  Role,
+  VoiceState,
+  MessageReaction,
+  ThreadChannel,
+} from 'discord.js';
+import { RuntimeValue, makeString, makeBoolean, makeObject, makeNumber, ObjectValue, makeArray } from '../runtime/values';
 import { logger } from '../utils/logger';
 
 /**
@@ -79,14 +91,61 @@ export class EventManager {
    * @param args - Raw Discord.js event arguments
    * @returns Array of RuntimeValues
    */
-  private convertEventArgs(eventName: string, args: any[]): RuntimeValue[] {
+  convertEventArgs(eventName: string, args: any[]): RuntimeValue[] {
     switch (eventName) {
+      // Message Events
       case 'messageCreate':
+      case 'messageUpdate':
+      case 'messageDelete':
         return [this.messageToRuntimeValue(args[0])];
-      case 'ready':
-        return [this.clientToRuntimeValue(args[0])];
+
+      // Interaction Events
       case 'interactionCreate':
         return [this.interactionToRuntimeValue(args[0])];
+
+      // Guild Events
+      case 'guildCreate':
+      case 'guildUpdate':
+      case 'guildDelete':
+        return [this.guildToRuntimeValue(args[0])];
+
+      // Member Events
+      case 'guildMemberAdd':
+      case 'guildMemberUpdate':
+      case 'guildMemberRemove':
+        return [this.memberToRuntimeValue(args[0])];
+
+      // Role Events
+      case 'roleCreate':
+      case 'roleUpdate':
+      case 'roleDelete':
+        return [this.roleToRuntimeValue(args[0])];
+
+      // Channel Events
+      case 'channelCreate':
+      case 'channelUpdate':
+      case 'channelDelete':
+        return [this.channelToRuntimeValue(args[0])];
+
+      // Voice Events
+      case 'voiceStateUpdate':
+        return [this.voiceStateToRuntimeValue(args[0]), this.voiceStateToRuntimeValue(args[1])];
+
+      // Reaction Events
+      case 'messageReactionAdd':
+      case 'messageReactionRemove':
+        return [this.reactionToRuntimeValue(args[0]), this.userToRuntimeValue(args[1])];
+
+      // Thread Events
+      case 'threadCreate':
+      case 'threadUpdate':
+      case 'threadDelete':
+        return [this.threadToRuntimeValue(args[0])];
+
+      // Ready Event
+      case 'ready':
+        return [this.clientToRuntimeValue(args[0])];
+
       default:
         // For unknown events, try to convert each argument
         return args.map((arg) => this.convertToRuntimeValue(arg));
@@ -117,6 +176,36 @@ export class EventManager {
       properties.set('channel', this.channelToRuntimeValue(message.channel));
     }
 
+    // Member information (if in guild)
+    if (message.member) {
+      properties.set('member', this.memberToRuntimeValue(message.member));
+    }
+
+    // Embeds
+    if (message.embeds.length > 0) {
+      const embeds = message.embeds.map(embed => {
+        const embedProps = new Map<string, RuntimeValue>();
+        if (embed.title) embedProps.set('title', makeString(embed.title));
+        if (embed.description) embedProps.set('description', makeString(embed.description));
+        if (embed.color) embedProps.set('color', makeNumber(embed.color));
+        return makeObject(embedProps);
+      });
+      properties.set('embeds', makeArray(embeds));
+    }
+
+    // Attachments
+    if (message.attachments.size > 0) {
+      const attachments = Array.from(message.attachments.values()).map(att => {
+        const attProps = new Map<string, RuntimeValue>();
+        attProps.set('id', makeString(att.id));
+        attProps.set('name', makeString(att.name));
+        attProps.set('url', makeString(att.url));
+        attProps.set('size', makeNumber(att.size));
+        return makeObject(attProps);
+      });
+      properties.set('attachments', makeArray(attachments));
+    }
+
     // Store the raw message for commands (reply, react)
     // We need to preserve the actual Discord.js object
     const rawValue: any = { __rawValue: message };
@@ -141,7 +230,12 @@ export class EventManager {
 
     if (user.avatar) {
       properties.set('avatar', makeString(user.avatar));
+      properties.set('avatarURL', makeString(user.displayAvatarURL()));
     }
+
+    // Store raw user
+    const rawValue: any = { __rawValue: user };
+    properties.set('__raw', rawValue as any);
 
     return makeObject(properties);
   }
@@ -155,11 +249,21 @@ export class EventManager {
     const properties = new Map<string, RuntimeValue>();
 
     properties.set('id', makeString(channel.id));
-    properties.set('type', makeString(String(channel.type)));
+    properties.set('type', makeNumber(channel.type));
 
     // Add channel name if available
     if ('name' in channel && channel.name) {
       properties.set('name', makeString(channel.name));
+    }
+
+    // Add guild ID if available
+    if ('guildId' in channel && channel.guildId) {
+      properties.set('guildId', makeString(channel.guildId));
+    }
+
+    // Add parent ID if available (for threads)
+    if ('parentId' in channel && channel.parentId) {
+      properties.set('parentId', makeString(channel.parentId));
     }
 
     // Store raw channel for send command
@@ -185,8 +289,16 @@ export class EventManager {
     properties.set('ready', makeBoolean(client.isReady()));
 
     if (client.guilds) {
-      properties.set('guildCount', makeString(String(client.guilds.cache.size)));
+      properties.set('guildCount', makeNumber(client.guilds.cache.size));
     }
+
+    if (client.users) {
+      properties.set('userCount', makeNumber(client.users.cache.size));
+    }
+
+    // Store raw client
+    const rawValue: any = { __rawValue: client };
+    properties.set('__raw', rawValue as any);
 
     return makeObject(properties);
   }
@@ -200,7 +312,7 @@ export class EventManager {
     const properties = new Map<string, RuntimeValue>();
 
     properties.set('id', makeString(interaction.id));
-    properties.set('type', makeString(String(interaction.type)));
+    properties.set('type', makeNumber(interaction.type));
 
     if (interaction.user) {
       properties.set('user', this.userToRuntimeValue(interaction.user));
@@ -214,8 +326,193 @@ export class EventManager {
       properties.set('guildId', makeString(interaction.guildId));
     }
 
+    // Add interaction type booleans for convenience
+    properties.set('isCommand', makeBoolean(interaction.isChatInputCommand()));
+    properties.set('isButton', makeBoolean(interaction.isButton()));
+    properties.set('isSelectMenu', makeBoolean(interaction.isAnySelectMenu()));
+    properties.set('isModal', makeBoolean(interaction.isModalSubmit()));
+    properties.set('isAutocomplete', makeBoolean(interaction.isAutocomplete()));
+    properties.set('isContextMenu', makeBoolean(interaction.isContextMenuCommand()));
+
+    // Add command-specific properties
+    if (interaction.isChatInputCommand()) {
+      properties.set('commandName', makeString(interaction.commandName));
+
+      // Add options as an object
+      const optionsMap = new Map<string, RuntimeValue>();
+      interaction.options.data.forEach(option => {
+        if (option.value !== undefined) {
+          if (typeof option.value === 'string') {
+            optionsMap.set(option.name, makeString(option.value));
+          } else if (typeof option.value === 'number') {
+            optionsMap.set(option.name, makeNumber(option.value));
+          } else if (typeof option.value === 'boolean') {
+            optionsMap.set(option.name, makeBoolean(option.value));
+          }
+        }
+      });
+      properties.set('options', makeObject(optionsMap));
+    }
+
+    // Add button/select menu customId
+    if (interaction.isButton() || interaction.isAnySelectMenu()) {
+      properties.set('customId', makeString(interaction.customId));
+    }
+
+    // Add select menu values
+    if (interaction.isStringSelectMenu()) {
+      const values = interaction.values.map(v => makeString(v));
+      properties.set('values', makeArray(values));
+    }
+
+    // Add modal fields
+    if (interaction.isModalSubmit()) {
+      properties.set('customId', makeString(interaction.customId));
+      const fieldsMap = new Map<string, RuntimeValue>();
+      interaction.fields.fields.forEach((field, id) => {
+        if ('value' in field) {
+          fieldsMap.set(id, makeString(field.value));
+        }
+      });
+      properties.set('fields', makeObject(fieldsMap));
+    }
+
     // Store raw interaction for future slash command support
     const rawValue: any = { __rawValue: interaction };
+    properties.set('__raw', rawValue as any);
+
+    return makeObject(properties);
+  }
+
+  /**
+   * Convert a Discord Guild to RuntimeValue
+   */
+  private guildToRuntimeValue(guild: Guild): ObjectValue {
+    const properties = new Map<string, RuntimeValue>();
+
+    properties.set('id', makeString(guild.id));
+    properties.set('name', makeString(guild.name));
+    properties.set('memberCount', makeNumber(guild.memberCount));
+    properties.set('ownerId', makeString(guild.ownerId));
+
+    if (guild.icon) {
+      properties.set('icon', makeString(guild.icon));
+      properties.set('iconURL', makeString(guild.iconURL() || ''));
+    }
+
+    // Store raw guild
+    const rawValue: any = { __rawValue: guild };
+    properties.set('__raw', rawValue as any);
+
+    return makeObject(properties);
+  }
+
+  /**
+   * Convert a Discord GuildMember to RuntimeValue
+   */
+  private memberToRuntimeValue(member: GuildMember): ObjectValue {
+    const properties = new Map<string, RuntimeValue>();
+
+    properties.set('id', makeString(member.id));
+    properties.set('user', this.userToRuntimeValue(member.user));
+    properties.set('nickname', makeString(member.nickname || ''));
+    properties.set('joinedAt', makeString(member.joinedAt?.toISOString() || ''));
+
+    // Roles
+    const roles = Array.from(member.roles.cache.values()).map(role => this.roleToRuntimeValue(role));
+    properties.set('roles', makeArray(roles));
+
+    // Permissions
+    properties.set('permissions', makeString(member.permissions.bitfield.toString()));
+
+    // Store raw member
+    const rawValue: any = { __rawValue: member };
+    properties.set('__raw', rawValue as any);
+
+    return makeObject(properties);
+  }
+
+  /**
+   * Convert a Discord Role to RuntimeValue
+   */
+  private roleToRuntimeValue(role: Role): ObjectValue {
+    const properties = new Map<string, RuntimeValue>();
+
+    properties.set('id', makeString(role.id));
+    properties.set('name', makeString(role.name));
+    properties.set('color', makeNumber(role.color));
+    properties.set('position', makeNumber(role.position));
+    properties.set('permissions', makeString(role.permissions.bitfield.toString()));
+    properties.set('mentionable', makeBoolean(role.mentionable));
+    properties.set('hoist', makeBoolean(role.hoist));
+
+    // Store raw role
+    const rawValue: any = { __rawValue: role };
+    properties.set('__raw', rawValue as any);
+
+    return makeObject(properties);
+  }
+
+  /**
+   * Convert a Discord VoiceState to RuntimeValue
+   */
+  private voiceStateToRuntimeValue(voiceState: VoiceState): ObjectValue {
+    const properties = new Map<string, RuntimeValue>();
+
+    properties.set('channelId', makeString(voiceState.channelId || ''));
+    properties.set('guildId', makeString(voiceState.guild.id));
+    properties.set('mute', makeBoolean(voiceState.mute || false));
+    properties.set('deaf', makeBoolean(voiceState.deaf || false));
+    properties.set('selfMute', makeBoolean(voiceState.selfMute || false));
+    properties.set('selfDeaf', makeBoolean(voiceState.selfDeaf || false));
+
+    if (voiceState.member) {
+      properties.set('member', this.memberToRuntimeValue(voiceState.member));
+    }
+
+    // Store raw voice state
+    const rawValue: any = { __rawValue: voiceState };
+    properties.set('__raw', rawValue as any);
+
+    return makeObject(properties);
+  }
+
+  /**
+   * Convert a Discord MessageReaction to RuntimeValue
+   */
+  private reactionToRuntimeValue(reaction: MessageReaction): ObjectValue {
+    const properties = new Map<string, RuntimeValue>();
+
+    properties.set('emoji', makeString(reaction.emoji.name || ''));
+    properties.set('count', makeNumber(reaction.count));
+    properties.set('me', makeBoolean(reaction.me));
+
+    if (reaction.message) {
+      properties.set('message', this.messageToRuntimeValue(reaction.message as Message));
+    }
+
+    // Store raw reaction
+    const rawValue: any = { __rawValue: reaction };
+    properties.set('__raw', rawValue as any);
+
+    return makeObject(properties);
+  }
+
+  /**
+   * Convert a Discord ThreadChannel to RuntimeValue
+   */
+  private threadToRuntimeValue(thread: ThreadChannel): ObjectValue {
+    const properties = new Map<string, RuntimeValue>();
+
+    properties.set('id', makeString(thread.id));
+    properties.set('name', makeString(thread.name));
+    properties.set('parentId', makeString(thread.parentId || ''));
+    properties.set('ownerId', makeString(thread.ownerId || ''));
+    properties.set('archived', makeBoolean(thread.archived || false));
+    properties.set('locked', makeBoolean(thread.locked || false));
+
+    // Store raw thread
+    const rawValue: any = { __rawValue: thread };
     properties.set('__raw', rawValue as any);
 
     return makeObject(properties);
@@ -233,6 +530,10 @@ export class EventManager {
 
     if (typeof value === 'string') {
       return makeString(value);
+    }
+
+    if (typeof value === 'number') {
+      return makeNumber(value);
     }
 
     if (typeof value === 'boolean') {

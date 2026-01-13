@@ -801,11 +801,20 @@ export class Runtime {
       // Create new environment for the handler
       const handlerEnv = env.extend();
 
-      // Convert Discord.js event args to RuntimeValue
-      const runtimeArg = this.eventManager['convertEventArgs'](eventName, eventArgs)[0];
+      // Convert Discord.js event args to RuntimeValue using EventManager
+      const runtimeArgs = this.eventManager.convertEventArgs(eventName, eventArgs);
 
-      // Bind the parameter
-      handlerEnv.define(paramName, runtimeArg);
+      // Bind the parameter (use first arg for most events, or handle multiple params)
+      if (runtimeArgs.length > 0) {
+        handlerEnv.define(paramName, runtimeArgs[0]);
+      }
+
+      // For events with multiple parameters, bind additional named params
+      // e.g., voiceStateUpdate has oldState and newState
+      if (runtimeArgs.length > 1) {
+        // Store additional args in array accessible via special variable
+        handlerEnv.define(`${paramName}_args`, makeArray(runtimeArgs));
+      }
 
       // Execute the handler body
       try {
