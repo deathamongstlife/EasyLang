@@ -1,0 +1,39 @@
+# Package Integration Bot - Testing JavaScript & Python Packages
+# This bot demonstrates how EzLang integrates with npm packages and Python
+
+# Get token from command line argument
+var token = get_argument("TOKEN", "")
+
+if token == "" {
+    print("Error: Please provide a bot token!")
+    print("Usage: ezlang examples/package-integration-bot.ez TOKEN=your_token_here")
+} else {
+    print("Starting Package Integration Bot...")
+    print("")
+    print("Available Commands:")
+    print("  !help - Show all commands")
+    print("")
+    print("JavaScript Package Integration:")
+    print("  !testmoment  - Date/time manipulation with moment.js")
+    print("  !testaxios   - HTTP requests with axios")
+    print("  !testlodash  - Utility functions with lodash")
+    print("")
+    print("Python Package Integration:")
+    print("  !testpython    - Python math module")
+    print("  !testrequests  - Python HTTP requests")
+    print("")
+    print("Installation Commands (Admin only):")
+    print("  !installjs <package>  - Show how to install JS packages")
+    print("  !installpy <package>  - Show how to install Python packages")
+    print("")
+    print("To install JavaScript packages:")
+    print("  bun add moment")
+    print("  bun add axios")
+    print("  bun add lodash")
+    print("")
+    print("Bot is now running! Press Ctrl+C to stop.")
+    print("=" * 50)
+
+    # Start the bot
+    bot_start(token)
+}

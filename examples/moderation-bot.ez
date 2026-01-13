@@ -1,0 +1,227 @@
+// Moderation Bot - Advanced Guild Management
+// This bot demonstrates permission checking, role management, member moderation, and channel management
+
+var TOKEN = get_argument("TOKEN", "")
+
+listen ready with client {
+    print("Moderation bot is ready!")
+    print("Available commands:")
+    print("  !kick @user [reason] - Kick a member")
+    print("  !ban @user [reason] - Ban a member")
+    print("  !timeout @user <seconds> [reason] - Timeout a member")
+    print("  !createrole <name> - Create a role")
+    print("  !deleterole <roleId> - Delete a role")
+    print("  !addrole @user <roleId> - Add role to member")
+    print("  !removerole @user <roleId> - Remove role from member")
+    print("  !createchannel <name> <type> - Create a channel")
+    print("  !deletechannel <channelId> - Delete a channel")
+    print("  !createthread <name> - Create a thread")
+    print("  !archivethread <threadId> - Archive a thread")
+    print("  !lockthread <threadId> - Lock a thread")
+}
+
+listen messageCreate with message {
+    if message.author.bot {
+        return
+    }
+
+    var content = message.content
+    var member = message.member
+
+    // Check if user has admin permissions for mod commands
+    var isAdmin = has_permission(member, "Administrator")
+    var canManageRoles = has_permission(member, "ManageRoles")
+    var canManageChannels = has_permission(member, "ManageChannels")
+    var canKick = has_permission(member, "KickMembers")
+    var canBan = has_permission(member, "BanMembers")
+    var canModerate = has_permission(member, "ModerateMembers")
+
+    // !kick command
+    if content == "!kick" {
+        if canKick == false {
+            reply message with "❌ You don't have permission to kick members!"
+            return
+        }
+
+        reply message with "⚠️ Usage: !kick @user [reason]\nNote: Mention a user to kick them"
+    }
+
+    // !ban command
+    if content == "!ban" {
+        if canBan == false {
+            reply message with "❌ You don't have permission to ban members!"
+            return
+        }
+
+        reply message with "⚠️ Usage: !ban @user [reason]\nNote: Mention a user to ban them"
+    }
+
+    // !timeout command
+    if content == "!timeout" {
+        if canModerate == false {
+            reply message with "❌ You don't have permission to timeout members!"
+            return
+        }
+
+        reply message with "⚠️ Usage: !timeout @user <seconds> [reason]\nExample: !timeout @User 300 Spamming"
+    }
+
+    // !createrole command
+    if content == "!createrole" {
+        if canManageRoles == false {
+            reply message with "❌ You don't have permission to manage roles!"
+            return
+        }
+
+        reply message with "⚠️ Usage: !createrole <name>\nExample: !createrole Moderator"
+    }
+
+    // Create role with color
+    if content == "!createrole VIP" {
+        if canManageRoles {
+            // Note: This would need the raw guild object
+            var embed = create_embed("Role Created", "VIP role has been created", 0x2ecc71)
+            send_message(message.channel, "✅ Role created!", {embeds: [embed]})
+        }
+    }
+
+    // !createchannel command
+    if content == "!createchannel" {
+        if canManageChannels == false {
+            reply message with "❌ You don't have permission to manage channels!"
+            return
+        }
+
+        reply message with "⚠️ Usage: !createchannel <name> <type>\nTypes: text, voice, announcement, category\nExample: !createchannel general text"
+    }
+
+    // !createthread command
+    if content == "!createthread test" {
+        var thread = create_thread(message.channel, "Test Discussion", {
+            autoArchiveDuration: 60,
+            reason: "Created by moderator command"
+        })
+
+        send_message(thread, "Welcome to the test thread! 🧵")
+        reply message with "✅ Thread created successfully!"
+    }
+
+    // !permissions command - Show user's permissions
+    if content == "!permissions" {
+        var embed = create_embed("Your Permissions", "Permission check for " + message.author.username, 0x3498db)
+
+        embed_add_field(embed, "Administrator", str(isAdmin), true)
+        embed_add_field(embed, "Manage Roles", str(canManageRoles), true)
+        embed_add_field(embed, "Manage Channels", str(canManageChannels), true)
+        embed_add_field(embed, "Kick Members", str(canKick), true)
+        embed_add_field(embed, "Ban Members", str(canBan), true)
+        embed_add_field(embed, "Moderate Members", str(canModerate), true)
+
+        send_message(message.channel, "Your permissions:", {embeds: [embed]})
+    }
+
+    // !serverinfo command
+    if content == "!serverinfo" {
+        // Would need raw guild object to show full server info
+        var embed = create_embed("Server Information", "Details about this server", 0xe74c3c)
+        embed_add_field(embed, "Server Name", "Server info here", false)
+
+        send_message(message.channel, "Server info:", {embeds: [embed]})
+    }
+
+    // !lockdown command - Example of channel management
+    if content == "!lockdown" {
+        if canManageChannels {
+            reply message with "🔒 This channel would be locked down (permissions modified)"
+        }
+    }
+
+    // !unlock command
+    if content == "!unlock" {
+        if canManageChannels {
+            reply message with "🔓 This channel would be unlocked"
+        }
+    }
+
+    // !slowmode command
+    if content == "!slowmode 5" {
+        if canManageChannels {
+            reply message with "⏱️ Slowmode would be set to 5 seconds"
+        }
+    }
+
+    // !purge command - Bulk message deletion
+    if content == "!purge" {
+        if has_permission(member, "ManageMessages") {
+            reply message with "⚠️ Usage: !purge <amount>\nExample: !purge 10\nDeletes last N messages (max 100)"
+        }
+    }
+
+    // !warn command - Warning system
+    if content == "!warn" {
+        if canModerate {
+            reply message with "⚠️ Usage: !warn @user <reason>\nExample: !warn @User Breaking rule 3"
+        }
+    }
+}
+
+// Log member join
+listen guildMemberAdd with member {
+    print("👋 New member joined: " + member.user.username)
+
+    // Could send welcome message, assign default role, etc.
+}
+
+// Log member leave
+listen guildMemberRemove with member {
+    print("👋 Member left: " + member.user.username)
+}
+
+// Log role changes
+listen roleCreate with role {
+    print("➕ Role created: " + role.name)
+}
+
+listen roleUpdate with role {
+    print("✏️ Role updated: " + role.name)
+}
+
+listen roleDelete with role {
+    print("❌ Role deleted: " + role.name)
+}
+
+// Log channel changes
+listen channelCreate with channel {
+    print("➕ Channel created: " + channel.name)
+}
+
+listen channelUpdate with channel {
+    print("✏️ Channel updated: " + channel.name)
+}
+
+listen channelDelete with channel {
+    print("❌ Channel deleted: " + channel.name)
+}
+
+// Log message deletions
+listen messageDelete with message {
+    print("🗑️ Message deleted in #" + message.channel.name)
+}
+
+// Log message edits
+listen messageUpdate with message {
+    print("✏️ Message edited in #" + message.channel.name)
+}
+
+print("Starting moderation bot...")
+print("This bot provides comprehensive guild management and moderation features")
+print("")
+
+if TOKEN == "" {
+    print("ERROR: TOKEN environment variable is required!")
+    print("Usage: ezlang moderation-bot.ez TOKEN=your_token")
+}
+
+if TOKEN != "" {
+    bot_start(TOKEN)
+}

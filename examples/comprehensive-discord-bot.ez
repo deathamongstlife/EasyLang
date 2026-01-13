@@ -1,0 +1,267 @@
+// Comprehensive Discord Bot - Full Discord.js v14 API Demonstration
+// This example shows all major features of EzLang's Discord integration
+
+var TOKEN = get_argument("TOKEN", "")
+
+// ==================== EVENT HANDLERS ====================
+
+// Ready event - Bot initialization
+listen ready with client {
+    print("Bot is ready!")
+    print("Logged in as: " + client.user.username)
+    print("Serving " + str(client.guildCount) + " guilds")
+}
+
+// Message events - Full message lifecycle
+listen messageCreate with message {
+    // Ignore bot messages
+    if message.author.bot {
+        return
+    }
+
+    var content = message.content
+
+    // Command: !ping
+    if content == "!ping" {
+        reply message with "Pong! Bot is online!"
+    }
+
+    // Command: !embed - Create rich embed
+    if content == "!embed" {
+        var embed = create_embed("Rich Embed Example", "This is a comprehensive embed", 0x5865F2)
+        embed_add_field(embed, "Field 1", "Value 1", true)
+        embed_add_field(embed, "Field 2", "Value 2", true)
+        embed_add_field(embed, "Field 3", "Value 3", false)
+
+        send_message(message.channel, "Here's your embed!", {
+            embeds: [embed]
+        })
+    }
+
+    // Command: !buttons - Interactive buttons
+    if content == "!buttons" {
+        var btn1 = create_button("Primary", "primary", "btn_primary")
+        var btn2 = create_button("Success", "success", "btn_success")
+        var btn3 = create_button("Danger", "danger", "btn_danger")
+        var linkBtn = create_link_button("Discord.js", "https://discord.js.org")
+
+        var row1 = create_action_row(btn1, btn2, btn3)
+        var row2 = create_action_row(linkBtn)
+
+        send_message(message.channel, "Click a button!", {
+            components: [row1, row2]
+        })
+    }
+
+    // Command: !select - Select menus
+    if content == "!select" {
+        var options = [
+            {label: "Option 1", value: "opt1", description: "First option"},
+            {label: "Option 2", value: "opt2", description: "Second option"},
+            {label: "Option 3", value: "opt3", description: "Third option"}
+        ]
+
+        var select = create_string_select("main_select", "Choose an option", options)
+        var row = create_action_row(select)
+
+        send_message(message.channel, "Make a selection!", {
+            components: [row]
+        })
+    }
+
+    // Command: !userselect - User picker
+    if content == "!userselect" {
+        var userSelect = create_user_select("user_picker", "Select users")
+        var row = create_action_row(userSelect)
+
+        send_message(message.channel, "Select users from the server!", {
+            components: [row]
+        })
+    }
+
+    // Command: !roleselect - Role picker
+    if content == "!roleselect" {
+        var roleSelect = create_role_select("role_picker", "Select roles")
+        var row = create_action_row(roleSelect)
+
+        send_message(message.channel, "Select roles!", {
+            components: [row]
+        })
+    }
+
+    // Command: !channelselect - Channel picker
+    if content == "!channelselect" {
+        var channelSelect = create_channel_select("channel_picker", "Select channels")
+        var row = create_action_row(channelSelect)
+
+        send_message(message.channel, "Select channels!", {
+            components: [row]
+        })
+    }
+
+    // Command: !modal - Modal form
+    if content == "!modal" {
+        // Note: Modals must be triggered by button interactions
+        var btn = create_button("Open Form", "primary", "open_modal")
+        var row = create_action_row(btn)
+
+        send_message(message.channel, "Click to open modal form!", {
+            components: [row]
+        })
+    }
+
+    // Command: !thread - Create thread
+    if content == "!thread" {
+        var thread = create_thread(message.channel, "New Discussion Thread", {
+            autoArchiveDuration: 60,
+            reason: "Created via bot command"
+        })
+
+        send_message(thread, "Welcome to the new thread!")
+    }
+
+    // Command: !permissions - Check permissions
+    if content == "!permissions" {
+        var member = message.member
+        var isAdmin = has_permission(member, "Administrator")
+        var canManage = has_permission(member, "ManageGuild")
+        var canKick = has_permission(member, "KickMembers")
+
+        var perms = "Your permissions:\n"
+        perms = perms + "Administrator: " + str(isAdmin) + "\n"
+        perms = perms + "Manage Guild: " + str(canManage) + "\n"
+        perms = perms + "Kick Members: " + str(canKick)
+
+        reply message with perms
+    }
+}
+
+// Interaction events - Handle all component interactions
+listen interactionCreate with interaction {
+    // Handle button interactions
+    if interaction.isButton {
+        var customId = interaction.customId
+
+        if customId == "btn_primary" {
+            interaction_reply(interaction, "You clicked Primary!", {ephemeral: true})
+        }
+
+        if customId == "btn_success" {
+            interaction_reply(interaction, "You clicked Success!", {ephemeral: true})
+        }
+
+        if customId == "btn_danger" {
+            interaction_reply(interaction, "You clicked Danger!", {ephemeral: true})
+        }
+
+        if customId == "open_modal" {
+            var modal = create_modal("feedback_form", "Feedback Form")
+
+            var nameInput = create_text_input("name_input", "Your Name", "short", true)
+            var feedbackInput = create_text_input("feedback_input", "Your Feedback", "paragraph", true)
+
+            var row1 = create_action_row(nameInput)
+            var row2 = create_action_row(feedbackInput)
+
+            // Note: Modal showing requires special handling in Discord.js
+            // This would need the raw interaction object
+        }
+    }
+
+    // Handle select menu interactions
+    if interaction.isSelectMenu {
+        var customId = interaction.customId
+
+        if customId == "main_select" {
+            var values = interaction.values
+            var selected = values[0]
+            interaction_reply(interaction, "You selected: " + selected, {ephemeral: true})
+        }
+    }
+
+    // Handle modal submissions
+    if interaction.isModal {
+        var customId = interaction.customId
+
+        if customId == "feedback_form" {
+            var fields = interaction.fields
+            var name = fields.name_input
+            var feedback = fields.feedback_input
+
+            var response = "Thank you for your feedback, " + name + "!"
+            response = response + "\nWe received: " + feedback
+
+            interaction_reply(interaction, response, {ephemeral: true})
+        }
+    }
+
+    // Handle slash commands
+    if interaction.isCommand {
+        var commandName = interaction.commandName
+
+        if commandName == "hello" {
+            var options = interaction.options
+            var userName = options.name
+
+            interaction_reply(interaction, "Hello, " + userName + "!", {})
+        }
+    }
+}
+
+// Member events
+listen guildMemberAdd with member {
+    print("New member joined: " + member.user.username)
+
+    // Welcome message could be sent here
+}
+
+listen guildMemberRemove with member {
+    print("Member left: " + member.user.username)
+}
+
+// Role events
+listen roleCreate with role {
+    print("New role created: " + role.name)
+}
+
+listen roleDelete with role {
+    print("Role deleted: " + role.name)
+}
+
+// Channel events
+listen channelCreate with channel {
+    print("New channel created: " + channel.name)
+}
+
+listen channelDelete with channel {
+    print("Channel deleted: " + channel.name)
+}
+
+// Voice state events
+listen voiceStateUpdate with oldState {
+    // Note: This receives oldState as first parameter
+    // newState is available as oldState_args[1]
+    print("Voice state changed")
+}
+
+// Reaction events
+listen messageReactionAdd with reaction {
+    print("Reaction added: " + reaction.emoji)
+}
+
+// Thread events
+listen threadCreate with thread {
+    print("Thread created: " + thread.name)
+}
+
+listen threadUpdate with thread {
+    print("Thread updated: " + thread.name)
+}
+
+// ==================== START BOT ====================
+
+print("Starting comprehensive Discord bot...")
+print("This bot demonstrates all Discord.js v14 features in EzLang")
+print("")
+
+bot_start(TOKEN)

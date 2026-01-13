@@ -1,0 +1,266 @@
+// Slash Commands Bot - Modern Discord Command System
+// This example demonstrates slash command registration and handling
+
+var TOKEN = get_argument("TOKEN", "")
+var GUILD_ID = get_argument("GUILD_ID", "")
+
+// Store the client for slash command registration
+var botClient = null
+
+listen ready with client {
+    print("Bot ready! Registering slash commands...")
+    botClient = client
+
+    // Register /hello command with options
+    var helloCommand = {
+        name: "hello",
+        description: "Say hello to someone",
+        options: [
+            {
+                type: "String",
+                name: "name",
+                description: "Person to greet",
+                required: true
+            },
+            {
+                type: "Boolean",
+                name: "loud",
+                description: "Shout the greeting",
+                required: false
+            }
+        ]
+    }
+    register_slash_command(client, GUILD_ID, helloCommand)
+
+    // Register /userinfo command with user option
+    var userinfoCommand = {
+        name: "userinfo",
+        description: "Get information about a user",
+        options: [
+            {
+                type: "User",
+                name: "target",
+                description: "User to get info about",
+                required: true
+            }
+        ]
+    }
+    register_slash_command(client, GUILD_ID, userinfoCommand)
+
+    // Register /poll command with multiple options
+    var pollCommand = {
+        name: "poll",
+        description: "Create a poll",
+        options: [
+            {
+                type: "String",
+                name: "question",
+                description: "Poll question",
+                required: true
+            },
+            {
+                type: "String",
+                name: "option1",
+                description: "First option",
+                required: true
+            },
+            {
+                type: "String",
+                name: "option2",
+                description: "Second option",
+                required: true
+            },
+            {
+                type: "String",
+                name: "option3",
+                description: "Third option (optional)",
+                required: false
+            }
+        ]
+    }
+    register_slash_command(client, GUILD_ID, pollCommand)
+
+    // Register /calc command with integer options
+    var calcCommand = {
+        name: "calc",
+        description: "Calculate two numbers",
+        options: [
+            {
+                type: "Integer",
+                name: "num1",
+                description: "First number",
+                required: true
+            },
+            {
+                type: "String",
+                name: "operation",
+                description: "Operation (+, -, *, /)",
+                required: true
+            },
+            {
+                type: "Integer",
+                name: "num2",
+                description: "Second number",
+                required: true
+            }
+        ]
+    }
+    register_slash_command(client, GUILD_ID, calcCommand)
+
+    // Register /role command with role option
+    var roleCommand = {
+        name: "role",
+        description: "Get information about a role",
+        options: [
+            {
+                type: "Role",
+                name: "target",
+                description: "Role to get info about",
+                required: true
+            }
+        ]
+    }
+    register_slash_command(client, GUILD_ID, roleCommand)
+
+    // Register /channel command with channel option
+    var channelCommand = {
+        name: "channel",
+        description: "Get information about a channel",
+        options: [
+            {
+                type: "Channel",
+                name: "target",
+                description: "Channel to get info about",
+                required: true
+            }
+        ]
+    }
+    register_slash_command(client, GUILD_ID, channelCommand)
+
+    print("All slash commands registered successfully!")
+}
+
+// Handle slash command interactions
+listen interactionCreate with interaction {
+    if interaction.isCommand {
+        var commandName = interaction.commandName
+        var options = interaction.options
+
+        // /hello command
+        if commandName == "hello" {
+            var name = options.name
+            var loud = options.loud
+
+            var greeting = "Hello, " + name + "!"
+
+            if loud {
+                greeting = "HELLO, " + name + "!!!"
+            }
+
+            interaction_reply(interaction, greeting, {})
+        }
+
+        // /userinfo command
+        if commandName == "userinfo" {
+            var targetUser = options.target
+
+            var embed = create_embed("User Information", "", 0x3498db)
+            embed_add_field(embed, "Username", targetUser, false)
+            embed_add_field(embed, "ID", "User ID here", false)
+
+            interaction_reply(interaction, "User info:", {
+                embeds: [embed]
+            })
+        }
+
+        // /poll command
+        if commandName == "poll" {
+            var question = options.question
+            var opt1 = options.option1
+            var opt2 = options.option2
+            var opt3 = options.option3
+
+            var embed = create_embed("Poll: " + question, "", 0xf39c12)
+            embed_add_field(embed, "1️⃣", opt1, false)
+            embed_add_field(embed, "2️⃣", opt2, false)
+
+            if opt3 {
+                embed_add_field(embed, "3️⃣", opt3, false)
+            }
+
+            interaction_reply(interaction, "New poll created!", {
+                embeds: [embed]
+            })
+        }
+
+        // /calc command
+        if commandName == "calc" {
+            var num1 = options.num1
+            var operation = options.operation
+            var num2 = options.num2
+
+            var result = 0
+
+            if operation == "+" {
+                result = num1 + num2
+            }
+
+            if operation == "-" {
+                result = num1 - num2
+            }
+
+            if operation == "*" {
+                result = num1 * num2
+            }
+
+            if operation == "/" {
+                if num2 == 0 {
+                    interaction_reply(interaction, "Cannot divide by zero!", {ephemeral: true})
+                    return
+                }
+                result = num1 / num2
+            }
+
+            var answer = str(num1) + " " + operation + " " + str(num2) + " = " + str(result)
+            interaction_reply(interaction, answer, {})
+        }
+
+        // /role command
+        if commandName == "role" {
+            var embed = create_embed("Role Information", "Details about the selected role", 0xe91e63)
+
+            interaction_reply(interaction, "Role info:", {
+                embeds: [embed]
+            })
+        }
+
+        // /channel command
+        if commandName == "channel" {
+            var embed = create_embed("Channel Information", "Details about the selected channel", 0x9b59b6)
+
+            interaction_reply(interaction, "Channel info:", {
+                embeds: [embed]
+            })
+        }
+    }
+}
+
+print("Starting slash commands bot...")
+print("Make sure to set TOKEN and GUILD_ID environment variables")
+print("")
+
+if TOKEN == "" {
+    print("ERROR: TOKEN is required!")
+    print("Usage: ezlang slash-commands-bot.ez TOKEN=your_token GUILD_ID=your_guild_id")
+}
+
+if GUILD_ID == "" {
+    print("ERROR: GUILD_ID is required!")
+    print("Usage: ezlang slash-commands-bot.ez TOKEN=your_token GUILD_ID=your_guild_id")
+}
+
+if TOKEN != "" {
+    if GUILD_ID != "" {
+        bot_start(TOKEN)
+    }
+}
