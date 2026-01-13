@@ -1,0 +1,16 @@
+# ========================================
+# MODAL HANDLER
+# ========================================
+# Handles modal form submissions
+# Written in PURE EzLang syntax
+
+# See main.ez for implementation in interactionCreate event
+# Modal submit handler:
+#
+# else if interaction_type == "MODAL_SUBMIT" {
+#     var custom_id = interaction.customId
+#     var field_value = get_modal_field(interaction, "field-id")
+#     # Process form data
+# }
+
+print("[COMPONENTS] Modal handler documentation loaded")

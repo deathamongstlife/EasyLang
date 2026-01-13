@@ -1,0 +1,11 @@
+# ========================================
+# SLASH COMMAND: /show-modal
+# ========================================
+# Open a modal form for user input
+# Developer only command
+# Written in PURE EzLang syntax
+
+# See main.ez for implementation
+# Uses create_modal, add_modal_text_input, show_modal
+
+print("[COMMANDS/SLASH] Show modal command documentation loaded")

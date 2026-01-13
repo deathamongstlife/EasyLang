@@ -1,0 +1,31 @@
+# ========================================
+# MESSAGECREATE.EZ - Message Event Handler
+# ========================================
+# This file demonstrates how message events would be organized
+# In the actual bot, this is integrated into main.ez
+# Written in PURE EzLang syntax
+
+# NOTE: In EzLang, events are defined using the "listen" syntax directly
+# This file shows what would be in a separate module if imports were supported
+
+# Example messageCreate event handler (see main.ez for actual implementation):
+#
+# listen messageCreate with message {
+#     if message.author.bot {
+#         return
+#     }
+#
+#     var content = message.content
+#     var prefix = get_prefix(message.guild.id)
+#
+#     if not starts_with(content, prefix) {
+#         return
+#     }
+#
+#     # Parse and handle commands
+#     var parts = split(content, " ")
+#     var command_name = parts[0]
+#     # ... command handling logic
+# }
+
+print("[EVENTS/MESSAGE] Message event documentation loaded")

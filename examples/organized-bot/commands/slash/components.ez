@@ -1,0 +1,11 @@
+# ========================================
+# SLASH COMMAND: /components
+# ========================================
+# Display interactive components (buttons, select menus)
+# Developer only command
+# Written in PURE EzLang syntax
+
+# See main.ez for implementation
+# Uses create_button, create_string_select, send_interaction_message
+
+print("[COMMANDS/SLASH] Components command documentation loaded")

@@ -1,0 +1,80 @@
+# ========================================
+# LOGGER.EZ - Logging Utilities
+# ========================================
+# Structured logging for bot events
+# Written in PURE EzLang syntax
+
+# Log levels
+var LOG_LEVEL_DEBUG = 0
+var LOG_LEVEL_INFO = 1
+var LOG_LEVEL_SUCCESS = 2
+var LOG_LEVEL_WARNING = 3
+var LOG_LEVEL_ERROR = 4
+
+# Current log level
+var current_log_level = LOG_LEVEL_INFO
+
+# Set log level
+function set_log_level(level) {
+    current_log_level = level
+}
+
+# Debug log
+function log_debug(message) {
+    if current_log_level <= LOG_LEVEL_DEBUG {
+        print("[DEBUG] " + message)
+    }
+}
+
+# Info log
+function log_info(message) {
+    if current_log_level <= LOG_LEVEL_INFO {
+        print("[INFO] " + message)
+    }
+}
+
+# Success log
+function log_success(message) {
+    if current_log_level <= LOG_LEVEL_SUCCESS {
+        print("[SUCCESS] " + message)
+    }
+}
+
+# Warning log
+function log_warning(message) {
+    if current_log_level <= LOG_LEVEL_WARNING {
+        print("[WARNING] " + message)
+    }
+}
+
+# Error log
+function log_error(message) {
+    if current_log_level <= LOG_LEVEL_ERROR {
+        print("[ERROR] " + message)
+    }
+}
+
+# Log separator
+function log_separator() {
+    print("========================================")
+}
+
+# Log startup banner
+function log_startup_banner(bot_name, version) {
+    log_separator()
+    print("  " + bot_name)
+    print("  Version: " + version)
+    log_separator()
+}
+
+# Log command execution
+function log_command(user_tag, command_name, guild_name) {
+    log_info("[COMMAND] " + user_tag + " used /" + command_name + " in " + guild_name)
+}
+
+# Log event
+function log_event(event_name, details) {
+    log_debug("[EVENT] " + event_name + ": " + details)
+}
+
+print("[LOGGER] Logger utilities loaded")

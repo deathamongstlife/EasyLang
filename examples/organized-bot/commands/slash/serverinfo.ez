@@ -1,0 +1,10 @@
+# ========================================
+# SLASH COMMAND: /serverinfo
+# ========================================
+# Display server/guild information
+# Written in PURE EzLang syntax
+
+# See main.ez for implementation
+# Command uses interaction.guild to get server info
+
+print("[COMMANDS/SLASH] Server info command documentation loaded")

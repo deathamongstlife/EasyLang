@@ -1,0 +1,23 @@
+# ========================================
+# READY.EZ - Bot Ready Event
+# ========================================
+# This file demonstrates how the ready event would be organized
+# In the actual bot, this is integrated into main.ez
+# Written in PURE EzLang syntax
+
+# NOTE: In EzLang, events are defined using the "listen" syntax directly
+# This file shows what would be in a separate module if imports were supported
+
+# Example ready event handler (see main.ez for actual implementation):
+#
+# listen ready with client {
+#     print("========================================")
+#     print("Bot is ready!")
+#     print("Logged in as: " + client.user.username)
+#     print("Bot ID: " + client.user.id)
+#     print("========================================")
+#
+#     set_status("online", "playing", "with EzLang")
+# }
+
+print("[EVENTS/READY] Ready event documentation loaded")

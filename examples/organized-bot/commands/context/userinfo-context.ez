@@ -1,0 +1,10 @@
+# ========================================
+# CONTEXT MENU: User Information
+# ========================================
+# Right-click user context menu command
+# Written in PURE EzLang syntax
+
+# See main.ez for implementation in interactionCreate event
+# Uses interaction.targetUser to get selected user
+
+print("[COMMANDS/CONTEXT] User info context menu documentation loaded")

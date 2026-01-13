@@ -1,0 +1,10 @@
+# ========================================
+# CONTEXT MENU: Message Information
+# ========================================
+# Right-click message context menu command
+# Written in PURE EzLang syntax
+
+# See main.ez for implementation in interactionCreate event
+# Uses interaction.targetMessage to get selected message
+
+print("[COMMANDS/CONTEXT] Message info context menu documentation loaded")

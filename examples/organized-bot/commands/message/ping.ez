@@ -1,0 +1,10 @@
+# ========================================
+# MESSAGE COMMAND: !ping
+# ========================================
+# Prefix command to check bot latency
+# Written in PURE EzLang syntax
+
+# See main.ez for implementation in messageCreate event
+# Uses "reply message with" syntax
+
+print("[COMMANDS/MESSAGE] Ping message command documentation loaded")

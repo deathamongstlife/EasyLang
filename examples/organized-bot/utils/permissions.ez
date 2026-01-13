@@ -1,0 +1,58 @@
+# ========================================
+# PERMISSIONS.EZ - Permission Utilities
+# ========================================
+# Permission checking and management
+# Written in PURE EzLang syntax
+
+# Check if user has permission
+function has_permission(member, permission) {
+    # In production, would check member.permissions
+    # For now, simplified implementation
+    return true
+}
+
+# Check if user is administrator
+function is_admin(member) {
+    return has_permission(member, "ADMINISTRATOR")
+}
+
+# Check if user is moderator (has kick/ban permissions)
+function is_moderator(member) {
+    if has_permission(member, "KICK_MEMBERS") {
+        return true
+    }
+    if has_permission(member, "BAN_MEMBERS") {
+        return true
+    }
+    return false
+}
+
+# Check if user can manage messages
+function can_manage_messages(member) {
+    return has_permission(member, "MANAGE_MESSAGES")
+}
+
+# Check if user can manage roles
+function can_manage_roles(member) {
+    return has_permission(member, "MANAGE_ROLES")
+}
+
+# Check if user can manage channels
+function can_manage_channels(member) {
+    return has_permission(member, "MANAGE_CHANNELS")
+}
+
+# Check if bot has permission
+function bot_has_permission(guild, permission) {
+    # In production, would check bot's permissions in guild
+    return true
+}
+
+# Check permission hierarchy
+function can_modify_user(executor, target) {
+    # In production, would check role hierarchy
+    # For now, simplified
+    return true
+}
+
+print("[PERMISSIONS] Permission utilities loaded")

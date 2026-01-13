@@ -1,0 +1,10 @@
+# ========================================
+# SLASH COMMAND: /help
+# ========================================
+# Shows list of available commands
+# Written in PURE EzLang syntax
+
+# See main.ez for implementation
+# Command uses reply_interaction to send help text
+
+print("[COMMANDS/SLASH] Help command documentation loaded")

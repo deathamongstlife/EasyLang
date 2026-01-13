@@ -1,0 +1,10 @@
+# ========================================
+# SLASH COMMAND: /userinfo
+# ========================================
+# Display information about a user
+# Written in PURE EzLang syntax
+
+# See main.ez for implementation
+# Command uses interaction.user to get user info
+
+print("[COMMANDS/SLASH] User info command documentation loaded")

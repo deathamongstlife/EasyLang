@@ -1,0 +1,11 @@
+# ========================================
+# AUTOCOMPLETE HANDLER
+# ========================================
+# Handles autocomplete interactions for commands
+# Written in PURE EzLang syntax
+
+# See main.ez for implementation in interactionCreate event
+# Autocomplete is typically handled in dedicated listen blocks
+# or within the interactionCreate handler
+
+print("[COMPONENTS] Autocomplete handler documentation loaded")

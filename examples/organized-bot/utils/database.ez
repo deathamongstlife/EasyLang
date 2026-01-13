@@ -1,0 +1,68 @@
+# ========================================
+# DATABASE.EZ - Database Utilities
+# ========================================
+# Simple in-memory database for bot data
+# Written in PURE EzLang syntax
+
+# Database storage
+var database = {}
+
+# Get value from database
+function db_get(key) {
+    if key in database {
+        return database[key]
+    }
+    return null
+}
+
+# Set value in database
+function db_set(key, value) {
+    database[key] = value
+    return true
+}
+
+# Delete value from database
+function db_delete(key) {
+    if key in database {
+        delete database[key]
+        return true
+    }
+    return false
+}
+
+# Check if key exists
+function db_exists(key) {
+    return key in database
+}
+
+# Clear entire database
+function db_clear() {
+    database = {}
+    return true
+}
+
+# Get all keys
+function db_keys() {
+    var keys = []
+    var key = ""
+    # In EzLang, would iterate through database keys
+    return keys
+}
+
+# Get guild prefix
+function db_get_prefix(guild_id) {
+    var key = "prefix:" + guild_id
+    var prefix = db_get(key)
+    if prefix == null {
+        return "!"
+    }
+    return prefix
+}
+
+# Set guild prefix
+function db_set_prefix(guild_id, prefix) {
+    var key = "prefix:" + guild_id
+    return db_set(key, prefix)
+}
+
+print("[DATABASE] Database utilities loaded")

@@ -1,0 +1,16 @@
+# ========================================
+# SELECT MENU HANDLER
+# ========================================
+# Handles select menu interactions
+# Written in PURE EzLang syntax
+
+# See main.ez for implementation in interactionCreate event
+# Select menu interaction handler:
+#
+# else if interaction_type == "SELECT_MENU" {
+#     var custom_id = interaction.customId
+#     var selected = interaction.values[0]
+#     # Handle selection
+# }
+
+print("[COMPONENTS] Select menu handler documentation loaded")
