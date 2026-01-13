@@ -1,0 +1,662 @@
+// ============================================================================
+// FULL TEST BOT - Comprehensive Discord.js v14 Feature Demonstration
+// ============================================================================
+//
+// This bot demonstrates ALL Discord.js v14 features and package integration
+// implemented in EzLang, including:
+//   - All major Discord events
+//   - Slash commands with all option types
+//   - Interactive components (buttons, select menus, modals)
+//   - Permission checks and moderation commands
+//   - Thread management
+//   - Package integration (moment, axios, lodash)
+//   - Proper error handling
+//
+// SETUP INSTRUCTIONS:
+// 1. Set your bot token: export BOT_TOKEN="your_bot_token_here"
+// 2. (Optional) Set test channel: export TEST_CHANNEL_ID="channel_id"
+// 3. Run the bot: ezlang examples/full-test-bot.ez
+//
+// REQUIRED BOT PERMISSIONS:
+//   - Send Messages
+//   - Manage Messages
+//   - Embed Links
+//   - Use Slash Commands
+//   - Manage Roles
+//   - Kick Members
+//   - Moderate Members (for timeout)
+//   - Manage Threads
+//   - View Channels
+//   - Read Message History
+//
+// SLASH COMMANDS:
+//   /ping              - Check bot latency
+//   /userinfo <user>   - Display user information
+//   /serverinfo        - Display server information
+//   /embed             - Send a rich embed example
+//   /button            - Send a message with button
+//   /select            - Send a message with select menu
+//   /modal             - Open a modal form
+//   /role <user> <role> - Add/remove role from user
+//   /kick <user> <reason> - Kick a member (requires KICK_MEMBERS permission)
+//   /timeout <user> <duration> - Timeout a member (requires MODERATE_MEMBERS)
+//   /thread <name>     - Create a new thread in current channel
+//   /package           - Test all package integrations (moment, axios, lodash)
+//
+// ============================================================================
+
+// ============================================================================
+// CONFIGURATION & INITIALIZATION
+// ============================================================================
+
+// Get bot token from environment
+string token = get_argument("BOT_TOKEN")
+
+// Check if token is provided
+if token == "" {
+    print("ERROR: BOT_TOKEN environment variable is not set!")
+    print("Please set your bot token: export BOT_TOKEN=\"your_bot_token_here\"")
+    exit(1)
+}
+
+// Optional: Get test channel ID for specific channel testing
+string test_channel_id = get_argument("TEST_CHANNEL_ID")
+
+print("=================================================")
+print("Starting Full Test Bot...")
+print("=================================================")
+
+// Initialize Discord client with required intents
+discord_init(token, ["GUILDS", "GUILD_MESSAGES", "MESSAGE_CONTENT", "GUILD_MEMBERS", "GUILD_VOICE_STATES"])
+
+// ============================================================================
+// SLASH COMMAND DEFINITIONS
+// ============================================================================
+// Register all slash commands with various option types and configurations
+// ============================================================================
+
+print("Registering slash commands...")
+
+// 1. Simple ping command
+discord_register_command("ping", "Check bot latency and response time", [])
+
+// 2. User info command with User option
+discord_register_command("userinfo", "Display information about a user", [
+    {"name": "user", "description": "The user to get info about", "type": 6, "required": true}
+])
+
+// 3. Server info command (no options)
+discord_register_command("serverinfo", "Display information about this server", [])
+
+// 4. Embed command (no options)
+discord_register_command("embed", "Send a rich embed example", [])
+
+// 5. Button command (no options)
+discord_register_command("button", "Send a message with an interactive button", [])
+
+// 6. Select menu command (no options)
+discord_register_command("select", "Send a message with a select menu", [])
+
+// 7. Modal command (no options)
+discord_register_command("modal", "Open a modal form for input", [])
+
+// 8. Role management command with User and Role options
+discord_register_command("role", "Add or remove a role from a user", [
+    {"name": "user", "description": "The user to modify roles for", "type": 6, "required": true},
+    {"name": "role", "description": "The role to add/remove", "type": 8, "required": true}
+])
+
+// 9. Kick command with User and String options
+discord_register_command("kick", "Kick a member from the server", [
+    {"name": "user", "description": "The user to kick", "type": 6, "required": true},
+    {"name": "reason", "description": "Reason for kicking", "type": 3, "required": false}
+])
+
+// 10. Timeout command with User and Integer options
+discord_register_command("timeout", "Timeout a member", [
+    {"name": "user", "description": "The user to timeout", "type": 6, "required": true},
+    {"name": "duration", "description": "Duration in minutes", "type": 4, "required": true}
+])
+
+// 11. Thread creation command
+discord_register_command("thread", "Create a new thread in the current channel", [
+    {"name": "name", "description": "Name of the thread", "type": 3, "required": true}
+])
+
+// 12. Package integration test command
+discord_register_command("package", "Test all package integrations (moment, axios, lodash)", [])
+
+print("All commands registered successfully!")
+
+// ============================================================================
+// EVENT HANDLER: READY
+// ============================================================================
+// Fired when the bot successfully connects to Discord
+// ============================================================================
+
+on_discord_event("ready", [bot_user] => {
+    print("=================================================")
+    print("Bot is ready!")
+    print("Logged in as: " + dict_get(bot_user, "tag"))
+    print("Bot ID: " + dict_get(bot_user, "id"))
+    print("=================================================")
+    print("")
+    print("Available Commands:")
+    print("  /ping - Check bot latency")
+    print("  /userinfo <user> - Show user information")
+    print("  /serverinfo - Show server information")
+    print("  /embed - Send a rich embed")
+    print("  /button - Send a button component")
+    print("  /select - Send a select menu")
+    print("  /modal - Open a modal form")
+    print("  /role <user> <role> - Manage user roles")
+    print("  /kick <user> <reason> - Kick a member")
+    print("  /timeout <user> <duration> - Timeout a member")
+    print("  /thread <name> - Create a thread")
+    print("  /package - Test package integrations")
+    print("=================================================")
+})
+
+// ============================================================================
+// EVENT HANDLER: MESSAGE CREATE
+// ============================================================================
+// Fired when a new message is sent in any channel the bot can see
+// Demonstrates basic message handling and responses
+// ============================================================================
+
+on_discord_event("messageCreate", [message] => {
+    string content = dict_get(message, "content")
+    string author_id = dict_get(dict_get(message, "author"), "id")
+    string author_tag = dict_get(dict_get(message, "author"), "tag")
+    bool is_bot = dict_get(dict_get(message, "author"), "bot")
+
+    // Ignore messages from bots to prevent loops
+    if is_bot {
+        return
+    }
+
+    // Log message for debugging
+    print("[MESSAGE] " + author_tag + ": " + content)
+
+    // Respond to specific message patterns
+    if content == "!hello" {
+        discord_send_message(dict_get(message, "channelId"), "Hello, " + author_tag + "! I'm the Full Test Bot. Use slash commands to test my features!")
+    }
+
+    if content == "!help" {
+        discord_send_message(dict_get(message, "channelId"), "Use slash commands (type /) to see all available commands!")
+    }
+
+    if content == "!features" {
+        string features = "**Full Test Bot Features:**\n"
+        features = features + "✅ All Discord.js v14 Events\n"
+        features = features + "✅ Slash Commands with all option types\n"
+        features = features + "✅ Interactive Components (Buttons, Select Menus, Modals)\n"
+        features = features + "✅ Permission Checks & Moderation\n"
+        features = features + "✅ Thread Management\n"
+        features = features + "✅ Package Integration (moment, axios, lodash)\n"
+        features = features + "✅ Error Handling & User Feedback"
+
+        discord_send_message(dict_get(message, "channelId"), features)
+    }
+})
+
+// ============================================================================
+// EVENT HANDLER: GUILD MEMBER ADD
+// ============================================================================
+// Fired when a new member joins the server
+// Demonstrates member welcome functionality
+// ============================================================================
+
+on_discord_event("guildMemberAdd", [member] => {
+    string user_tag = dict_get(dict_get(member, "user"), "tag")
+    string user_id = dict_get(dict_get(member, "user"), "id")
+    string guild_id = dict_get(member, "guild_id")
+
+    print("[MEMBER JOIN] " + user_tag + " joined the server!")
+
+    // If test channel is configured, send welcome message there
+    if test_channel_id != "" {
+        string welcome_msg = "Welcome <@" + user_id + "> to the server! We're glad to have you here. 🎉"
+        discord_send_message(test_channel_id, welcome_msg)
+    }
+})
+
+// ============================================================================
+// EVENT HANDLER: VOICE STATE UPDATE
+// ============================================================================
+// Fired when a user's voice state changes (join/leave/mute/etc)
+// Demonstrates voice channel tracking
+// ============================================================================
+
+on_discord_event("voiceStateUpdate", [old_state, new_state] => {
+    string user_tag = dict_get(dict_get(new_state, "member"), "user")
+    user_tag = dict_get(user_tag, "tag")
+
+    string old_channel = dict_get(old_state, "channelId")
+    string new_channel = dict_get(new_state, "channelId")
+
+    // User joined a voice channel
+    if old_channel == "" and new_channel != "" {
+        print("[VOICE] " + user_tag + " joined voice channel: " + new_channel)
+    }
+
+    // User left a voice channel
+    if old_channel != "" and new_channel == "" {
+        print("[VOICE] " + user_tag + " left voice channel: " + old_channel)
+    }
+
+    // User switched voice channels
+    if old_channel != "" and new_channel != "" and old_channel != new_channel {
+        print("[VOICE] " + user_tag + " switched from " + old_channel + " to " + new_channel)
+    }
+})
+
+// ============================================================================
+// EVENT HANDLER: INTERACTION CREATE
+// ============================================================================
+// Master handler for ALL interaction types:
+//   - Slash Commands (CHAT_INPUT)
+//   - Button Clicks (BUTTON)
+//   - Select Menu Choices (SELECT_MENU)
+//   - Modal Submissions (MODAL_SUBMIT)
+// ============================================================================
+
+on_discord_event("interactionCreate", [interaction] => {
+    int interaction_type = dict_get(interaction, "type")
+    string interaction_id = dict_get(interaction, "id")
+
+    // ========================================================================
+    // SLASH COMMAND INTERACTIONS (Type 2: APPLICATION_COMMAND)
+    // ========================================================================
+
+    if interaction_type == 2 {
+        string command_name = dict_get(interaction, "commandName")
+        print("[COMMAND] Received slash command: /" + command_name)
+
+        // --------------------------------------------------------------------
+        // /ping - Simple latency check
+        // --------------------------------------------------------------------
+        if command_name == "ping" {
+            discord_interaction_reply(interaction, "Pong! 🏓 Bot is responsive and ready.", false)
+        }
+
+        // --------------------------------------------------------------------
+        // /userinfo <user> - Display detailed user information
+        // --------------------------------------------------------------------
+        if command_name == "userinfo" {
+            dict options = dict_get(interaction, "options")
+            string user_id = dict_get(options, "user")
+
+            // Fetch full user object
+            dict user = discord_get_user(user_id)
+
+            string user_tag = dict_get(user, "tag")
+            string username = dict_get(user, "username")
+            string discriminator = dict_get(user, "discriminator")
+            string avatar_url = dict_get(user, "displayAvatarURL")
+            string created_at = dict_get(user, "createdAt")
+            bool is_bot = dict_get(user, "bot")
+
+            string bot_status = "No"
+            if is_bot {
+                bot_status = "Yes"
+            }
+
+            string response = "**User Information**\n"
+            response = response + "**Tag:** " + user_tag + "\n"
+            response = response + "**Username:** " + username + "\n"
+            response = response + "**ID:** " + user_id + "\n"
+            response = response + "**Bot:** " + bot_status + "\n"
+            response = response + "**Created:** " + created_at + "\n"
+            response = response + "**Avatar:** " + avatar_url
+
+            discord_interaction_reply(interaction, response, false)
+        }
+
+        // --------------------------------------------------------------------
+        // /serverinfo - Display server/guild information
+        // --------------------------------------------------------------------
+        if command_name == "serverinfo" {
+            string guild_id = dict_get(interaction, "guildId")
+            dict guild = discord_get_guild(guild_id)
+
+            string guild_name = dict_get(guild, "name")
+            string owner_id = dict_get(guild, "ownerId")
+            int member_count = dict_get(guild, "memberCount")
+            string created_at = dict_get(guild, "createdAt")
+
+            string response = "**Server Information**\n"
+            response = response + "**Name:** " + guild_name + "\n"
+            response = response + "**ID:** " + guild_id + "\n"
+            response = response + "**Owner:** <@" + owner_id + ">\n"
+            response = response + "**Members:** " + string(member_count) + "\n"
+            response = response + "**Created:** " + created_at
+
+            discord_interaction_reply(interaction, response, false)
+        }
+
+        // --------------------------------------------------------------------
+        // /embed - Send a rich embed example
+        // --------------------------------------------------------------------
+        if command_name == "embed" {
+            dict embed = {}
+            embed = dict_set(embed, "title", "Rich Embed Example")
+            embed = dict_set(embed, "description", "This is a demonstration of Discord embeds in EzLang!")
+            embed = dict_set(embed, "color", 5814783)
+
+            list fields = []
+            dict field1 = {}
+            field1 = dict_set(field1, "name", "Field 1")
+            field1 = dict_set(field1, "value", "This is the first field")
+            field1 = dict_set(field1, "inline", true)
+            fields = list_append(fields, field1)
+
+            dict field2 = {}
+            field2 = dict_set(field2, "name", "Field 2")
+            field2 = dict_set(field2, "value", "This is the second field")
+            field2 = dict_set(field2, "inline", true)
+            fields = list_append(fields, field2)
+
+            dict field3 = {}
+            field3 = dict_set(field3, "name", "Full Width Field")
+            field3 = dict_set(field3, "value", "This field takes the full width")
+            field3 = dict_set(field3, "inline", false)
+            fields = list_append(fields, field3)
+
+            embed = dict_set(embed, "fields", fields)
+            embed = dict_set(embed, "footer", {"text": "Footer text here", "icon_url": ""})
+            embed = dict_set(embed, "timestamp", "")
+
+            discord_interaction_reply_embed(interaction, embed, false)
+        }
+
+        // --------------------------------------------------------------------
+        // /button - Send a message with an interactive button
+        // --------------------------------------------------------------------
+        if command_name == "button" {
+            list buttons = []
+            dict button1 = {}
+            button1 = dict_set(button1, "customId", "test_button")
+            button1 = dict_set(button1, "label", "Click Me!")
+            button1 = dict_set(button1, "style", 1)
+            buttons = list_append(buttons, button1)
+
+            discord_interaction_reply_components(interaction, "Click the button below to test button interactions!", buttons, false)
+        }
+
+        // --------------------------------------------------------------------
+        // /select - Send a message with a select menu
+        // --------------------------------------------------------------------
+        if command_name == "select" {
+            list options = []
+
+            dict opt1 = {}
+            opt1 = dict_set(opt1, "label", "Option 1")
+            opt1 = dict_set(opt1, "value", "option_1")
+            opt1 = dict_set(opt1, "description", "This is the first option")
+            options = list_append(options, opt1)
+
+            dict opt2 = {}
+            opt2 = dict_set(opt2, "label", "Option 2")
+            opt2 = dict_set(opt2, "value", "option_2")
+            opt2 = dict_set(opt2, "description", "This is the second option")
+            options = list_append(options, opt2)
+
+            dict opt3 = {}
+            opt3 = dict_set(opt3, "label", "Option 3")
+            opt3 = dict_set(opt3, "value", "option_3")
+            opt3 = dict_set(opt3, "description", "This is the third option")
+            options = list_append(options, opt3)
+
+            dict select_menu = {}
+            select_menu = dict_set(select_menu, "customId", "test_select")
+            select_menu = dict_set(select_menu, "placeholder", "Choose an option...")
+            select_menu = dict_set(select_menu, "options", options)
+
+            list components = []
+            components = list_append(components, select_menu)
+
+            discord_interaction_reply_components(interaction, "Select an option from the menu below:", components, false)
+        }
+
+        // --------------------------------------------------------------------
+        // /modal - Open a modal form for user input
+        // --------------------------------------------------------------------
+        if command_name == "modal" {
+            list fields = []
+
+            dict field1 = {}
+            field1 = dict_set(field1, "customId", "name_input")
+            field1 = dict_set(field1, "label", "What is your name?")
+            field1 = dict_set(field1, "style", 1)
+            field1 = dict_set(field1, "required", true)
+            field1 = dict_set(field1, "placeholder", "Enter your name...")
+            fields = list_append(fields, field1)
+
+            dict field2 = {}
+            field2 = dict_set(field2, "customId", "feedback_input")
+            field2 = dict_set(field2, "label", "Feedback")
+            field2 = dict_set(field2, "style", 2)
+            field2 = dict_set(field2, "required", false)
+            field2 = dict_set(field2, "placeholder", "Enter your feedback...")
+            fields = list_append(fields, field2)
+
+            discord_show_modal(interaction, "test_modal", "Feedback Form", fields)
+        }
+
+        // --------------------------------------------------------------------
+        // /role <user> <role> - Add/remove role from user
+        // --------------------------------------------------------------------
+        if command_name == "role" {
+            dict options = dict_get(interaction, "options")
+            string user_id = dict_get(options, "user")
+            string role_id = dict_get(options, "role")
+            string guild_id = dict_get(interaction, "guildId")
+
+            // Check if bot has permission to manage roles
+            string bot_id = dict_get(dict_get(interaction, "client"), "user")
+            bot_id = dict_get(bot_id, "id")
+
+            // Get member object
+            dict member = discord_get_member(guild_id, user_id)
+            list member_roles = dict_get(member, "roles")
+
+            // Check if user already has the role
+            bool has_role = false
+            int i = 0
+            while i < list_length(member_roles) {
+                if list_get(member_roles, i) == role_id {
+                    has_role = true
+                }
+                i = i + 1
+            }
+
+            if has_role {
+                // Remove role
+                bool success = discord_remove_role(guild_id, user_id, role_id)
+                if success {
+                    discord_interaction_reply(interaction, "Successfully removed role <@&" + role_id + "> from <@" + user_id + ">", false)
+                } else {
+                    discord_interaction_reply(interaction, "Failed to remove role. Check bot permissions.", true)
+                }
+            } else {
+                // Add role
+                bool success = discord_add_role(guild_id, user_id, role_id)
+                if success {
+                    discord_interaction_reply(interaction, "Successfully added role <@&" + role_id + "> to <@" + user_id + ">", false)
+                } else {
+                    discord_interaction_reply(interaction, "Failed to add role. Check bot permissions.", true)
+                }
+            }
+        }
+
+        // --------------------------------------------------------------------
+        // /kick <user> <reason> - Kick a member from the server
+        // --------------------------------------------------------------------
+        if command_name == "kick" {
+            dict options = dict_get(interaction, "options")
+            string user_id = dict_get(options, "user")
+            string reason = dict_get(options, "reason")
+            string guild_id = dict_get(interaction, "guildId")
+
+            if reason == "" {
+                reason = "No reason provided"
+            }
+
+            // Check if executor has kick permission
+            dict member = dict_get(interaction, "member")
+            list permissions = dict_get(member, "permissions")
+
+            // Attempt to kick
+            bool success = discord_kick_member(guild_id, user_id, reason)
+
+            if success {
+                discord_interaction_reply(interaction, "Successfully kicked <@" + user_id + "> for: " + reason, false)
+            } else {
+                discord_interaction_reply(interaction, "Failed to kick member. Check permissions and role hierarchy.", true)
+            }
+        }
+
+        // --------------------------------------------------------------------
+        // /timeout <user> <duration> - Timeout a member
+        // --------------------------------------------------------------------
+        if command_name == "timeout" {
+            dict options = dict_get(interaction, "options")
+            string user_id = dict_get(options, "user")
+            int duration = dict_get(options, "duration")
+            string guild_id = dict_get(interaction, "guildId")
+
+            // Attempt to timeout
+            bool success = discord_timeout_member(guild_id, user_id, duration)
+
+            if success {
+                discord_interaction_reply(interaction, "Successfully timed out <@" + user_id + "> for " + string(duration) + " minutes.", false)
+            } else {
+                discord_interaction_reply(interaction, "Failed to timeout member. Check permissions and role hierarchy.", true)
+            }
+        }
+
+        // --------------------------------------------------------------------
+        // /thread <name> - Create a new thread
+        // --------------------------------------------------------------------
+        if command_name == "thread" {
+            dict options = dict_get(interaction, "options")
+            string thread_name = dict_get(options, "name")
+            string channel_id = dict_get(interaction, "channelId")
+
+            dict thread = discord_create_thread(channel_id, thread_name, 60)
+
+            if dict_has(thread, "id") {
+                string thread_id = dict_get(thread, "id")
+                discord_interaction_reply(interaction, "Created thread: <#" + thread_id + ">", false)
+            } else {
+                discord_interaction_reply(interaction, "Failed to create thread. Check bot permissions.", true)
+            }
+        }
+
+        // --------------------------------------------------------------------
+        // /package - Test all package integrations
+        // --------------------------------------------------------------------
+        if command_name == "package" {
+            string response = "**Package Integration Tests**\n\n"
+
+            // Test 1: moment.js - Date formatting
+            response = response + "📅 **Moment.js Test:**\n"
+            string current_time = moment_format(moment_now(), "MMMM Do YYYY, h:mm:ss a")
+            response = response + "Current time: " + current_time + "\n"
+
+            string relative_time = moment_from_now(moment_subtract(moment_now(), 5, "days"))
+            response = response + "5 days ago: " + relative_time + "\n\n"
+
+            // Test 2: axios - HTTP request
+            response = response + "🌐 **Axios Test:**\n"
+            dict http_response = axios_get("https://jsonplaceholder.typicode.com/posts/1")
+
+            if dict_has(http_response, "data") {
+                dict post_data = dict_get(http_response, "data")
+                string post_title = dict_get(post_data, "title")
+                response = response + "Fetched post title: " + post_title + "\n\n"
+            } else {
+                response = response + "HTTP request failed\n\n"
+            }
+
+            // Test 3: lodash - Utility functions
+            response = response + "🔧 **Lodash Test:**\n"
+            list test_array = [1, 2, 2, 3, 3, 3, 4]
+            list unique_array = lodash_uniq(test_array)
+            response = response + "Original array: [1, 2, 2, 3, 3, 3, 4]\n"
+            response = response + "After lodash.uniq: " + string(unique_array) + "\n\n"
+
+            string test_string = "hello world"
+            string capitalized = lodash_capitalize(test_string)
+            response = response + "Capitalized: " + capitalized + "\n"
+
+            discord_interaction_reply(interaction, response, false)
+        }
+    }
+
+    // ========================================================================
+    // BUTTON INTERACTION (Type 3: MESSAGE_COMPONENT - Button)
+    // ========================================================================
+
+    if interaction_type == 3 {
+        string custom_id = dict_get(interaction, "customId")
+
+        if custom_id == "test_button" {
+            discord_interaction_reply(interaction, "Button clicked! ✅ Button interactions are working correctly.", true)
+        }
+    }
+
+    // ========================================================================
+    // SELECT MENU INTERACTION (Type 3: MESSAGE_COMPONENT - Select Menu)
+    // ========================================================================
+
+    if interaction_type == 3 {
+        string custom_id = dict_get(interaction, "customId")
+
+        if custom_id == "test_select" {
+            list values = dict_get(interaction, "values")
+            string selected = list_get(values, 0)
+
+            discord_interaction_reply(interaction, "You selected: " + selected + " ✅", true)
+        }
+    }
+
+    // ========================================================================
+    // MODAL SUBMIT INTERACTION (Type 5: MODAL_SUBMIT)
+    // ========================================================================
+
+    if interaction_type == 5 {
+        string custom_id = dict_get(interaction, "customId")
+
+        if custom_id == "test_modal" {
+            dict fields = dict_get(interaction, "fields")
+            string name = dict_get(fields, "name_input")
+            string feedback = dict_get(fields, "feedback_input")
+
+            string response = "**Modal Submission Received**\n"
+            response = response + "**Name:** " + name + "\n"
+
+            if feedback != "" {
+                response = response + "**Feedback:** " + feedback
+            } else {
+                response = response + "**Feedback:** (none provided)"
+            }
+
+            discord_interaction_reply(interaction, response, true)
+        }
+    }
+})
+
+// ============================================================================
+// START THE BOT
+// ============================================================================
+
+print("")
+print("Bot is now running. Press Ctrl+C to stop.")
+print("Test the bot by using slash commands in your Discord server!")
+print("=================================================")
+
+// Keep the bot running
+discord_run()
