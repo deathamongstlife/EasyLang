@@ -33,12 +33,45 @@ export class DiscordManager {
 
     this.token = token;
 
-    // Create Discord client with required intents
+    // Create Discord client with comprehensive intents for full Discord API v14 support
     this.client = new Client({
       intents: [
+        // Core intents
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.MessageContent, // Required for reading message content
+        GatewayIntentBits.DirectMessages,
+
+        // Member and presence intents
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildPresences,
+
+        // Interaction intents
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildMessageTyping,
+        GatewayIntentBits.DirectMessageReactions,
+        GatewayIntentBits.DirectMessageTyping,
+
+        // Voice intents
+        GatewayIntentBits.GuildVoiceStates,
+
+        // Integration intents
+        GatewayIntentBits.GuildIntegrations,
+        GatewayIntentBits.GuildWebhooks,
+        GatewayIntentBits.GuildInvites,
+
+        // Moderation intents
+        GatewayIntentBits.GuildModeration, // Replaces deprecated GuildBans
+
+        // Emoji and sticker intents
+        GatewayIntentBits.GuildEmojisAndStickers,
+
+        // Scheduled event intents
+        GatewayIntentBits.GuildScheduledEvents,
+
+        // AutoMod intents
+        GatewayIntentBits.AutoModerationConfiguration,
+        GatewayIntentBits.AutoModerationExecution,
       ],
     });
 

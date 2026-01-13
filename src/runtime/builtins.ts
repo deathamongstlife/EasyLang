@@ -29,11 +29,12 @@ import {
   TextInputStyle,
   ChannelType,
   ActivityType,
-  
   UserSelectMenuBuilder,
   RoleSelectMenuBuilder,
   ChannelSelectMenuBuilder,
 } from 'discord.js';
+import { discordBuiltins } from './discord-builtins';
+import { advancedDiscordBuiltins } from './discord-advanced';
 
 /**
  * print(...args) - Print values to console
@@ -474,8 +475,13 @@ function createBotStartFunction(discordManager: DiscordManager) {
                   inline: false
                 },
                 {
+                  name: '**Package Integration**',
+                  value: '`!testmoment` - Date/time with moment.js\n`!testaxios` - HTTP requests with axios\n`!testlodash` - Utilities with lodash\n`!testpython` - Python math module\n`!testrequests` - Python HTTP requests',
+                  inline: false
+                },
+                {
                   name: '**Bot Settings (Admin)**',
-                  value: '`!setname <name>` - Change bot name\n`!setstatus <status>` - Set status\n`!setactivity <type> <text>` - Set activity\n`!setavatar <url>` - Change avatar',
+                  value: '`!setname <name>` - Change bot name\n`!setstatus <status>` - Set status\n`!setactivity <type> <text>` - Set activity\n`!setavatar <url>` - Change avatar\n`!installjs <pkg>` - Install JS package\n`!installpy <pkg>` - Install Python package',
                   inline: false
                 }
               )
@@ -720,7 +726,7 @@ function createBotStartFunction(discordManager: DiscordManager) {
                 .addOptions(
                   { label: 'Choice A', value: 'option1', emoji: '🅰️' },
                   { label: 'Choice B', value: 'option2', emoji: '🅱️' },
-                  { label: 'Choice C', value: 'option3', emoji: '©️' }
+                  { label: 'Choice C', value: 'option3', emoji: '🔤' }
                 )
             );
 
@@ -795,6 +801,216 @@ function createBotStartFunction(discordManager: DiscordManager) {
               embeds: [embed],
               components: [row],
             });
+          }
+
+          // ==================== PACKAGE INTEGRATION COMMANDS ====================
+
+          // JavaScript Package: moment.js
+          else if (command === 'testmoment') {
+            try {
+              // Try to require moment
+              const moment = require('moment');
+
+              const now = moment();
+              const tomorrow = moment().add(1, 'day');
+              const twoDaysAgo = moment().subtract(2, 'days');
+              const birthday = moment('1990-01-01');
+
+              const embed = new EmbedBuilder()
+                .setColor(0x00d9ff)
+                .setTitle('Moment.js Integration Test')
+                .setDescription('Demonstrating date/time manipulation with moment.js')
+                .addFields(
+                  { name: 'Current Date/Time', value: now.format('LLLL'), inline: false },
+                  { name: 'ISO Format', value: now.toISOString(), inline: true },
+                  { name: 'Unix Timestamp', value: now.unix().toString(), inline: true },
+                  { name: 'Tomorrow', value: tomorrow.format('LL'), inline: false },
+                  { name: 'Two Days Ago', value: `${twoDaysAgo.format('LL')} (${twoDaysAgo.fromNow()})`, inline: false },
+                  { name: 'Days Since Birthday', value: `${now.diff(birthday, 'days')} days`, inline: true },
+                  { name: 'Years Since Birthday', value: `${now.diff(birthday, 'years')} years`, inline: true },
+                  { name: 'Timezone', value: moment.tz.guess() || 'UTC', inline: false }
+                )
+                .setFooter({ text: 'Package: moment.js' })
+                .setTimestamp();
+
+              await message.reply({ embeds: [embed] });
+            } catch (error) {
+              await message.reply('❌ **moment.js not installed!**\n\nInstall it with: `bun add moment`\nThen restart the bot.');
+            }
+          }
+
+          // JavaScript Package: axios
+          else if (command === 'testaxios') {
+            try {
+              // Try to require axios
+              const axios = require('axios');
+
+              await message.reply('Fetching data from GitHub API...');
+
+              // Make API request to GitHub Zen API
+              const zenResponse = await axios.get('https://api.github.com/zen');
+              const zenQuote = zenResponse.data;
+
+              // Get some GitHub stats
+              const octoResponse = await axios.get('https://api.github.com/users/octocat');
+              const octoData = octoResponse.data;
+
+              const embed = new EmbedBuilder()
+                .setColor(0xff6b6b)
+                .setTitle('Axios HTTP Client Test')
+                .setDescription('Demonstrating HTTP requests with axios')
+                .addFields(
+                  { name: 'GitHub Zen Quote', value: `"${zenQuote}"`, inline: false },
+                  { name: 'Test API Request', value: 'https://api.github.com/zen', inline: false },
+                  { name: 'Response Status', value: `${zenResponse.status} ${zenResponse.statusText}`, inline: true },
+                  { name: 'Content Type', value: zenResponse.headers['content-type'] || 'N/A', inline: true },
+                  { name: 'Sample User Data', value: `@${octoData.login}`, inline: false },
+                  { name: 'User Name', value: octoData.name || 'N/A', inline: true },
+                  { name: 'Public Repos', value: octoData.public_repos.toString(), inline: true },
+                  { name: 'Followers', value: octoData.followers.toString(), inline: true }
+                )
+                .setFooter({ text: 'Package: axios' })
+                .setTimestamp();
+
+              await message.reply({ embeds: [embed] });
+            } catch (error) {
+              if ((error as any).code === 'MODULE_NOT_FOUND') {
+                await message.reply('❌ **axios not installed!**\n\nInstall it with: `bun add axios`\nThen restart the bot.');
+              } else {
+                await message.reply(`❌ Error making HTTP request: ${(error as Error).message}`);
+              }
+            }
+          }
+
+          // JavaScript Package: lodash
+          else if (command === 'testlodash') {
+            try {
+              // Try to require lodash
+              const _ = require('lodash');
+
+              // Sample data for demonstrations
+              const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+              const users = [
+                { name: 'Alice', age: 25, active: true },
+                { name: 'Bob', age: 30, active: false },
+                { name: 'Charlie', age: 25, active: true },
+                { name: 'Diana', age: 28, active: true }
+              ];
+              const nested = { a: { b: { c: 'deep value' } } };
+
+              // Demonstrate various lodash utilities
+              const chunked = _.chunk(numbers, 3);
+              const sum = _.sum(numbers);
+              const average = _.mean(numbers);
+              const activeUsers = _.filter(users, { active: true });
+              const grouped = _.groupBy(users, 'age');
+              const deepValue = _.get(nested, 'a.b.c', 'default');
+              const shuffled = _.shuffle([1, 2, 3, 4, 5]);
+              const debounceExample = 'Function that waits 300ms after last call';
+
+              const embed = new EmbedBuilder()
+                .setColor(0x3492ff)
+                .setTitle('Lodash Utility Library Test')
+                .setDescription('Demonstrating powerful utility functions with lodash')
+                .addFields(
+                  { name: 'Array Chunking', value: `${JSON.stringify(chunked)}`, inline: false },
+                  { name: 'Sum of Numbers', value: sum.toString(), inline: true },
+                  { name: 'Average', value: average.toString(), inline: true },
+                  { name: 'Active Users', value: activeUsers.map((u: any) => u.name).join(', '), inline: false },
+                  { name: 'Grouped by Age', value: Object.keys(grouped).map(age => `${age}: ${grouped[age].length}`).join(', '), inline: false },
+                  { name: 'Deep Object Access', value: `_.get(nested, 'a.b.c') = "${deepValue}"`, inline: false },
+                  { name: 'Shuffled Array', value: shuffled.join(', '), inline: true },
+                  { name: 'Debounce Available', value: debounceExample, inline: false },
+                  { name: 'Other Utilities', value: 'throttle, cloneDeep, merge, omit, pick, uniq, flattenDeep, and 300+ more!', inline: false }
+                )
+                .setFooter({ text: 'Package: lodash' })
+                .setTimestamp();
+
+              await message.reply({ embeds: [embed] });
+            } catch (error) {
+              await message.reply('❌ **lodash not installed!**\n\nInstall it with: `bun add lodash`\nThen restart the bot.');
+            }
+          }
+
+          // Python Integration: math module
+          else if (command === 'testpython') {
+            await message.reply('❌ **Python integration not yet implemented!**\n\n' +
+              'This would use the Python bridge from PYTHON.md to call Python\'s math module.\n\n' +
+              'Example operations:\n' +
+              '• `math.sqrt(144)` = 12\n' +
+              '• `math.factorial(5)` = 120\n' +
+              '• `math.pi` = 3.14159...\n' +
+              '• `math.sin(math.pi/2)` = 1.0\n\n' +
+              'The Python bridge would need to be connected to enable this feature.');
+          }
+
+          // Python Integration: requests library
+          else if (command === 'testrequests') {
+            await message.reply('❌ **Python integration not yet implemented!**\n\n' +
+              'This would use the Python bridge to make HTTP requests with the `requests` library.\n\n' +
+              'Example usage:\n' +
+              '```python\n' +
+              'import requests\n' +
+              'response = requests.get("https://api.github.com/zen")\n' +
+              'print(response.text)\n' +
+              '```\n\n' +
+              'The Python bridge would need to be connected to enable this feature.');
+          }
+
+          // ==================== PACKAGE INSTALLATION COMMANDS (ADMIN) ====================
+
+          else if (command === 'installjs') {
+            if (!message.member?.permissions.has('Administrator')) {
+              await message.reply('❌ You need Administrator permission to use this command!');
+              return;
+            }
+
+            const packageName = args[0];
+            if (!packageName) {
+              await message.reply('❌ Please specify a package name!\n\nUsage: `!installjs <package>`\n\nExamples:\n• `!installjs moment`\n• `!installjs axios`\n• `!installjs lodash`');
+              return;
+            }
+
+            const embed = new EmbedBuilder()
+              .setColor(0xffa500)
+              .setTitle('JavaScript Package Installation')
+              .setDescription(`To install **${packageName}**, run this command in your terminal:`)
+              .addFields(
+                { name: 'Bun (recommended)', value: `\`\`\`bash\nbun add ${packageName}\n\`\`\``, inline: false },
+                { name: 'NPM', value: `\`\`\`bash\nnpm install ${packageName}\n\`\`\``, inline: false },
+                { name: 'Yarn', value: `\`\`\`bash\nyarn add ${packageName}\n\`\`\``, inline: false },
+                { name: 'After Installation', value: 'Restart the bot to use the new package!', inline: false }
+              )
+              .setFooter({ text: 'Run the command in your project directory' });
+
+            await message.reply({ embeds: [embed] });
+          }
+
+          else if (command === 'installpy') {
+            if (!message.member?.permissions.has('Administrator')) {
+              await message.reply('❌ You need Administrator permission to use this command!');
+              return;
+            }
+
+            const packageName = args[0];
+            if (!packageName) {
+              await message.reply('❌ Please specify a package name!\n\nUsage: `!installpy <package>`\n\nExamples:\n• `!installpy requests`\n• `!installpy numpy`\n• `!installpy pandas`');
+              return;
+            }
+
+            const embed = new EmbedBuilder()
+              .setColor(0x3776ab)
+              .setTitle('Python Package Installation')
+              .setDescription(`To install **${packageName}**, run this command in your terminal:`)
+              .addFields(
+                { name: 'pip', value: `\`\`\`bash\npip install ${packageName}\n\`\`\``, inline: false },
+                { name: 'pip3', value: `\`\`\`bash\npip3 install ${packageName}\n\`\`\``, inline: false },
+                { name: 'Note', value: 'Python bridge must be set up for Python packages to work with EzLang.', inline: false },
+                { name: 'After Installation', value: 'The package will be available in your Python environment!', inline: false }
+              )
+              .setFooter({ text: 'Requires Python 3.x installed' });
+
+            await message.reply({ embeds: [embed] });
           }
 
           // ==================== BOT PROFILE COMMANDS (ADMIN) ====================
@@ -908,7 +1124,7 @@ function createBotStartFunction(discordManager: DiscordManager) {
 export function createGlobalEnvironment(discordManager: DiscordManager): Environment {
   const env = new Environment();
 
-  // Register all built-in functions
+  // Register core built-in functions
   env.define('print', printFunction);
   env.define('length', lengthFunction);
   env.define('random', randomFunction);
@@ -923,6 +1139,16 @@ export function createGlobalEnvironment(discordManager: DiscordManager): Environ
 
   // Discord bot functions
   env.define('bot_start', createBotStartFunction(discordManager));
+
+  // Register all Discord API functions from discord-builtins.ts
+  Object.entries(discordBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register all advanced Discord functions from discord-advanced.ts
+  Object.entries(advancedDiscordBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
 
   return env;
 }
