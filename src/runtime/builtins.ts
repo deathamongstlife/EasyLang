@@ -277,9 +277,9 @@ const popFunction = makeNativeFunction('pop', async (args: RuntimeValue[]) => {
 });
 
 /**
- * Create bot_start function with access to Discord manager
+ * Create bot_start function with access to Discord manager and Python bridge
  */
-function createBotStartFunction(discordManager: DiscordManager) {
+function createBotStartFunction(discordManager: DiscordManager, pythonBridge: any) {
   return makeNativeFunction('bot_start', async (args: RuntimeValue[]) => {
     if (args.length !== 1) {
       throw new RuntimeError(`bot_start() expects 1 argument (token), got ${args.length}`);
@@ -934,27 +934,76 @@ function createBotStartFunction(discordManager: DiscordManager) {
 
           // Python Integration: math module
           else if (command === 'testpython') {
-            await message.reply('❌ **Python integration not yet implemented!**\n\n' +
-              'This would use the Python bridge from PYTHON.md to call Python\'s math module.\n\n' +
-              'Example operations:\n' +
-              '• `math.sqrt(144)` = 12\n' +
-              '• `math.factorial(5)` = 120\n' +
-              '• `math.pi` = 3.14159...\n' +
-              '• `math.sin(math.pi/2)` = 1.0\n\n' +
-              'The Python bridge would need to be connected to enable this feature.');
+            try {
+              // Import Python math module and test functions
+              await pythonBridge.importModule('math');
+
+              // Test getting pi constant
+              const pi = await pythonBridge.getAttribute('math', ['pi']);
+
+              // Test calling sqrt function
+              const sqrtResult = await pythonBridge.callFunction('math', 'sqrt', [144]);
+
+              // Test calling factorial function
+              const factorialResult = await pythonBridge.callFunction('math', 'factorial', [5]);
+
+              const embed = new EmbedBuilder()
+                .setTitle('🐍 Python Bridge Test')
+                .setColor(0x3776AB)
+                .addFields(
+                  { name: 'Module', value: 'math', inline: true },
+                  { name: 'Status', value: '✅ Connected', inline: true },
+                  { name: 'math.pi', value: String(pi), inline: false },
+                  { name: 'math.sqrt(144)', value: String(sqrtResult), inline: false },
+                  { name: 'math.factorial(5)', value: String(factorialResult), inline: false }
+                )
+                .setFooter({ text: 'Python integration working!' });
+
+              await message.reply({ embeds: [embed] });
+            } catch (error: any) {
+              await message.reply(`❌ **Python bridge error:**\n\`\`\`\n${error.message}\n\`\`\`\n\nMake sure:\n1. Python 3 is installed\n2. Run: \`pip3 install ipc\` (or use --break-system-packages if needed)\n3. The Python bridge server is accessible`);
+            }
           }
 
           // Python Integration: requests library
           else if (command === 'testrequests') {
-            await message.reply('❌ **Python integration not yet implemented!**\n\n' +
-              'This would use the Python bridge to make HTTP requests with the `requests` library.\n\n' +
-              'Example usage:\n' +
-              '```python\n' +
-              'import requests\n' +
-              'response = requests.get("https://api.github.com/zen")\n' +
-              'print(response.text)\n' +
-              '```\n\n' +
-              'The Python bridge would need to be connected to enable this feature.');
+            try {
+              // Import requests module
+              await pythonBridge.importModule('requests');
+
+              // Make a simple GET request to test
+              const result = await pythonBridge.callFunction(
+                'requests',
+                'get',
+                ['https://jsonplaceholder.typicode.com/todos/1']
+              );
+
+              // Try to get status code
+              let statusInfo = 'Request completed';
+              try {
+                // The result contains response object representation
+                if (result && typeof result === 'object' && '__repr__' in result) {
+                  statusInfo = result.__repr__;
+                }
+              } catch (e) {
+                // Ignore if we can't get status details
+              }
+
+              const embed = new EmbedBuilder()
+                .setTitle('🐍 Python Requests Test')
+                .setColor(0x3776AB)
+                .addFields(
+                  { name: 'Module', value: 'requests', inline: true },
+                  { name: 'Status', value: '✅ Working', inline: true },
+                  { name: 'Test URL', value: 'jsonplaceholder.typicode.com/todos/1', inline: false },
+                  { name: 'Response', value: statusInfo, inline: false }
+                )
+                .setFooter({ text: 'Python requests module working!' });
+
+              await message.reply({ embeds: [embed] });
+            } catch (error: any) {
+              await message.reply(`❌ **Python requests error:**\n\`\`\`\n${error.message}\n\`\`\`\n\nMake sure:\n1. Python requests is installed: \`pip3 install requests\`\n2. Python bridge is connected (test with \`!testpython\` first)`);
+            }
           }
 
           // ==================== PACKAGE INSTALLATION COMMANDS (ADMIN) ====================
@@ -1121,7 +1170,7 @@ function createBotStartFunction(discordManager: DiscordManager) {
 /**
  * Create and populate the global environment with built-in functions
  */
-export function createGlobalEnvironment(discordManager: DiscordManager): Environment {
+export function createGlobalEnvironment(discordManager: DiscordManager, pythonBridge?: any): Environment {
   const env = new Environment();
 
   // Register core built-in functions
@@ -1138,7 +1187,7 @@ export function createGlobalEnvironment(discordManager: DiscordManager): Environ
   env.define('pop', popFunction);
 
   // Discord bot functions
-  env.define('bot_start', createBotStartFunction(discordManager));
+  env.define('bot_start', createBotStartFunction(discordManager, pythonBridge));
 
   // Register all Discord API functions from discord-builtins.ts
   Object.entries(discordBuiltins).forEach(([name, func]) => {

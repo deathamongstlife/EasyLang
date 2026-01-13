@@ -74,7 +74,7 @@ export class Runtime {
     this.discordManager = new DiscordManager();
     this.eventManager = new EventManager();
     this.pythonBridge = new PythonBridge();
-    this.globalEnv = createGlobalEnvironment(this.discordManager);
+    this.globalEnv = createGlobalEnvironment(this.discordManager, this.pythonBridge);
   }
 
   /**

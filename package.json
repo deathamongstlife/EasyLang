@@ -16,6 +16,7 @@
     "test:lexer": "ts-node scripts/test-lexer.ts",
     "test:runtime": "ts-node scripts/test-runtime.ts",
     "test:discord": "ts-node scripts/test-discord.ts",
+    "test:python": "npm run build && node dist/scripts/test-python-bridge.js",
     "start:repl": "npm run build && node dist/index.js repl",
     "test:repl": "npm run build && echo 'var x = 10\nvar y = 20\nprint(x + y)' | node dist/index.js repl",
     "test:cli": "./test-cli.sh",
