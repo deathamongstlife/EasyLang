@@ -220,6 +220,23 @@ export interface ArrayLiteral extends Expression {
 }
 
 /**
+ * Object literal: {key: value, ...}
+ */
+export interface ObjectLiteral extends Expression {
+  type: 'ObjectLiteral';
+  properties: ObjectProperty[];
+}
+
+/**
+ * Object property in an object literal
+ */
+export interface ObjectProperty extends ASTNode {
+  type: 'ObjectProperty';
+  key: string;
+  value: Expression;
+}
+
+/**
  * Assignment expression: target = value
  */
 export interface AssignmentExpression extends Expression {
@@ -240,6 +257,7 @@ export function isExpression(node: ASTNode): node is Expression {
     node.type === 'Identifier' ||
     node.type === 'Literal' ||
     node.type === 'ArrayLiteral' ||
+    node.type === 'ObjectLiteral' ||
     node.type === 'AssignmentExpression'
   );
 }

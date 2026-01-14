@@ -1,9 +1,9 @@
-# ========================================
-# MAIN.EZ - Organized Bot Entry Point
-# ========================================
-# Multi-file organized Discord bot for EzLang
-# Demonstrates best practices for bot organization
-# Written in PURE EzLang syntax
+// ========================================
+// MAIN.EZ - Organized Bot Entry Point
+// ========================================
+// Multi-file organized Discord bot for EzLang
+// Demonstrates best practices for bot organization
+// Written in PURE EzLang syntax
 
 print("========================================")
 print("  EzLang Organized Bot")
@@ -11,9 +11,9 @@ print("  Multi-File Bot Architecture")
 print("========================================")
 print("")
 
-# ========================================
-# CONFIGURATION
-# ========================================
+// ========================================
+// CONFIGURATION
+// ========================================
 
 var BOT_TOKEN = get_argument("BOT_TOKEN", "")
 var OWNER_ID = get_argument("OWNER_ID", "")
@@ -21,16 +21,16 @@ var BOT_NAME = "EzLang Organized Bot"
 var BOT_VERSION = "1.0.0"
 var DEFAULT_PREFIX = "!"
 
-# Developer IDs (additional users with elevated permissions)
+// Developer IDs (additional users with elevated permissions)
 var DEVELOPER_IDS = ["123456789012345678", "987654321098765432"]
 
-# Guild-specific prefix storage (map: guild_id -> prefix)
+// Guild-specific prefix storage (map: guild_id -> prefix)
 var guild_prefixes = {}
 
-# Cooldown tracking (map: "command_name:user_id" -> timestamp)
+// Cooldown tracking (map: "command_name:user_id" -> timestamp)
 var cooldowns = {}
 
-# Status messages for rotation
+// Status messages for rotation
 var status_messages = [
     "with EzLang v1.0",
     "Organized Bot Structure",
@@ -41,23 +41,23 @@ var status_messages = [
 print("[MAIN] Configuration loaded")
 print("[MAIN] Bot: " + BOT_NAME + " v" + BOT_VERSION)
 
-# ========================================
-# UTILITY FUNCTIONS
-# ========================================
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
 
-# Check if user is bot owner
+// Check if user is bot owner
 function is_bot_owner(user_id) {
     return user_id == OWNER_ID
 }
 
-# Check if user is developer
+// Check if user is developer
 function is_developer(user_id) {
     if is_bot_owner(user_id) {
         return true
     }
 
     var i = 0
-    while i < len(DEVELOPER_IDS) {
+    while i < length(DEVELOPER_IDS) {
         if DEVELOPER_IDS[i] == user_id {
             return true
         }
@@ -66,7 +66,7 @@ function is_developer(user_id) {
     return false
 }
 
-# Get prefix for guild
+// Get prefix for guild
 function get_prefix(guild_id) {
     if guild_id in guild_prefixes {
         return guild_prefixes[guild_id]
@@ -74,7 +74,7 @@ function get_prefix(guild_id) {
     return DEFAULT_PREFIX
 }
 
-# Check and apply cooldown
+// Check and apply cooldown
 function check_cooldown(command_name, user_id, cooldown_ms) {
     var key = command_name + ":" + user_id
     var current_time = time()
@@ -93,7 +93,7 @@ function check_cooldown(command_name, user_id, cooldown_ms) {
     return 0
 }
 
-# Format cooldown time
+// Format cooldown time
 function format_cooldown(ms) {
     var seconds = ms / 1000
     if seconds < 60 {
@@ -105,11 +105,11 @@ function format_cooldown(ms) {
 
 print("[MAIN] Utility functions loaded")
 
-# ========================================
-# EVENT: READY
-# ========================================
+// ========================================
+// EVENT: READY
+// ========================================
 
-listen ready with client {
+listen "ready" (client) {
     print("========================================")
     print("Bot is ready!")
     print("Logged in as: " + client.user.username)
@@ -118,15 +118,82 @@ listen ready with client {
     print("========================================")
 
     set_status("online", "playing", status_messages[0])
+
+    // Register all slash commands
+    print("[READY] Registering slash commands...")
+
+    // Slash command: /ping
+    register_command({
+        name: "ping",
+        description: "Replies with Pong!",
+        type: 1
+    })
+
+    // Slash command: /help
+    register_command({
+        name: "help",
+        description: "Replies with a list of available application commands.",
+        type: 1
+    })
+
+    // Slash command: /userinfo
+    register_command({
+        name: "userinfo",
+        description: "Get information about a user.",
+        type: 1,
+        options: [
+            {
+                name: "user",
+                description: "The user to get information about",
+                type: 6,
+                required: false
+            }
+        ]
+    })
+
+    // Slash command: /serverinfo
+    register_command({
+        name: "serverinfo",
+        description: "Get information about the server.",
+        type: 1
+    })
+
+    // Slash command: /components
+    register_command({
+        name: "components",
+        description: "[TESTING COMMAND] Replies with an example of components to test.",
+        type: 1
+    })
+
+    // Slash command: /show-modal
+    register_command({
+        name: "show-modal",
+        description: "[TESTING COMMAND] Opens a modal.",
+        type: 1
+    })
+
+    // User context menu: User Information
+    register_command({
+        name: "User Information",
+        type: 2
+    })
+
+    // Message context menu: Message Information
+    register_command({
+        name: "Message Information",
+        type: 3
+    })
+
+    print("[READY] All commands registered")
 }
 
 print("[MAIN] Ready event registered")
 
-# ========================================
-# EVENT: MESSAGE CREATE
-# ========================================
+// ========================================
+// EVENT: MESSAGE CREATE
+// ========================================
 
-listen messageCreate with message {
+listen "messageCreate" (message) {
     if message.author.bot {
         return
     }
@@ -139,33 +206,33 @@ listen messageCreate with message {
         return
     }
 
-    var without_prefix = substr(content, len(prefix), len(content))
+    var without_prefix = substr(content, length(prefix), length(content))
     var parts = split(without_prefix, " ")
     var command_name = parts[0]
 
     var args = []
     var i = 1
-    while i < len(parts) {
+    while i < length(parts) {
         args = append(args, parts[i])
         i = i + 1
     }
 
-    # MESSAGE COMMAND: !ping
+    // MESSAGE COMMAND: !ping
     if command_name == "ping" {
         var cooldown = check_cooldown("msg_ping", message.author.id, 5000)
         if cooldown > 0 {
-            reply message with "Please wait " + format_cooldown(cooldown) + " before using this command again."
+            reply message "Please wait " + format_cooldown(cooldown) + " before using this command again."
             return
         }
 
-        reply message with "**Pong!** Message command received!"
+        reply message "**Pong!** Message command received!"
     }
 
-    # MESSAGE COMMAND: !help
+    // MESSAGE COMMAND: !help
     else if command_name == "help" {
         var cooldown = check_cooldown("msg_help", message.author.id, 10000)
         if cooldown > 0 {
-            reply message with "Please wait " + format_cooldown(cooldown) + " before using this command again."
+            reply message "Please wait " + format_cooldown(cooldown) + " before using this command again."
             return
         }
 
@@ -183,26 +250,26 @@ listen messageCreate with message {
         help_text = help_text + "`/components` - Show interactive components\n"
         help_text = help_text + "`/show-modal` - Display modal form\n"
 
-        reply message with help_text
+        reply message help_text
     }
 
-    # MESSAGE COMMAND: !setprefix
+    // MESSAGE COMMAND: !setprefix
     else if command_name == "setprefix" {
         var cooldown = check_cooldown("msg_setprefix", message.author.id, 5000)
         if cooldown > 0 {
-            reply message with "Please wait " + format_cooldown(cooldown) + " before using this command again."
+            reply message "Please wait " + format_cooldown(cooldown) + " before using this command again."
             return
         }
 
-        if len(args) == 0 {
-            reply message with "You must provide the prefix! Usage: `" + prefix + "setprefix <prefix>`"
+        if length(args) == 0 {
+            reply message "You must provide the prefix! Usage: `" + prefix + "setprefix <prefix>`"
             return
         }
 
         var new_prefix = args[0]
 
-        if len(new_prefix) > 5 {
-            reply message with "The prefix is too long! (" + str(len(new_prefix)) + " > 5)"
+        if length(new_prefix) > 5 {
+            reply message "The prefix is too long! (" + str(length(new_prefix)) + " > 5)"
             return
         }
 
@@ -212,39 +279,39 @@ listen messageCreate with message {
             guild_prefixes[guild_id] = new_prefix
         }
 
-        reply message with "Successfully updated the prefix to `" + new_prefix + "`."
+        reply message "Successfully updated the prefix to `" + new_prefix + "`."
     }
 }
 
 print("[MAIN] Message event registered")
 
-# ========================================
-# EVENT: INTERACTION CREATE
-# ========================================
+// ========================================
+// EVENT: INTERACTION CREATE
+// ========================================
 
-listen interactionCreate with interaction {
+listen "interactionCreate" (interaction) {
     var interaction_type = interaction.type
 
-    # SLASH COMMANDS
+    // SLASH COMMANDS
     if interaction_type == "APPLICATION_COMMAND" {
         var command_name = interaction.commandName
 
-        # SLASH: /ping
+        // SLASH: /ping
         if command_name == "ping" {
             var cooldown = check_cooldown("slash_ping", interaction.user.id, 5000)
             if cooldown > 0 {
-                reply_interaction interaction with "Please wait " + format_cooldown(cooldown) + " before using this command again." ephemeral
+                reply_interaction(interaction, "Please wait " + format_cooldown(cooldown) + " before using this command again.", true)
                 return
             }
 
-            reply_interaction interaction with "**Pong!** Slash command received!"
+            reply_interaction(interaction, "**Pong!** Slash command received!")
         }
 
-        # SLASH: /help
+        // SLASH: /help
         else if command_name == "help" {
             var cooldown = check_cooldown("slash_help", interaction.user.id, 10000)
             if cooldown > 0 {
-                reply_interaction interaction with "Please wait " + format_cooldown(cooldown) + " before using this command again." ephemeral
+                reply_interaction(interaction, "Please wait " + format_cooldown(cooldown) + " before using this command again.", true)
                 return
             }
 
@@ -252,14 +319,14 @@ listen interactionCreate with interaction {
             help_text = help_text + "`/ping`, `/help`, `/userinfo`, `/serverinfo`, "
             help_text = help_text + "`/components`, `/show-modal`"
 
-            reply_interaction interaction with help_text
+            reply_interaction(interaction, help_text)
         }
 
-        # SLASH: /userinfo
+        // SLASH: /userinfo
         else if command_name == "userinfo" {
             var cooldown = check_cooldown("slash_userinfo", interaction.user.id, 5000)
             if cooldown > 0 {
-                reply_interaction interaction with "Please wait " + format_cooldown(cooldown) + " before using this command again." ephemeral
+                reply_interaction(interaction, "Please wait " + format_cooldown(cooldown) + " before using this command again.", true)
                 return
             }
 
@@ -268,17 +335,22 @@ listen interactionCreate with interaction {
             var info = "**User Information:**\n"
             info = info + "**Username:** " + target_user.username + "\n"
             info = info + "**ID:** " + target_user.id + "\n"
-            info = info + "**Bot?** " + (target_user.bot ? "Yes" : "No") + "\n"
+
+            var bot_status = "No"
+            if target_user.bot {
+                bot_status = "Yes"
+            }
+            info = info + "**Bot?** " + bot_status + "\n"
             info = info + "**Display Name:** " + target_user.displayName
 
-            reply_interaction interaction with info
+            reply_interaction(interaction, info)
         }
 
-        # SLASH: /serverinfo
+        // SLASH: /serverinfo
         else if command_name == "serverinfo" {
             var cooldown = check_cooldown("slash_serverinfo", interaction.user.id, 5000)
             if cooldown > 0 {
-                reply_interaction interaction with "Please wait " + format_cooldown(cooldown) + " before using this command again." ephemeral
+                reply_interaction(interaction, "Please wait " + format_cooldown(cooldown) + " before using this command again.", true)
                 return
             }
 
@@ -287,13 +359,13 @@ listen interactionCreate with interaction {
             info = info + "**Member Count:** Coming soon\n"
             info = info + "**Channel Count:** Coming soon"
 
-            reply_interaction interaction with info
+            reply_interaction(interaction, info)
         }
 
-        # SLASH: /components
+        // SLASH: /components
         else if command_name == "components" {
             if not is_developer(interaction.user.id) {
-                reply_interaction interaction with "❌ This command is only available to bot developers." ephemeral
+                reply_interaction(interaction, "❌ This command is only available to bot developers.", true)
                 return
             }
 
@@ -313,10 +385,10 @@ listen interactionCreate with interaction {
             })
         }
 
-        # SLASH: /show-modal
+        // SLASH: /show-modal
         else if command_name == "show-modal" {
             if not is_developer(interaction.user.id) {
-                reply_interaction interaction with "❌ This command is only available to bot developers." ephemeral
+                reply_interaction(interaction, "❌ This command is only available to bot developers.", true)
                 return
             }
 
@@ -327,29 +399,34 @@ listen interactionCreate with interaction {
         }
     }
 
-    # CONTEXT MENU COMMANDS
+    // CONTEXT MENU COMMANDS
     else if interaction_type == "USER_CONTEXT_MENU" {
         var command_name = interaction.commandName
 
         if command_name == "User Information" {
             var cooldown = check_cooldown("ctx_userinfo", interaction.user.id, 5000)
             if cooldown > 0 {
-                reply_interaction interaction with "Please wait " + format_cooldown(cooldown) + " before using this command again." ephemeral
+                reply_interaction(interaction, "Please wait " + format_cooldown(cooldown) + " before using this command again.", true)
                 return
             }
 
             var target = interaction.targetUser
 
             if not target {
-                reply_interaction interaction with "Invalid target!" ephemeral
+                reply_interaction(interaction, "Invalid target!", true)
                 return
             }
 
             var info = "**Displayname:** " + target.displayName + "\n"
-            info = info + "**Bot?** " + (target.bot ? "Yes" : "No") + "\n"
+
+            var bot_status = "No"
+            if target.bot {
+                bot_status = "Yes"
+            }
+            info = info + "**Bot?** " + bot_status + "\n"
             info = info + "**User ID:** " + target.id
 
-            reply_interaction interaction with info ephemeral
+            reply_interaction(interaction, info, true)
         }
     }
 
@@ -359,130 +436,65 @@ listen interactionCreate with interaction {
         if command_name == "Message Information" {
             var cooldown = check_cooldown("ctx_msginfo", interaction.user.id, 5000)
             if cooldown > 0 {
-                reply_interaction interaction with "Please wait " + format_cooldown(cooldown) + " before using this command again." ephemeral
+                reply_interaction(interaction, "Please wait " + format_cooldown(cooldown) + " before using this command again.", true)
                 return
             }
 
             var target = interaction.targetMessage
 
             if not target {
-                reply_interaction interaction with "Invalid target!" ephemeral
+                reply_interaction(interaction, "Invalid target!", true)
                 return
             }
 
             var info = "**Author:** " + target.author.username + "\n"
-            info = info + "**Content:** " + (len(target.content) > 0 ? target.content : "(empty)") + "\n"
+
+            var content_display = "(empty)"
+            if length(target.content) > 0 {
+                content_display = target.content
+            }
+            info = info + "**Content:** " + content_display + "\n"
             info = info + "**Message ID:** " + target.id
 
-            reply_interaction interaction with info ephemeral
+            reply_interaction(interaction, info, true)
         }
     }
 
-    # BUTTON INTERACTIONS
+    // BUTTON INTERACTIONS
     else if interaction_type == "BUTTON" {
         var custom_id = interaction.customId
 
         if custom_id == "example-button-id" {
-            reply_interaction interaction with "Replied from a Button interaction!" ephemeral
+            reply_interaction(interaction, "Replied from a Button interaction!", true)
         }
     }
 
-    # SELECT MENU INTERACTIONS
+    // SELECT MENU INTERACTIONS
     else if interaction_type == "SELECT_MENU" {
         var custom_id = interaction.customId
 
         if custom_id == "example-menu-id" {
             var selected = interaction.values[0]
-            reply_interaction interaction with "Replied from a Select Menu interaction! (You selected **" + selected + "**)." ephemeral
+            reply_interaction(interaction, "Replied from a Select Menu interaction! (You selected **" + selected + "**).", true)
         }
     }
 
-    # MODAL SUBMIT INTERACTIONS
+    // MODAL SUBMIT INTERACTIONS
     else if interaction_type == "MODAL_SUBMIT" {
         var custom_id = interaction.customId
 
         if custom_id == "example-modal-id" {
             var field_value = get_modal_field(interaction, "example-modal-id-field-1")
-            reply_interaction interaction with "Hello **" + field_value + "**." ephemeral
+            reply_interaction(interaction, "Hello **" + field_value + "**.", true)
         }
     }
 }
 
 print("[MAIN] Interaction event registered")
 
-# ========================================
-# COMMAND REGISTRATION
-# ========================================
-
-print("[MAIN] Registering commands...")
-
-# Slash command: /ping
-register_command({
-    name: "ping",
-    description: "Replies with Pong!",
-    type: "CHAT_INPUT"
-})
-
-# Slash command: /help
-register_command({
-    name: "help",
-    description: "Replies with a list of available application commands.",
-    type: "CHAT_INPUT"
-})
-
-# Slash command: /userinfo
-register_command({
-    name: "userinfo",
-    description: "Get information about a user.",
-    type: "CHAT_INPUT",
-    options: [
-        {
-            name: "user",
-            description: "The user to get information about",
-            type: "USER",
-            required: false
-        }
-    ]
-})
-
-# Slash command: /serverinfo
-register_command({
-    name: "serverinfo",
-    description: "Get information about the server.",
-    type: "CHAT_INPUT"
-})
-
-# Slash command: /components
-register_command({
-    name: "components",
-    description: "[TESTING COMMAND] Replies with an example of components to test.",
-    type: "CHAT_INPUT"
-})
-
-# Slash command: /show-modal
-register_command({
-    name: "show-modal",
-    description: "[TESTING COMMAND] Opens a modal.",
-    type: "CHAT_INPUT"
-})
-
-# User context menu: User Information
-register_command({
-    name: "User Information",
-    type: "USER"
-})
-
-# Message context menu: Message Information
-register_command({
-    name: "Message Information",
-    type: "MESSAGE"
-})
-
-print("[MAIN] All commands registered")
-
-# ========================================
-# START BOT
-# ========================================
+// ========================================
+// START BOT
+// ========================================
 
 print("")
 print("[MAIN] Starting bot...")

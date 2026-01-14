@@ -38,6 +38,38 @@ import {
 } from 'discord.js';
 
 /**
+ * Get the Discord client from global context
+ */
+function getDiscordClient(): any {
+  // This will be set by the DiscordManager
+  return (global as any).__discordClient;
+}
+
+/**
+ * Convert EzLang object to plain JavaScript object
+ */
+function convertObjectToJS(obj: RuntimeValue): any {
+  if (isObject(obj)) {
+    const result: any = {};
+    obj.properties.forEach((value, key) => {
+      if (key !== '__raw') {
+        result[key] = convertObjectToJS(value);
+      }
+    });
+    return result;
+  } else if (isArray(obj)) {
+    return obj.elements.map(convertObjectToJS);
+  } else if (isString(obj)) {
+    return obj.value;
+  } else if (isNumber(obj)) {
+    return obj.value;
+  } else if (isBoolean(obj)) {
+    return obj.value;
+  }
+  return null;
+}
+
+/**
  * Extract raw Discord.js object from RuntimeValue
  */
 function getRawValue(value: RuntimeValue): any {
@@ -756,6 +788,170 @@ export const fetchMessage = makeNativeFunction('fetch_message', async (args: Run
   return makeObject(properties);
 });
 
+// ==================== BOT STATUS AND ADVANCED FUNCTIONS ====================
+
+/**
+ * set_status(status, activity, text)
+ * Set the bot's status and activity
+ * status: "online" | "idle" | "dnd" | "invisible"
+ * activity: "playing" | "watching" | "listening"
+ * text: Activity text
+ */
+const setBotStatus = makeNativeFunction('set_status', async (args: RuntimeValue[]) => {
+  if (args.length !== 3) {
+    throw new RuntimeError(`set_status() expects 3 arguments (status, activity, text), got ${args.length}`);
+  }
+  if (!isString(args[0]) || !isString(args[1]) || !isString(args[2])) {
+    throw new TypeError('set_status() expects three strings');
+  }
+
+  const client = getDiscordClient();
+  if (!client) {
+    throw new RuntimeError('No Discord client available');
+  }
+
+  const status = args[0].value;
+  const activity = args[1].value;
+  const text = args[2].value;
+
+  const activityType = activity === 'playing' ? 0 : activity === 'watching' ? 3 : activity === 'listening' ? 2 : 0;
+
+  await client.user?.setPresence({
+    status: status as any,
+    activities: [{ name: text, type: activityType }]
+  });
+
+  return makeBoolean(true);
+});
+
+/**
+ * reply_interaction(interaction, content, ephemeral)
+ * Reply to an interaction with optional ephemeral flag
+ */
+const replyInteraction = makeNativeFunction('reply_interaction', async (args: RuntimeValue[]) => {
+  if (args.length < 2) {
+    throw new RuntimeError(`reply_interaction() expects at least 2 arguments, got ${args.length}`);
+  }
+
+  const interaction = getRawValue(args[0]);
+  if (!interaction) {
+    throw new RuntimeError('Invalid interaction object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('Second argument must be a string');
+  }
+
+  const content = args[1].value;
+  const ephemeral = args.length > 2 && isBoolean(args[2]) ? args[2].value : false;
+
+  await interaction.reply({
+    content: content,
+    ephemeral: ephemeral
+  });
+
+  return makeBoolean(true);
+});
+
+/**
+ * show_modal(interaction, modal)
+ * Show a modal to the user
+ */
+const showModal = makeNativeFunction('show_modal', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`show_modal() expects 2 arguments, got ${args.length}`);
+  }
+
+  const interaction = getRawValue(args[0]);
+  const modal = getRawValue(args[1]);
+
+  if (!interaction || !modal) {
+    throw new RuntimeError('Invalid interaction or modal object');
+  }
+
+  await interaction.showModal(modal);
+  return makeBoolean(true);
+});
+
+/**
+ * add_modal_text_input(modal, customId, label, style, placeholder, required, maxLength)
+ * Add a text input to a modal
+ */
+const addModalTextInput = makeNativeFunction('add_modal_text_input', async (args: RuntimeValue[]) => {
+  if (args.length !== 7) {
+    throw new RuntimeError(`add_modal_text_input() expects 7 arguments, got ${args.length}`);
+  }
+
+  const modal = getRawValue(args[0]);
+  if (!modal) {
+    throw new RuntimeError('Invalid modal object');
+  }
+
+  const customId = isString(args[1]) ? args[1].value : '';
+  const label = isString(args[2]) ? args[2].value : '';
+  const style = isString(args[3]) ? args[3].value : 'short';
+  const placeholder = isString(args[4]) ? args[4].value : '';
+  const required = isBoolean(args[5]) ? args[5].value : true;
+  const maxLength = isNumber(args[6]) ? args[6].value : 1000;
+
+  const textInput = new TextInputBuilder()
+    .setCustomId(customId)
+    .setLabel(label)
+    .setStyle(style === 'paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short)
+    .setPlaceholder(placeholder)
+    .setRequired(required)
+    .setMaxLength(maxLength);
+
+  const row = new ActionRowBuilder<TextInputBuilder>().addComponents(textInput);
+  modal.addComponents(row);
+
+  return args[0];
+});
+
+/**
+ * get_modal_field(interaction, fieldId)
+ * Get a field value from a modal submission
+ */
+const getModalField = makeNativeFunction('get_modal_field', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`get_modal_field() expects 2 arguments, got ${args.length}`);
+  }
+
+  const interaction = getRawValue(args[0]);
+  if (!interaction || !interaction.fields) {
+    throw new RuntimeError('Invalid modal interaction object');
+  }
+
+  const fieldId = isString(args[1]) ? args[1].value : '';
+  const value = interaction.fields.getTextInputValue(fieldId);
+
+  return makeString(value);
+});
+
+/**
+ * register_command(commandData)
+ * Register a slash command with Discord
+ */
+const registerCommand = makeNativeFunction('register_command', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`register_command() expects 1 argument, got ${args.length}`);
+  }
+
+  if (!isObject(args[0])) {
+    throw new TypeError('register_command() expects an object');
+  }
+
+  const client = getDiscordClient();
+  if (!client || !client.application) {
+    throw new RuntimeError('No Discord client available');
+  }
+
+  const commandData = convertObjectToJS(args[0]);
+  await client.application.commands.create(commandData);
+
+  return makeBoolean(true);
+});
+
 // Export all Discord builtin functions
 export const discordBuiltins = {
   // Slash Commands
@@ -792,4 +988,12 @@ export const discordBuiltins = {
   edit_message: editMessage,
   delete_message: deleteMessage,
   fetch_message: fetchMessage,
+
+  // Bot Status and Advanced Functions
+  set_status: setBotStatus,
+  reply_interaction: replyInteraction,
+  show_modal: showModal,
+  add_modal_text_input: addModalTextInput,
+  get_modal_field: getModalField,
+  register_command: registerCommand,
 };

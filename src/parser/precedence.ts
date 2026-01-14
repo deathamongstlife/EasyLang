@@ -22,7 +22,7 @@ export enum Precedence {
 /**
  * Get the precedence level for a token type
  */
-export function getPrecedence(tokenType: TokenType): Precedence {
+export function getPrecedence(tokenType: TokenType, tokenValue?: string): Precedence {
   switch (tokenType) {
     case TokenType.ASSIGN:
       return Precedence.ASSIGNMENT;
@@ -38,6 +38,12 @@ export function getPrecedence(tokenType: TokenType): Precedence {
     case TokenType.GREATER_THAN:
     case TokenType.GREATER_THAN_EQUAL:
       return Precedence.COMPARISON;
+    case TokenType.KEYWORD:
+      // Handle 'in' operator as keyword
+      if (tokenValue === 'in') {
+        return Precedence.COMPARISON;
+      }
+      return Precedence.NONE;
     case TokenType.PLUS:
     case TokenType.MINUS:
       return Precedence.TERM;

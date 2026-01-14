@@ -277,6 +277,78 @@ const popFunction = makeNativeFunction('pop', async (args: RuntimeValue[]) => {
 });
 
 /**
+ * starts_with(str, prefix) - Check if string starts with prefix
+ */
+const startsWithFunction = makeNativeFunction('starts_with', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`starts_with() expects 2 arguments, got ${args.length}`);
+  }
+  if (!isString(args[0]) || !isString(args[1])) {
+    throw new TypeError('starts_with() expects two strings');
+  }
+  const str = args[0].value;
+  const prefix = args[1].value;
+  return makeBoolean(str.startsWith(prefix));
+});
+
+/**
+ * substr(str, start, end) - Get substring from start to end
+ */
+const substrFunction = makeNativeFunction('substr', async (args: RuntimeValue[]) => {
+  if (args.length !== 3) {
+    throw new RuntimeError(`substr() expects 3 arguments, got ${args.length}`);
+  }
+  if (!isString(args[0]) || !isNumber(args[1]) || !isNumber(args[2])) {
+    throw new TypeError('substr() expects (string, number, number)');
+  }
+  const str = args[0].value;
+  const start = args[1].value;
+  const end = args[2].value;
+  return makeString(str.substring(start, end));
+});
+
+/**
+ * split(str, delimiter) - Split string by delimiter
+ */
+const splitFunction = makeNativeFunction('split', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`split() expects 2 arguments, got ${args.length}`);
+  }
+  if (!isString(args[0]) || !isString(args[1])) {
+    throw new TypeError('split() expects two strings');
+  }
+  const str = args[0].value;
+  const delimiter = args[1].value;
+  const parts = str.split(delimiter);
+  return makeArray(parts.map(part => makeString(part)));
+});
+
+/**
+ * append(array, value) - Append value to array (mutates array)
+ */
+const appendFunction = makeNativeFunction('append', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`append() expects 2 arguments, got ${args.length}`);
+  }
+  if (!isArray(args[0])) {
+    throw new TypeError('append() expects an array as first argument');
+  }
+  const arr = args[0].elements;
+  arr.push(args[1]);
+  return args[0];
+});
+
+/**
+ * time() - Get current timestamp in milliseconds
+ */
+const timeFunction = makeNativeFunction('time', async (args: RuntimeValue[]) => {
+  if (args.length !== 0) {
+    throw new RuntimeError(`time() expects 0 arguments, got ${args.length}`);
+  }
+  return makeNumber(Date.now());
+});
+
+/**
  * Create bot_start function with access to Discord manager and Python bridge
  */
 function createBotStartFunction(discordManager: DiscordManager, pythonBridge: any) {
@@ -1185,6 +1257,13 @@ export function createGlobalEnvironment(discordManager: DiscordManager, pythonBr
   env.define('num', numFunction);
   env.define('push', pushFunction);
   env.define('pop', popFunction);
+
+  // String and utility functions
+  env.define('starts_with', startsWithFunction);
+  env.define('substr', substrFunction);
+  env.define('split', splitFunction);
+  env.define('append', appendFunction);
+  env.define('time', timeFunction);
 
   // Discord bot functions
   env.define('bot_start', createBotStartFunction(discordManager, pythonBridge));

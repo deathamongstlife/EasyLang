@@ -30,6 +30,7 @@ import {
   Identifier,
   Literal,
   ArrayLiteral,
+  ObjectLiteral,
   AssignmentExpression,
 } from '../parser/ast';
 import { Environment } from './environment';
@@ -41,6 +42,7 @@ import {
   makeBoolean,
   makeNull,
   makeArray,
+  makeObject,
   makeFunction,
   makeReturn,
   isNumber,
@@ -183,6 +185,8 @@ export class Runtime {
         return this.evaluateMemberExpression(node as MemberExpression, env);
       case 'ArrayLiteral':
         return this.evaluateArrayLiteral(node as ArrayLiteral, env);
+      case 'ObjectLiteral':
+        return this.evaluateObjectLiteral(node as ObjectLiteral, env);
       case 'AssignmentExpression':
         return this.evaluateAssignmentExpression(node as AssignmentExpression, env);
       default:
@@ -433,6 +437,27 @@ export class Runtime {
     }
     if (node.operator === '||') {
       return makeBoolean(isTruthy(left) || isTruthy(right));
+    }
+
+    // In operator
+    if (node.operator === 'in') {
+      if (!isString(left)) {
+        throw new TypeError(
+          `'in' operator requires string key, got ${left.type}`,
+          node.position?.line,
+          node.position?.column
+        );
+      }
+
+      if (!isObject(right)) {
+        throw new TypeError(
+          `'in' operator requires object, got ${right.type}`,
+          node.position?.line,
+          node.position?.column
+        );
+      }
+
+      return makeBoolean(right.properties.has(left.value));
     }
 
     throw new RuntimeError(
@@ -713,6 +738,20 @@ export class Runtime {
     }
 
     return makeArray(elements);
+  }
+
+  /**
+   * Evaluate an object literal
+   */
+  private async evaluateObjectLiteral(node: ObjectLiteral, env: Environment): Promise<RuntimeValue> {
+    const obj = makeObject(new Map());
+
+    for (const prop of node.properties) {
+      const value = await this.evaluateExpression(prop.value, env);
+      obj.properties.set(prop.key, value);
+    }
+
+    return obj;
   }
 
   /**

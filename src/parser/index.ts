@@ -23,6 +23,8 @@ import {
   Identifier,
   Literal,
   ArrayLiteral,
+  ObjectLiteral,
+  ObjectProperty,
 } from './ast';
 import { getPrecedence, getOperatorString, isRightAssociative, Precedence } from './precedence';
 import { ParserError } from '../utils/errors';
@@ -191,7 +193,7 @@ export class Parser {
   }
 
   /**
-   * Parse an if statement: if condition { consequent } else { alternate }
+   * Parse an if statement: if condition { consequent } else if condition { alternate } else { alternate }
    */
   private parseIfStatement(): IfStatement {
     const position = this.peek().position;
@@ -203,7 +205,21 @@ export class Parser {
     let alternate: BlockStatement | null = null;
     if (this.peek().isKeyword('else')) {
       this.advance();
-      alternate = this.parseBlockStatement();
+
+      // Check for 'else if' pattern
+      if (this.peek().isKeyword('if')) {
+        // Parse the 'else if' as a nested if statement
+        // Wrap it in a block statement to maintain AST structure
+        const nestedIf = this.parseIfStatement();
+        alternate = {
+          type: 'BlockStatement',
+          statements: [nestedIf],
+          position: nestedIf.position,
+        };
+      } else {
+        // Regular else block
+        alternate = this.parseBlockStatement();
+      }
     }
 
     return {
@@ -442,7 +458,7 @@ export class Parser {
 
     while (true) {
       const token = this.peek();
-      const precedence = getPrecedence(token.type);
+      const precedence = getPrecedence(token.type, token.value);
 
       if (precedence < minPrecedence) {
         break;
@@ -465,6 +481,22 @@ export class Parser {
           type: 'AssignmentExpression',
           target: left as Identifier | MemberExpression,
           value,
+          position: token.position,
+        } as Expression;
+        continue;
+      }
+
+      // Handle 'in' operator as binary operator
+      if (token.isKeyword('in')) {
+        this.advance();
+        const nextPrecedence = precedence + 1;
+        const right = this.parseExpression(nextPrecedence);
+
+        left = {
+          type: 'BinaryExpression',
+          operator: 'in',
+          left,
+          right,
           position: token.position,
         } as Expression;
         continue;
@@ -533,6 +565,11 @@ export class Parser {
       return this.parseNullLiteral();
     }
 
+    // Unary 'not' operator (as identifier)
+    if (token.is(TokenType.IDENTIFIER) && token.value === 'not') {
+      return this.parseUnaryExpression();
+    }
+
     // Identifiers
     if (token.is(TokenType.IDENTIFIER)) {
       return this.parseIdentifier();
@@ -541,6 +578,11 @@ export class Parser {
     // Array literals
     if (token.is(TokenType.LBRACKET)) {
       return this.parseArrayLiteral();
+    }
+
+    // Object literals
+    if (token.is(TokenType.LBRACE)) {
+      return this.parseObjectLiteral();
     }
 
     // Grouping
@@ -648,6 +690,65 @@ export class Parser {
   }
 
   /**
+   * Parse an object literal: {key: value, ...}
+   */
+  private parseObjectLiteral(): ObjectLiteral {
+    const position = this.peek().position;
+    this.consume(TokenType.LBRACE, "Expected '{'");
+
+    const properties: ObjectProperty[] = [];
+
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      // Parse key (must be identifier or string)
+      let key: string;
+      const keyToken = this.peek();
+
+      if (keyToken.is(TokenType.IDENTIFIER)) {
+        key = keyToken.value;
+        this.advance();
+      } else if (keyToken.is(TokenType.STRING)) {
+        key = keyToken.value;
+        this.advance();
+      } else {
+        throw new ParserError(
+          `Expected property key, got ${keyToken.type}`,
+          keyToken.line,
+          keyToken.column
+        );
+      }
+
+      this.consume(TokenType.COLON, "Expected ':' after property key");
+
+      const value = this.parseExpression();
+
+      properties.push({
+        type: 'ObjectProperty',
+        key,
+        value,
+        position: keyToken.position,
+      });
+
+      if (this.match(TokenType.COMMA)) {
+        // Continue to next property
+      } else if (!this.check(TokenType.RBRACE)) {
+        throw new ParserError(
+          "Expected ',' or '}' in object literal",
+          this.peek().line,
+          this.peek().column
+        );
+      }
+    }
+
+    this.consume(TokenType.RBRACE, "Expected '}'");
+
+    return {
+      type: 'ObjectLiteral',
+      properties,
+      position,
+    };
+  }
+
+  /**
    * Parse a grouping expression: (expression)
    */
   private parseGrouping(): Expression {
@@ -658,15 +759,18 @@ export class Parser {
   }
 
   /**
-   * Parse a unary expression: !expr or -expr
+   * Parse a unary expression: !expr, -expr, or not expr
    */
   private parseUnaryExpression(): UnaryExpression {
     const token = this.advance();
     const operand = this.parseExpression(Precedence.UNARY);
 
+    // Handle 'not' identifier as operator
+    const operator = (token.is(TokenType.IDENTIFIER) && token.value === 'not') ? '!' : getOperatorString(token.type);
+
     return {
       type: 'UnaryExpression',
-      operator: getOperatorString(token.type),
+      operator,
       operand,
       position: token.position,
     };

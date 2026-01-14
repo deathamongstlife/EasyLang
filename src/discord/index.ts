@@ -89,6 +89,9 @@ export class DiscordManager {
       logger.error(`Discord client error: ${error.message}`);
     });
 
+    // Make client available globally for built-in functions
+    (global as any).__discordClient = this.client;
+
     logger.debug('Discord client initialized');
   }
 
