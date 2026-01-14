@@ -1,0 +1,15 @@
+// Utility functions for testing imports
+
+function log_info(message) {
+    print("[INFO] " + message)
+}
+
+function log_error(message) {
+    print("[ERROR] " + message)
+}
+
+function add(a, b) {
+    return a + b
+}
+
+var shared_variable = "Hello from utils!"

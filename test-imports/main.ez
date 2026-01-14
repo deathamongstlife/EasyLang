@@ -1,0 +1,22 @@
+// Main file that imports other modules
+
+import "utils.ez"
+import "math_helpers.ez"
+
+// Test imported functions
+log_info("Starting main program")
+
+var result1 = add(10, 20)
+print("10 + 20 = " + result1)
+
+var result2 = multiply(5, 6)
+print("5 * 6 = " + result2)
+
+var result3 = divide(100, 4)
+print("100 / 4 = " + result3)
+
+// Test imported variables
+print("Shared variable: " + shared_variable)
+print("Pi value: " + pi)
+
+log_info("Program completed successfully")

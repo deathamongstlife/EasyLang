@@ -24,6 +24,9 @@ export const KEYWORDS = new Set([
   'use',
   'as',
 
+  // Module system
+  'import',
+
   // Boolean literals
   'true',
   'false',

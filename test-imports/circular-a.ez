@@ -1,0 +1,7 @@
+// File A that imports B
+
+print("Loading A")
+import "circular-b.ez"
+print("A loaded successfully")
+
+var a_value = 10

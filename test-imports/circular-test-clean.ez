@@ -1,0 +1,9 @@
+// Test circular imports with clear tracking
+
+print("=== Starting circular import test ===")
+
+import "circular-a.ez"
+
+print("=== Test complete ===")
+print("a_value should be: " + a_value)
+print("b_value should be: " + b_value)

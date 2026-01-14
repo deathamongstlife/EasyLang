@@ -1,0 +1,10 @@
+// Test nested imports with relative paths
+
+import "utils/logger.ez"
+import "math_helpers.ez"
+
+log_debug("Testing nested imports")
+log_warn("This is a warning message")
+
+var area = multiply(pi, 10)
+print("Area (pi * 10): " + area)

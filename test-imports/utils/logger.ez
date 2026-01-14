@@ -1,0 +1,9 @@
+// Logger utility
+
+function log_debug(message) {
+    print("[DEBUG] " + message)
+}
+
+function log_warn(message) {
+    print("[WARN] " + message)
+}

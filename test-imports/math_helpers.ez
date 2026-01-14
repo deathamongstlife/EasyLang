@@ -1,0 +1,15 @@
+// Math helper functions
+
+function multiply(a, b) {
+    return a * b
+}
+
+function divide(a, b) {
+    if b == 0 {
+        print("Error: Division by zero")
+        return null
+    }
+    return a / b
+}
+
+var pi = 3.14159

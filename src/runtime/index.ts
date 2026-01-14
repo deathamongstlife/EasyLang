@@ -3,6 +3,8 @@
  * Executes the AST produced by the parser
  */
 
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   Program,
   Statement,
@@ -17,6 +19,7 @@ import {
   ExpressionStatement,
   ListenStatement,
   UseStatement,
+  ImportStatement,
   SendCommand,
   ReplyCommand,
   ReactCommand,
@@ -60,6 +63,8 @@ import { send, reply, react } from '../discord/commands';
 import { EventManager } from '../discord/events';
 import { PythonBridge } from '../python';
 import { PythonProxy } from '../python/proxy';
+import { Lexer } from '../lexer';
+import { Parser } from '../parser';
 
 export class Runtime {
   private program: Program;
@@ -68,9 +73,12 @@ export class Runtime {
   private eventManager: EventManager;
   public pythonBridge: PythonBridge;
   private pythonProxies: Map<string, PythonProxy> = new Map();
+  private importedFiles: Set<string> = new Set();
+  private currentFilePath: string = '';
 
-  constructor(program: Program) {
+  constructor(program: Program, filePath: string = '') {
     this.program = program;
+    this.currentFilePath = filePath;
     this.discordManager = new DiscordManager();
     this.eventManager = new EventManager();
     this.pythonBridge = new PythonBridge();
@@ -139,6 +147,8 @@ export class Runtime {
         return this.evaluateListenStatement(node as ListenStatement, env);
       case 'UseStatement':
         return this.evaluateUseStatement(node as UseStatement, env);
+      case 'ImportStatement':
+        return this.evaluateImportStatement(node as ImportStatement, env);
       case 'SendCommand':
         return this.evaluateSendCommand(node as SendCommand, env);
       case 'ReplyCommand':
@@ -862,6 +872,103 @@ export class Runtime {
       const errorMessage = error instanceof Error ? error.message : String(error);
       throw new RuntimeError(
         errorMessage,
+        node.position?.line,
+        node.position?.column
+      );
+    }
+  }
+
+  /**
+   * Evaluate an import statement: import "path/to/file.ez"
+   */
+  private async evaluateImportStatement(
+    node: ImportStatement,
+    env: Environment
+  ): Promise<RuntimeValue> {
+    let importPath = node.path;
+
+    // Resolve the import path relative to the current file
+    let resolvedPath: string;
+
+    if (path.isAbsolute(importPath)) {
+      // Absolute path
+      resolvedPath = importPath;
+    } else {
+      // Relative path - resolve relative to current file's directory
+      const currentDir = this.currentFilePath ? path.dirname(this.currentFilePath) : process.cwd();
+      resolvedPath = path.resolve(currentDir, importPath);
+    }
+
+    // Ensure .ez extension
+    if (!resolvedPath.endsWith('.ez')) {
+      resolvedPath += '.ez';
+    }
+
+    // Normalize path for consistency in tracking
+    resolvedPath = path.normalize(resolvedPath);
+
+    // Check for circular imports - mark BEFORE processing to prevent infinite loops
+    if (this.importedFiles.has(resolvedPath)) {
+      logger.debug(`Skipping already imported file: ${resolvedPath}`);
+      return makeNull();
+    }
+
+    // Mark this file as imported to prevent circular imports BEFORE processing
+    this.importedFiles.add(resolvedPath);
+
+    // Check if file exists
+    if (!fs.existsSync(resolvedPath)) {
+      // Remove from imported files if file doesn't exist
+      this.importedFiles.delete(resolvedPath);
+      throw new RuntimeError(
+        `Import error: File not found: ${importPath} (resolved to: ${resolvedPath})`,
+        node.position?.line,
+        node.position?.column
+      );
+    }
+
+    try {
+
+      logger.debug(`Importing file: ${resolvedPath}`);
+
+      // Read file content
+      const content = fs.readFileSync(resolvedPath, 'utf-8');
+
+      // Tokenize the imported file
+      const lexer = new Lexer(content);
+      const tokens = lexer.tokenize();
+
+      // Parse the imported file
+      const parser = new Parser(tokens);
+      const program = parser.parse();
+
+      // Save current file path
+      const previousFilePath = this.currentFilePath;
+
+      // Update current file path for nested imports
+      this.currentFilePath = resolvedPath;
+
+      // Execute the imported file in the current environment (shared scope)
+      for (const statement of program.body) {
+        await this.evaluateStatement(statement, env);
+      }
+
+      // Restore previous file path
+      this.currentFilePath = previousFilePath;
+
+      logger.debug(`Successfully imported: ${resolvedPath}`);
+      return makeNull();
+    } catch (error) {
+      // Remove from imported files if import failed
+      this.importedFiles.delete(resolvedPath);
+
+      if (error instanceof RuntimeError) {
+        throw error;
+      }
+
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new RuntimeError(
+        `Import error: ${errorMessage}`,
         node.position?.line,
         node.position?.column
       );

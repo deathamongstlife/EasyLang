@@ -13,6 +13,7 @@ import {
   ExpressionStatement,
   ListenStatement,
   UseStatement,
+  ImportStatement,
   SendCommand,
   ReplyCommand,
   ReactCommand,
@@ -107,6 +108,10 @@ export class Parser {
 
     if (token.isKeyword('use')) {
       return this.parseUseStatement();
+    }
+
+    if (token.isKeyword('import')) {
+      return this.parseImportStatement();
     }
 
     if (token.isKeyword('send')) {
@@ -354,6 +359,23 @@ export class Parser {
       type: 'UseStatement',
       module,
       alias,
+      position,
+    };
+  }
+
+  /**
+   * Parse an import statement: import "path/to/file.ez"
+   */
+  private parseImportStatement(): ImportStatement {
+    const position = this.peek().position;
+    this.consume(TokenType.KEYWORD, "Expected 'import'");
+
+    const pathToken = this.consume(TokenType.STRING, 'Expected file path');
+    const path = pathToken.value;
+
+    return {
+      type: 'ImportStatement',
+      path,
       position,
     };
   }

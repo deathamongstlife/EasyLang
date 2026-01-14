@@ -122,6 +122,14 @@ export interface UseStatement extends Statement {
 }
 
 /**
+ * Import statement: import "path/to/file.ez"
+ */
+export interface ImportStatement extends Statement {
+  type: 'ImportStatement';
+  path: string;
+}
+
+/**
  * Discord send command: send channel message
  */
 export interface SendCommand extends Statement {
@@ -248,6 +256,7 @@ export function isStatement(node: ASTNode): node is Statement {
     node.type === 'ExpressionStatement' ||
     node.type === 'ListenStatement' ||
     node.type === 'UseStatement' ||
+    node.type === 'ImportStatement' ||
     node.type === 'SendCommand' ||
     node.type === 'ReplyCommand' ||
     node.type === 'ReactCommand'

@@ -43,7 +43,7 @@ export async function runFile(
 
     // Execute
     console.log(chalk.gray('Executing...\n'));
-    const runtime = new Runtime(program);
+    const runtime = new Runtime(program, resolvedPath);
 
     // Make command-line arguments available via get_argument() built-in
     // This would need to be added to the runtime's global environment

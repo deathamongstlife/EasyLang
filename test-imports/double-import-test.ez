@@ -1,0 +1,12 @@
+// Test importing the same file twice
+
+print("Test: Importing utils.ez twice")
+
+import "utils.ez"
+print("First import complete")
+
+import "utils.ez"
+print("Second import complete (should be skipped)")
+
+// Function should only be defined once
+log_info("Testing double import prevention")
