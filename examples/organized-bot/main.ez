@@ -488,4 +488,4 @@ print("")
 print("[MAIN] Starting bot...")
 print("[MAIN] Connecting to Discord...")
 
-login BOT_TOKEN
+bot_start(BOT_TOKEN)
