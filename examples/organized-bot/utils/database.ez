@@ -1,68 +1,29 @@
-# ========================================
-# DATABASE.EZ - Database Utilities
-# ========================================
-# Simple in-memory database for bot data
-# Written in PURE EzLang syntax
+// ========================================
+// UTILS/DATABASE.EZ - Database/Storage Functions
+// ========================================
+// Functions for managing guild settings and data
 
-# Database storage
-var database = {}
-
-# Get value from database
-function db_get(key) {
-    if key in database {
-        return database[key]
+// Get prefix for guild
+function get_prefix(guild_id) {
+    if guild_id in guild_prefixes {
+        return guild_prefixes[guild_id]
     }
-    return null
+    return DEFAULT_PREFIX
 }
 
-# Set value in database
-function db_set(key, value) {
-    database[key] = value
-    return true
-}
-
-# Delete value from database
-function db_delete(key) {
-    if key in database {
-        delete database[key]
-        return true
+// Set prefix for guild
+function set_prefix(guild_id, new_prefix) {
+    if new_prefix == DEFAULT_PREFIX {
+        delete guild_prefixes[guild_id]
+    } else {
+        guild_prefixes[guild_id] = new_prefix
     }
-    return false
 }
 
-# Check if key exists
-function db_exists(key) {
-    return key in database
-}
-
-# Clear entire database
-function db_clear() {
-    database = {}
-    return true
-}
-
-# Get all keys
-function db_keys() {
-    var keys = []
-    var key = ""
-    # In EzLang, would iterate through database keys
-    return keys
-}
-
-# Get guild prefix
-function db_get_prefix(guild_id) {
-    var key = "prefix:" + guild_id
-    var prefix = db_get(key)
-    if prefix == null {
-        return "!"
-    }
-    return prefix
-}
-
-# Set guild prefix
-function db_set_prefix(guild_id, prefix) {
-    var key = "prefix:" + guild_id
-    return db_set(key, prefix)
+// Validate prefix length
+function is_valid_prefix(prefix_str) {
+    var len = length(prefix_str)
+    return len > 0 and len <= 5
 }
 
 print("[DATABASE] Database utilities loaded")

@@ -1,10 +1,24 @@
-# ========================================
-# SLASH COMMAND: /serverinfo
-# ========================================
-# Display server/guild information
-# Written in PURE EzLang syntax
+// ========================================
+// COMMANDS/SLASH/SERVERINFO.EZ - Server Info Command
+// ========================================
+// Display server/guild information
 
-# See main.ez for implementation
-# Command uses interaction.guild to get server info
+function execute_serverinfo(interaction) {
+    var cooldown = check_cooldown("slash_serverinfo", interaction.user.id, 5000)
+    if cooldown > 0 {
+        reply_interaction(interaction, "Please wait " + format_cooldown(cooldown) + " before using this command again.", true)
+        return
+    }
 
-print("[COMMANDS/SLASH] Server info command documentation loaded")
+    var info = "**Server Information:**\n"
+    info = info + "**Guild ID:** " + interaction.guild.id + "\n"
+    info = info + "**Member Count:** Coming soon\n"
+    info = info + "**Channel Count:** Coming soon"
+
+    reply_interaction(interaction, info, false)
+}
+
+// Register command handler
+register_slash_handler("serverinfo", execute_serverinfo)
+
+print("[COMMANDS/SLASH/SERVERINFO] Server info command loaded")

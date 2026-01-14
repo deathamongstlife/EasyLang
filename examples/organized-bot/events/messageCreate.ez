@@ -1,31 +1,34 @@
-# ========================================
-# MESSAGECREATE.EZ - Message Event Handler
-# ========================================
-# This file demonstrates how message events would be organized
-# In the actual bot, this is integrated into main.ez
-# Written in PURE EzLang syntax
+// ========================================
+// EVENTS/MESSAGECREATE.EZ - Message Event
+// ========================================
+// Handles incoming messages and prefix commands
 
-# NOTE: In EzLang, events are defined using the "listen" syntax directly
-# This file shows what would be in a separate module if imports were supported
+listen "messageCreate" (message) {
+    if message.author.bot {
+        return
+    }
 
-# Example messageCreate event handler (see main.ez for actual implementation):
-#
-# listen messageCreate with message {
-#     if message.author.bot {
-#         return
-#     }
-#
-#     var content = message.content
-#     var prefix = get_prefix(message.guild.id)
-#
-#     if not starts_with(content, prefix) {
-#         return
-#     }
-#
-#     # Parse and handle commands
-#     var parts = split(content, " ")
-#     var command_name = parts[0]
-#     # ... command handling logic
-# }
+    var content = message.content
+    var guild_id = message.guild.id
+    var prefix = get_prefix(guild_id)
 
-print("[EVENTS/MESSAGE] Message event documentation loaded")
+    if not starts_with(content, prefix) {
+        return
+    }
+
+    var without_prefix = substr(content, length(prefix), length(content))
+    var parts = split(without_prefix, " ")
+    var command_name = parts[0]
+
+    var args = []
+    var i = 1
+    while i < length(parts) {
+        args = append(args, parts[i])
+        i = i + 1
+    }
+
+    // Route to command handler
+    handle_message_command(command_name, message, args)
+}
+
+print("[EVENTS/MESSAGECREATE] Message event registered")

@@ -1,0 +1,17 @@
+// ========================================
+// COMPONENTS/BUTTONS.EZ - Button Handlers
+// ========================================
+// Handle button click interactions
+
+function handle_button_interaction(interaction) {
+    var custom_id = interaction.customId
+
+    if custom_id == "example-button-id" {
+        reply_interaction(interaction, "Replied from a Button interaction!", true)
+        return true
+    }
+
+    return false
+}
+
+print("[COMPONENTS/BUTTONS] Button handlers loaded")

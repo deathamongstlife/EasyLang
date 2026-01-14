@@ -1,10 +1,19 @@
-# ========================================
-# MESSAGE COMMAND: !ping
-# ========================================
-# Prefix command to check bot latency
-# Written in PURE EzLang syntax
+// ========================================
+// COMMANDS/MESSAGE/PING.EZ - Ping Message Command
+// ========================================
+// Check bot latency with prefix command
 
-# See main.ez for implementation in messageCreate event
-# Uses "reply message with" syntax
+function execute_msg_ping(message, args) {
+    var cooldown = check_cooldown("msg_ping", message.author.id, 5000)
+    if cooldown > 0 {
+        reply message "Please wait " + format_cooldown(cooldown) + " before using this command again."
+        return
+    }
 
-print("[COMMANDS/MESSAGE] Ping message command documentation loaded")
+    reply message "**Pong!** Message command received!"
+}
+
+// Register command handler
+register_message_handler("ping", execute_msg_ping)
+
+print("[COMMANDS/MESSAGE/PING] Ping message command loaded")

@@ -1,0 +1,82 @@
+// ========================================
+// HANDLERS/COMMAND-REGISTRY.EZ - Command Registration
+// ========================================
+// System for registering and handling commands
+
+// Command storage maps
+var slash_commands = {}
+var message_commands = {}
+var context_commands = {}
+
+// Register slash command handler
+function register_slash_handler(name, callback) {
+    slash_commands[name] = callback
+    log_debug("Registered slash handler: " + name)
+}
+
+// Register message command handler
+function register_message_handler(name, callback) {
+    message_commands[name] = callback
+    log_debug("Registered message handler: " + name)
+}
+
+// Register context menu handler
+function register_context_handler(name, callback) {
+    context_commands[name] = callback
+    log_debug("Registered context handler: " + name)
+}
+
+// Handle slash command
+function handle_slash_command(name, interaction) {
+    if name in slash_commands {
+        log_command("SLASH", name, interaction.user.id)
+        var handler = slash_commands[name]
+        handler(interaction)
+        return true
+    }
+    return false
+}
+
+// Handle message command
+function handle_message_command(name, message, args) {
+    if name in message_commands {
+        log_command("MESSAGE", name, message.author.id)
+        var handler = message_commands[name]
+        handler(message, args)
+        return true
+    }
+    return false
+}
+
+// Handle context menu command
+function handle_context_command(name, interaction) {
+    if name in context_commands {
+        log_command("CONTEXT", name, interaction.user.id)
+        var handler = context_commands[name]
+        handler(interaction)
+        return true
+    }
+    return false
+}
+
+// Note: reply_interaction() is a built-in function
+// Signature: reply_interaction(interaction, content, ephemeral)
+
+// Send interaction message with components
+function send_interaction_message(interaction, content, options) {
+    var message_options = {}
+
+    if "components" in options {
+        message_options.components = options.components
+    }
+
+    if "ephemeral" in options {
+        if options.ephemeral {
+            message_options.ephemeral = true
+        }
+    }
+
+    interaction_reply(interaction, content, message_options)
+}
+
+print("[COMMAND-REGISTRY] Command registry loaded")

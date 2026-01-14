@@ -1,0 +1,262 @@
+# EzLang Tier 1 Discord Features Demo
+# This file demonstrates all newly implemented Discord features
+
+function demo_enhanced_embeds(channel) {
+    print("=== Enhanced Embed Features ===")
+
+    # Create a rich embed with all new features
+    let embed = create_embed(
+        "Complete Embed Demo",
+        "This embed showcases all Tier 1 enhanced features!",
+        0x5865F2
+    )
+
+    # Set author with icon and URL
+    embed_set_author(embed, "EzLang Bot", "https://i.imgur.com/AfFp7pu.png", "https://github.com")
+
+    # Set footer with icon
+    embed_set_footer(embed, "Powered by EzLang", "https://i.imgur.com/AfFp7pu.png")
+
+    # Set large image
+    embed_set_image(embed, "https://i.imgur.com/AfFp7pu.png")
+
+    # Set thumbnail
+    embed_set_thumbnail(embed, "https://i.imgur.com/AfFp7pu.png")
+
+    # Set timestamp to current time
+    embed_set_timestamp(embed)
+
+    # Set URL
+    embed_set_url(embed, "https://discord.js.org")
+
+    # Add some fields
+    embed_add_field(embed, "New Feature", "Enhanced embeds!", true)
+    embed_add_field(embed, "Status", "Working perfectly!", true)
+
+    # Send the embed
+    send_message(channel, "Check out this rich embed!", {
+        embeds: [embed]
+    })
+}
+
+function demo_reactions(message, channel) {
+    print("=== Message Reactions ===")
+
+    # Add various reactions
+    add_reaction(message, "👍")
+    add_reaction(message, "❤️")
+    add_reaction(message, "🎉")
+    add_reaction(message, "🔥")
+
+    wait(2)
+
+    # Fetch users who reacted with thumbs up
+    let users = fetch_reactions(message, "👍")
+    print("Users who reacted with 👍: " + str(length(users)))
+
+    # Remove a specific reaction
+    remove_reaction(message, "🔥")
+
+    # Clear all reactions
+    # clear_reactions(message)
+}
+
+function demo_pins(channel) {
+    print("=== Pin Management ===")
+
+    # Send a message to pin
+    let msg = send_message(channel, "📌 This message will be pinned!")
+
+    # Pin the message
+    pin_message(msg)
+
+    wait(2)
+
+    # Fetch all pinned messages
+    let pinned = fetch_pinned_messages(channel)
+    print("Total pinned messages: " + str(length(pinned)))
+
+    # Unpin the message
+    unpin_message(msg)
+}
+
+function demo_ban_management(guild, userId) {
+    print("=== Ban Management ===")
+
+    # Fetch all bans
+    let bans = fetch_bans(guild)
+    print("Total bans: " + str(length(bans)))
+
+    # Fetch specific ban (if exists)
+    # let ban = fetch_ban(guild, userId)
+    # print("Ban reason: " + ban.reason)
+
+    # Unban a user (admin only!)
+    # unban_user(guild, userId, "Appeal accepted")
+}
+
+function demo_bulk_operations(channel) {
+    print("=== Bulk Message Operations ===")
+
+    # Send multiple messages
+    send_message(channel, "Message 1")
+    send_message(channel, "Message 2")
+    send_message(channel, "Message 3")
+    send_message(channel, "Message 4")
+    send_message(channel, "Message 5")
+
+    wait(1)
+
+    # Bulk delete messages (2-100, less than 14 days old)
+    let deleted_count = bulk_delete(channel, 5)
+    print("Deleted " + str(deleted_count) + " messages")
+
+    # Fetch message history
+    let messages = fetch_messages(channel, 10)
+    print("Fetched " + str(length(messages)) + " messages from history")
+}
+
+function demo_context_menus(client) {
+    print("=== Context Menu Commands ===")
+
+    # Register user context menu
+    register_user_context_menu("User Info", function(interaction, user) {
+        let embed = create_embed("User Information", "Details about " + user.tag, 0x3498DB)
+        embed_add_field(embed, "User ID", user.id, true)
+        embed_add_field(embed, "Username", user.username, true)
+        interaction_reply(interaction, "", {
+            embeds: [embed],
+            ephemeral: true
+        })
+    })
+
+    # Register message context menu
+    register_message_context_menu("Message Info", function(interaction, message) {
+        let embed = create_embed("Message Information", "Details about this message", 0xE74C3C)
+        embed_add_field(embed, "Message ID", message.id, true)
+        embed_add_field(embed, "Content Length", str(length(message.content)), true)
+        interaction_reply(interaction, "", {
+            embeds: [embed],
+            ephemeral: true
+        })
+    })
+
+    print("Context menus registered!")
+}
+
+function demo_file_system() {
+    print("=== File System Operations ===")
+
+    # Check if a directory exists
+    let bot_dir_exists = fs_exists("./bots")
+    print("Bots directory exists: " + str(bot_dir_exists))
+
+    # List files in a directory
+    if bot_dir_exists {
+        let files = fs_read_dir("./bots")
+        print("Files in bots directory:")
+        for let i = 0; i < length(files); i = i + 1 {
+            let file = files[i]
+            print("  - " + file)
+
+            # Check if it's a file or directory
+            let full_path = path_join("./bots", file)
+            if fs_is_file(full_path) {
+                print("    (file)")
+            } else if fs_is_dir(full_path) {
+                print("    (directory)")
+            }
+        }
+    }
+
+    # Write a test file
+    let test_path = path_join(".", "test_file.txt")
+    fs_write_file(test_path, "Hello from EzLang!\nTier 1 features working!")
+    print("Created test file: " + test_path)
+
+    # Read the file back
+    if fs_exists(test_path) {
+        let content = fs_read_file(test_path)
+        print("File content:")
+        print(content)
+    }
+}
+
+function demo_combined_features(channel) {
+    print("=== Combined Feature Demo ===")
+
+    # Create a comprehensive embed with reactions and pinning
+    let embed = create_embed(
+        "🎯 Tier 1 Features Showcase",
+        "All new features working together!",
+        0x2ECC71
+    )
+
+    embed_set_author(embed, "EzLang Bot", "https://i.imgur.com/AfFp7pu.png")
+    embed_set_thumbnail(embed, "https://i.imgur.com/AfFp7pu.png")
+    embed_set_timestamp(embed)
+
+    # Add fields for each feature category
+    embed_add_field(embed, "✨ Enhanced Embeds", "Author, footer, images, thumbnails, timestamps, URLs", false)
+    embed_add_field(embed, "👍 Message Reactions", "Add, remove, clear, and fetch reactions", false)
+    embed_add_field(embed, "📌 Pin Management", "Pin, unpin, and fetch pinned messages", false)
+    embed_add_field(embed, "🔨 Ban Management", "Unban users, fetch bans", false)
+    embed_add_field(embed, "📚 Bulk Operations", "Delete multiple messages, fetch message history", false)
+    embed_add_field(embed, "📂 File System", "Read/write files, list directories, check paths", false)
+
+    embed_set_footer(embed, "React to vote on features!", "https://i.imgur.com/AfFp7pu.png")
+
+    # Send the message
+    let msg = send_message(channel, "", {
+        embeds: [embed]
+    })
+
+    # Add reaction options
+    add_reaction(msg, "✨")  # Embeds
+    add_reaction(msg, "👍")  # Reactions
+    add_reaction(msg, "📌")  # Pins
+    add_reaction(msg, "🔨")  # Bans
+    add_reaction(msg, "📚")  # Bulk ops
+    add_reaction(msg, "📂")  # File system
+
+    # Pin this important message
+    pin_message(msg)
+
+    print("Combined demo complete!")
+}
+
+# Main demo function
+function run_tier1_demos(channel, guild) {
+    print("========================================")
+    print("  EzLang Tier 1 Features Demonstration")
+    print("========================================")
+    print("")
+
+    # Demo 1: Enhanced Embeds
+    demo_enhanced_embeds(channel)
+    wait(2)
+
+    # Demo 2: File System (safe to run first)
+    demo_file_system()
+    wait(2)
+
+    # Demo 3: Combined Features
+    demo_combined_features(channel)
+    wait(2)
+
+    print("")
+    print("========================================")
+    print("  All Tier 1 Features Demonstrated!")
+    print("========================================")
+    print("")
+    print("To test other features, use these functions:")
+    print("  - demo_reactions(message, channel)")
+    print("  - demo_pins(channel)")
+    print("  - demo_ban_management(guild, userId)")
+    print("  - demo_bulk_operations(channel)")
+    print("  - demo_context_menus(client)")
+}
+
+# Note: This is a demonstration file
+# To use these features in your bot, call the appropriate functions
+# from your bot's event handlers (messageCreate, interactionCreate, etc.)

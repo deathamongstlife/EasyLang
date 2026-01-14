@@ -1,0 +1,18 @@
+// ========================================
+// COMPONENTS/SELECTS.EZ - Select Menu Handlers
+// ========================================
+// Handle select menu interactions
+
+function handle_select_interaction(interaction) {
+    var custom_id = interaction.customId
+
+    if custom_id == "example-menu-id" {
+        var selected = interaction.values[0]
+        reply_interaction(interaction, "Replied from a Select Menu interaction! (You selected **" + selected + "**).", true)
+        return true
+    }
+
+    return false
+}
+
+print("[COMPONENTS/SELECTS] Select menu handlers loaded")

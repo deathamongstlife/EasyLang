@@ -1,23 +1,86 @@
-# ========================================
-# READY.EZ - Bot Ready Event
-# ========================================
-# This file demonstrates how the ready event would be organized
-# In the actual bot, this is integrated into main.ez
-# Written in PURE EzLang syntax
+// ========================================
+// EVENTS/READY.EZ - Ready Event
+// ========================================
+// Fires when bot connects to Discord
 
-# NOTE: In EzLang, events are defined using the "listen" syntax directly
-# This file shows what would be in a separate module if imports were supported
+listen "ready" (client) {
+    print("========================================")
+    print("Bot is ready!")
+    print("Logged in as: " + client.user.username)
+    print("Bot ID: " + client.user.id)
+    print("Serving guilds: " + str(client.guildCount))
+    print("========================================")
 
-# Example ready event handler (see main.ez for actual implementation):
-#
-# listen ready with client {
-#     print("========================================")
-#     print("Bot is ready!")
-#     print("Logged in as: " + client.user.username)
-#     print("Bot ID: " + client.user.id)
-#     print("========================================")
-#
-#     set_status("online", "playing", "with EzLang")
-# }
+    set_status("online", "playing", status_messages[0])
 
-print("[EVENTS/READY] Ready event documentation loaded")
+    // Register all slash commands with Discord
+    print("[READY] Registering slash commands...")
+
+    // Slash command: /ping
+    register_command({
+        name: "ping",
+        description: "Replies with Pong!",
+        type: 1
+    })
+
+    // Slash command: /help
+    register_command({
+        name: "help",
+        description: "Replies with a list of available application commands.",
+        type: 1
+    })
+
+    // Slash command: /userinfo
+    register_command({
+        name: "userinfo",
+        description: "Get information about a user.",
+        type: 1,
+        options: [
+            {
+                name: "user",
+                description: "The user to get information about",
+                type: 6,
+                required: false
+            }
+        ]
+    })
+
+    // Slash command: /serverinfo
+    register_command({
+        name: "serverinfo",
+        description: "Get information about the server.",
+        type: 1
+    })
+
+    // Slash command: /components
+    register_command({
+        name: "components",
+        description: "[TESTING COMMAND] Replies with an example of components to test.",
+        type: 1
+    })
+
+    // Slash command: /show-modal
+    register_command({
+        name: "show-modal",
+        description: "[TESTING COMMAND] Opens a modal.",
+        type: 1
+    })
+
+    // User context menu: User Information
+    register_command({
+        name: "User Information",
+        type: 2
+    })
+
+    // Message context menu: Message Information
+    register_command({
+        name: "Message Information",
+        type: 3
+    })
+
+    print("[READY] All commands registered")
+
+    log_info("Bot is now online and ready")
+}
+
+print("[EVENTS/READY] Ready event registered")

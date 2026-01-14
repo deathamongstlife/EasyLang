@@ -1,0 +1,35 @@
+// ========================================
+// CONTEXT/MESSAGEINFO.EZ - Message Context Menu
+// ========================================
+// Right-click message to get info
+
+function execute_ctx_messageinfo(interaction) {
+    var cooldown = check_cooldown("ctx_msginfo", interaction.user.id, 5000)
+    if cooldown > 0 {
+        reply_interaction(interaction, "Please wait " + format_cooldown(cooldown) + " before using this command again.", true)
+        return
+    }
+
+    var target = interaction.targetMessage
+
+    if not target {
+        reply_interaction(interaction, "Invalid target!", true)
+        return
+    }
+
+    var info = "**Author:** " + target.author.username + "\n"
+
+    var content_display = "(empty)"
+    if length(target.content) > 0 {
+        content_display = target.content
+    }
+    info = info + "**Content:** " + content_display + "\n"
+    info = info + "**Message ID:** " + target.id
+
+    reply_interaction(interaction, info, true)
+}
+
+// Register command handler
+register_context_handler("Message Information", execute_ctx_messageinfo)
+
+print("[CONTEXT/MESSAGEINFO] Message info context menu loaded")

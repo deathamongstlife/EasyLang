@@ -1,29 +1,19 @@
-# ========================================
-# SLASH COMMAND: /ping
-# ========================================
-# Description: Check bot latency and response time
-# Cooldown: 5000ms (5 seconds)
-# Permissions: None
-# Written in PURE EzLang syntax
+// ========================================
+// COMMANDS/SLASH/PING.EZ - Ping Command
+// ========================================
+// Check bot latency
 
-# NOTE: This file demonstrates command organization
-# In the actual bot (main.ez), the implementation uses:
+function execute_ping(interaction) {
+    var cooldown = check_cooldown("slash_ping", interaction.user.id, 5000)
+    if cooldown > 0 {
+        reply_interaction(interaction, "Please wait " + format_cooldown(cooldown) + " before using this command again.", true)
+        return
+    }
 
-# Command Registration:
-# register_command({
-#     name: "ping",
-#     description: "Replies with Pong!",
-#     type: "CHAT_INPUT"
-# })
+    reply_interaction(interaction, "**Pong!** Slash command received!", false)
+}
 
-# Command Handler (in interactionCreate event):
-# if command_name == "ping" {
-#     var cooldown = check_cooldown("slash_ping", interaction.user.id, 5000)
-#     if cooldown > 0 {
-#         reply_interaction interaction with "Please wait..." ephemeral
-#         return
-#     }
-#     reply_interaction interaction with "**Pong!** Slash command received!"
-# }
+// Register command handler
+register_slash_handler("ping", execute_ping)
 
-print("[COMMANDS/SLASH] Ping command documentation loaded")
+print("[COMMANDS/SLASH/PING] Ping command loaded")

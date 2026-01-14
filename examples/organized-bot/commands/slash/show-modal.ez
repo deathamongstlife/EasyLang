@@ -1,11 +1,21 @@
-# ========================================
-# SLASH COMMAND: /show-modal
-# ========================================
-# Open a modal form for user input
-# Developer only command
-# Written in PURE EzLang syntax
+// ========================================
+// COMMANDS/SLASH/SHOW-MODAL.EZ - Show Modal Command
+// ========================================
+// Open a modal form (developer only)
 
-# See main.ez for implementation
-# Uses create_modal, add_modal_text_input, show_modal
+function execute_show_modal(interaction) {
+    if not is_developer(interaction.user.id) {
+        reply_interaction(interaction, "❌ This command is only available to bot developers.", true)
+        return
+    }
 
-print("[COMMANDS/SLASH] Show modal command documentation loaded")
+    var modal = create_modal("example-modal-id", "Example Modal")
+    add_modal_text_input(modal, "example-modal-id-field-1", "What is your Discord username?", "short", true, 2, 15, "Enter your username here!")
+
+    show_modal(interaction, modal)
+}
+
+// Register command handler
+register_slash_handler("show-modal", execute_show_modal)
+
+print("[COMMANDS/SLASH/SHOW-MODAL] Show modal command loaded")

@@ -1,34 +1,39 @@
-# ========================================
-# INTERACTIONCREATE.EZ - Interaction Handler
-# ========================================
-# This file demonstrates how interactions would be organized
-# In the actual bot, this is integrated into main.ez
-# Written in PURE EzLang syntax
+// ========================================
+// EVENTS/INTERACTIONCREATE.EZ - Interaction Event
+// ========================================
+// Handles all Discord interactions
 
-# NOTE: In EzLang, events are defined using the "listen" syntax directly
-# This file shows what would be in a separate module if imports were supported
+listen "interactionCreate" (interaction) {
+    var interaction_type = interaction.type
 
-# Example interactionCreate event handler (see main.ez for actual implementation):
-#
-# listen interactionCreate with interaction {
-#     var interaction_type = interaction.type
-#
-#     if interaction_type == "APPLICATION_COMMAND" {
-#         var command_name = interaction.commandName
-#         # Handle slash commands
-#     }
-#     else if interaction_type == "BUTTON" {
-#         var custom_id = interaction.customId
-#         # Handle button clicks
-#     }
-#     else if interaction_type == "SELECT_MENU" {
-#         var custom_id = interaction.customId
-#         # Handle select menus
-#     }
-#     else if interaction_type == "MODAL_SUBMIT" {
-#         var custom_id = interaction.customId
-#         # Handle modal submissions
-#     }
-# }
+    // SLASH COMMANDS
+    if interaction_type == "APPLICATION_COMMAND" {
+        handle_slash_command(interaction.commandName, interaction)
+    }
 
-print("[EVENTS/INTERACTION] Interaction event documentation loaded")
+    // CONTEXT MENU COMMANDS
+    if interaction_type == "USER_CONTEXT_MENU" {
+        handle_context_command(interaction.commandName, interaction)
+    }
+
+    if interaction_type == "MESSAGE_CONTEXT_MENU" {
+        handle_context_command(interaction.commandName, interaction)
+    }
+
+    // BUTTON INTERACTIONS
+    if interaction_type == "BUTTON" {
+        handle_button_interaction(interaction)
+    }
+
+    // SELECT MENU INTERACTIONS
+    if interaction_type == "SELECT_MENU" {
+        handle_select_interaction(interaction)
+    }
+
+    // MODAL SUBMIT INTERACTIONS
+    if interaction_type == "MODAL_SUBMIT" {
+        handle_modal_interaction(interaction)
+    }
+}
+
+print("[EVENTS/INTERACTIONCREATE] Interaction event registered")

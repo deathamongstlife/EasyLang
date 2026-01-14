@@ -1,10 +1,32 @@
-# ========================================
-# SLASH COMMAND: /userinfo
-# ========================================
-# Display information about a user
-# Written in PURE EzLang syntax
+// ========================================
+// COMMANDS/SLASH/USERINFO.EZ - User Info Command
+// ========================================
+// Display information about a user
 
-# See main.ez for implementation
-# Command uses interaction.user to get user info
+function execute_userinfo(interaction) {
+    var cooldown = check_cooldown("slash_userinfo", interaction.user.id, 5000)
+    if cooldown > 0 {
+        reply_interaction(interaction, "Please wait " + format_cooldown(cooldown) + " before using this command again.", true)
+        return
+    }
 
-print("[COMMANDS/SLASH] User info command documentation loaded")
+    var target_user = interaction.user
+
+    var info = "**User Information:**\n"
+    info = info + "**Username:** " + target_user.username + "\n"
+    info = info + "**ID:** " + target_user.id + "\n"
+
+    var bot_status = "No"
+    if target_user.bot {
+        bot_status = "Yes"
+    }
+    info = info + "**Bot?** " + bot_status + "\n"
+    info = info + "**Display Name:** " + target_user.displayName
+
+    reply_interaction(interaction, info, false)
+}
+
+// Register command handler
+register_slash_handler("userinfo", execute_userinfo)
+
+print("[COMMANDS/SLASH/USERINFO] User info command loaded")

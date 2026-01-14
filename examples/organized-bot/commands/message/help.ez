@@ -1,0 +1,36 @@
+// ========================================
+// COMMANDS/MESSAGE/HELP.EZ - Help Message Command
+// ========================================
+// Display available commands with prefix
+
+function execute_msg_help(message, args) {
+    var cooldown = check_cooldown("msg_help", message.author.id, 10000)
+    if cooldown > 0 {
+        reply message "Please wait " + format_cooldown(cooldown) + " before using this command again."
+        return
+    }
+
+    var guild_id = message.guild.id
+    var prefix = get_prefix(guild_id)
+
+    var help_text = "**Available Commands:**\n\n"
+    help_text = help_text + "**Message Commands (prefix: " + prefix + "):**\n"
+    help_text = help_text + "`" + prefix + "ping` - Check bot latency\n"
+    help_text = help_text + "`" + prefix + "help` - Show this help message\n"
+    help_text = help_text + "`" + prefix + "set prefix <prefix>` - Change bot prefix\n\n"
+
+    help_text = help_text + "**Slash Commands:**\n"
+    help_text = help_text + "`/ping` - Check bot latency\n"
+    help_text = help_text + "`/help` - Show command list\n"
+    help_text = help_text + "`/userinfo` - Get user information\n"
+    help_text = help_text + "`/serverinfo` - Get server information\n"
+    help_text = help_text + "`/components` - Show interactive components\n"
+    help_text = help_text + "`/show-modal` - Display modal form\n"
+
+    reply message help_text
+}
+
+// Register command handler
+register_message_handler("help", execute_msg_help)
+
+print("[COMMANDS/MESSAGE/HELP] Help message command loaded")

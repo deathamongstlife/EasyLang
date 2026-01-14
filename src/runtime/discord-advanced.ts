@@ -8,6 +8,7 @@ import {
   makeBoolean,
   makeObject,
   makeNativeFunction,
+  makeArray,
   isString,
   isNumber,
   isBoolean,
@@ -305,6 +306,91 @@ export const banMember = makeNativeFunction('ban_member', async (args: RuntimeVa
 
   await member.ban({ reason, deleteMessageDays });
   return makeBoolean(true);
+});
+
+/**
+ * unban_user(guild, userId, reason?)
+ * Unban a user from the guild
+ */
+export const unbanUser = makeNativeFunction('unban_user', async (args: RuntimeValue[]) => {
+  if (args.length < 2) {
+    throw new RuntimeError(`unban_user() expects at least 2 arguments, got ${args.length}`);
+  }
+
+  const guild = getRawValue(args[0]) as Guild;
+  if (!guild || !guild.bans) {
+    throw new RuntimeError('Invalid guild object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('User ID must be a string');
+  }
+
+  const userId = args[1].value;
+  const reason = args.length >= 3 && isString(args[2]) ? args[2].value : undefined;
+
+  await guild.bans.remove(userId, reason);
+  return makeBoolean(true);
+});
+
+/**
+ * fetch_bans(guild)
+ * Get all bans in the guild
+ * Returns an array of ban objects with user info and reason
+ */
+export const fetchBans = makeNativeFunction('fetch_bans', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`fetch_bans() expects 1 argument, got ${args.length}`);
+  }
+
+  const guild = getRawValue(args[0]) as Guild;
+  if (!guild || !guild.bans) {
+    throw new RuntimeError('Invalid guild object');
+  }
+
+  const bans = await guild.bans.fetch();
+  const banArray = bans.map((ban) => {
+    const properties = new Map<string, RuntimeValue>();
+    properties.set('__raw', { __rawValue: ban } as any);
+    properties.set('userId', makeString(ban.user.id));
+    properties.set('username', makeString(ban.user.username));
+    properties.set('tag', makeString(ban.user.tag));
+    properties.set('reason', makeString(ban.reason || 'No reason provided'));
+    return makeObject(properties);
+  });
+
+  return makeArray(Array.from(banArray));
+});
+
+/**
+ * fetch_ban(guild, userId)
+ * Get specific ban information for a user
+ * Returns ban object with user info and reason
+ */
+export const fetchBan = makeNativeFunction('fetch_ban', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`fetch_ban() expects 2 arguments, got ${args.length}`);
+  }
+
+  const guild = getRawValue(args[0]) as Guild;
+  if (!guild || !guild.bans) {
+    throw new RuntimeError('Invalid guild object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('User ID must be a string');
+  }
+
+  const ban = await guild.bans.fetch(args[1].value);
+
+  const properties = new Map<string, RuntimeValue>();
+  properties.set('__raw', { __rawValue: ban } as any);
+  properties.set('userId', makeString(ban.user.id));
+  properties.set('username', makeString(ban.user.username));
+  properties.set('tag', makeString(ban.user.tag));
+  properties.set('reason', makeString(ban.reason || 'No reason provided'));
+
+  return makeObject(properties);
 });
 
 /**
@@ -609,6 +695,9 @@ export const advancedDiscordBuiltins = {
   // Member Management
   kick_member: kickMember,
   ban_member: banMember,
+  unban_user: unbanUser,
+  fetch_bans: fetchBans,
+  fetch_ban: fetchBan,
   timeout_member: timeoutMember,
   fetch_member: fetchMember,
 

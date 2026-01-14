@@ -1,0 +1,18 @@
+// ========================================
+// COMPONENTS/MODALS.EZ - Modal Handlers
+// ========================================
+// Handle modal submission interactions
+
+function handle_modal_interaction(interaction) {
+    var custom_id = interaction.customId
+
+    if custom_id == "example-modal-id" {
+        var field_value = get_modal_field(interaction, "example-modal-id-field-1")
+        reply_interaction(interaction, "Hello **" + field_value + "**.", true)
+        return true
+    }
+
+    return false
+}
+
+print("[COMPONENTS/MODALS] Modal handlers loaded")

@@ -1,20 +1,10 @@
-# ========================================
-# COOLDOWNS.EZ - Cooldown Management
-# ========================================
-# Cooldown tracking and enforcement
-# Written in PURE EzLang syntax
+// ========================================
+// UTILS/COOLDOWNS.EZ - Cooldown Management
+// ========================================
+// Functions for managing command cooldowns
 
-# Cooldown storage (map: "command:user_id" -> timestamp)
-var cooldowns = {}
-
-# Initialize cooldown system
-function cooldown_init() {
-    cooldowns = {}
-    print("[COOLDOWNS] Cooldown system initialized")
-}
-
-# Check if user is on cooldown
-function is_on_cooldown(command_name, user_id, cooldown_time) {
+// Check and apply cooldown
+function check_cooldown(command_name, user_id, cooldown_ms) {
     var key = command_name + ":" + user_id
     var current_time = time()
 
@@ -22,69 +12,32 @@ function is_on_cooldown(command_name, user_id, cooldown_time) {
         var last_used = cooldowns[key]
         var time_passed = current_time - last_used
 
-        if time_passed < cooldown_time {
-            return true
+        if time_passed < cooldown_ms {
+            var remaining = cooldown_ms - time_passed
+            return remaining
         }
     }
 
-    return false
-}
-
-# Get remaining cooldown time
-function get_cooldown_remaining(command_name, user_id, cooldown_time) {
-    var key = command_name + ":" + user_id
-    var current_time = time()
-
-    if key in cooldowns {
-        var last_used = cooldowns[key]
-        var time_passed = current_time - last_used
-
-        if time_passed < cooldown_time {
-            return cooldown_time - time_passed
-        }
-    }
-
+    cooldowns[key] = current_time
     return 0
 }
 
-# Apply cooldown to user
-function apply_cooldown(command_name, user_id) {
-    var key = command_name + ":" + user_id
-    cooldowns[key] = time()
-    return true
-}
-
-# Reset cooldown for user
-function reset_cooldown(command_name, user_id) {
-    var key = command_name + ":" + user_id
-    if key in cooldowns {
-        delete cooldowns[key]
-        return true
-    }
-    return false
-}
-
-# Clear all cooldowns
-function clear_all_cooldowns() {
-    cooldowns = {}
-    return true
-}
-
-# Format cooldown time for display
-function format_cooldown_time(ms) {
+// Format cooldown time for display
+function format_cooldown(ms) {
     var seconds = ms / 1000
-
     if seconds < 60 {
         return str(seconds) + "s"
     }
-
     var minutes = seconds / 60
-    if minutes < 60 {
-        return str(minutes) + "m"
-    }
+    return str(minutes) + "m"
+}
 
-    var hours = minutes / 60
-    return str(hours) + "h"
+// Clear cooldown for a user
+function clear_cooldown(command_name, user_id) {
+    var key = command_name + ":" + user_id
+    if key in cooldowns {
+        delete cooldowns[key]
+    }
 }
 
 print("[COOLDOWNS] Cooldown utilities loaded")

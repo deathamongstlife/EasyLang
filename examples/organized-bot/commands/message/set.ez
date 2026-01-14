@@ -1,0 +1,61 @@
+// ========================================
+// COMMANDS/MESSAGE/SET.EZ - Set Message Command
+// ========================================
+// Configure bot settings (subcommands)
+
+function execute_msg_set(message, args) {
+    var cooldown = check_cooldown("msg_set", message.author.id, 5000)
+    if cooldown > 0 {
+        reply message "Please wait " + format_cooldown(cooldown) + " before using this command again."
+        return
+    }
+
+    var guild_id = message.guild.id
+    var prefix = get_prefix(guild_id)
+
+    // Check if subcommand is provided
+    if length(args) == 0 {
+        var set_help = "**Set Command Usage:**\n\n"
+        set_help = set_help + "Available subcommands:\n"
+        set_help = set_help + "`" + prefix + "set prefix <prefix>` - Change bot prefix\n\n"
+        set_help = set_help + "Example: `" + prefix + "set prefix ?`"
+        reply message set_help
+        return
+    }
+
+    var subcommand = args[0]
+
+    // SUBCOMMAND: set prefix
+    if subcommand == "prefix" {
+        // Check if value is provided
+        if length(args) < 2 {
+            reply message "You must provide a prefix value! Usage: `" + prefix + "set prefix <prefix>`"
+            return
+        }
+
+        var new_prefix = args[1]
+
+        if length(new_prefix) > 5 {
+            reply message "The prefix is too long! (" + str(length(new_prefix)) + " > 5)"
+            return
+        }
+
+        if new_prefix == DEFAULT_PREFIX {
+            delete guild_prefixes[guild_id]
+        } else {
+            guild_prefixes[guild_id] = new_prefix
+        }
+
+        reply message "Successfully updated the prefix to `" + new_prefix + "`."
+    }
+
+    // Unknown subcommand
+    else {
+        reply message "Unknown subcommand `" + subcommand + "`. Use `" + prefix + "set` to see available subcommands."
+    }
+}
+
+// Register command handler
+register_message_handler("set", execute_msg_set)
+
+print("[COMMANDS/MESSAGE/SET] Set message command loaded")

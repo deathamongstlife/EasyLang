@@ -9,6 +9,8 @@ import {
   makeBoolean,
   makeObject,
   makeNativeFunction,
+  makeArray,
+  makeNumber,
   isString,
   isNumber,
   isBoolean,
@@ -31,6 +33,8 @@ import {
   REST,
   Routes,
   SlashCommandBuilder,
+  ContextMenuCommandBuilder,
+  ApplicationCommandType,
   Message,
   Interaction,
   TextChannel,
@@ -255,6 +259,166 @@ export const embedAddField = makeNativeFunction('embed_add_field', async (args: 
   const inline = args.length >= 4 && isBoolean(args[3]) ? args[3].value : false;
 
   embed.addFields({ name: args[1].value, value: args[2].value, inline });
+
+  return args[0]; // Return the embed for chaining
+});
+
+/**
+ * embed_set_author(embed, name, iconURL?, url?)
+ * Set the author of an embed
+ */
+export const embedSetAuthor = makeNativeFunction('embed_set_author', async (args: RuntimeValue[]) => {
+  if (args.length < 2) {
+    throw new RuntimeError(`embed_set_author() expects at least 2 arguments, got ${args.length}`);
+  }
+
+  const embed = getRawValue(args[0]) as EmbedBuilder;
+  if (!embed) {
+    throw new RuntimeError('Invalid embed object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('Author name must be a string');
+  }
+
+  const authorOptions: any = { name: args[1].value };
+
+  if (args.length >= 3 && isString(args[2])) {
+    authorOptions.iconURL = args[2].value;
+  }
+
+  if (args.length >= 4 && isString(args[3])) {
+    authorOptions.url = args[3].value;
+  }
+
+  embed.setAuthor(authorOptions);
+
+  return args[0]; // Return the embed for chaining
+});
+
+/**
+ * embed_set_footer(embed, text, iconURL?)
+ * Set the footer of an embed
+ */
+export const embedSetFooter = makeNativeFunction('embed_set_footer', async (args: RuntimeValue[]) => {
+  if (args.length < 2) {
+    throw new RuntimeError(`embed_set_footer() expects at least 2 arguments, got ${args.length}`);
+  }
+
+  const embed = getRawValue(args[0]) as EmbedBuilder;
+  if (!embed) {
+    throw new RuntimeError('Invalid embed object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('Footer text must be a string');
+  }
+
+  const footerOptions: any = { text: args[1].value };
+
+  if (args.length >= 3 && isString(args[2])) {
+    footerOptions.iconURL = args[2].value;
+  }
+
+  embed.setFooter(footerOptions);
+
+  return args[0]; // Return the embed for chaining
+});
+
+/**
+ * embed_set_image(embed, url)
+ * Set the large image of an embed
+ */
+export const embedSetImage = makeNativeFunction('embed_set_image', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`embed_set_image() expects 2 arguments, got ${args.length}`);
+  }
+
+  const embed = getRawValue(args[0]) as EmbedBuilder;
+  if (!embed) {
+    throw new RuntimeError('Invalid embed object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('Image URL must be a string');
+  }
+
+  embed.setImage(args[1].value);
+
+  return args[0]; // Return the embed for chaining
+});
+
+/**
+ * embed_set_thumbnail(embed, url)
+ * Set the thumbnail image of an embed
+ */
+export const embedSetThumbnail = makeNativeFunction('embed_set_thumbnail', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`embed_set_thumbnail() expects 2 arguments, got ${args.length}`);
+  }
+
+  const embed = getRawValue(args[0]) as EmbedBuilder;
+  if (!embed) {
+    throw new RuntimeError('Invalid embed object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('Thumbnail URL must be a string');
+  }
+
+  embed.setThumbnail(args[1].value);
+
+  return args[0]; // Return the embed for chaining
+});
+
+/**
+ * embed_set_timestamp(embed, timestamp?)
+ * Set the timestamp of an embed (defaults to now)
+ */
+export const embedSetTimestamp = makeNativeFunction('embed_set_timestamp', async (args: RuntimeValue[]) => {
+  if (args.length < 1) {
+    throw new RuntimeError(`embed_set_timestamp() expects at least 1 argument, got ${args.length}`);
+  }
+
+  const embed = getRawValue(args[0]) as EmbedBuilder;
+  if (!embed) {
+    throw new RuntimeError('Invalid embed object');
+  }
+
+  if (args.length >= 2) {
+    if (isNumber(args[1])) {
+      embed.setTimestamp(args[1].value);
+    } else if (isString(args[1])) {
+      embed.setTimestamp(new Date(args[1].value));
+    } else {
+      throw new TypeError('Timestamp must be a number or string');
+    }
+  } else {
+    embed.setTimestamp(); // Use current time
+  }
+
+  return args[0]; // Return the embed for chaining
+});
+
+/**
+ * embed_set_url(embed, url)
+ * Set the URL of an embed
+ */
+export const embedSetUrl = makeNativeFunction('embed_set_url', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`embed_set_url() expects 2 arguments, got ${args.length}`);
+  }
+
+  const embed = getRawValue(args[0]) as EmbedBuilder;
+  if (!embed) {
+    throw new RuntimeError('Invalid embed object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('URL must be a string');
+  }
+
+  embed.setURL(args[1].value);
 
   return args[0]; // Return the embed for chaining
 });
@@ -788,6 +952,256 @@ export const fetchMessage = makeNativeFunction('fetch_message', async (args: Run
   return makeObject(properties);
 });
 
+// ==================== MESSAGE REACTION FUNCTIONS ====================
+
+/**
+ * add_reaction(message, emoji)
+ * Add a reaction to a message
+ */
+export const addReaction = makeNativeFunction('add_reaction', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`add_reaction() expects 2 arguments, got ${args.length}`);
+  }
+
+  const message = getRawValue(args[0]) as Message;
+  if (!message || !message.react) {
+    throw new RuntimeError('Invalid message object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('Emoji must be a string');
+  }
+
+  await message.react(args[1].value);
+  return makeBoolean(true);
+});
+
+/**
+ * remove_reaction(message, emoji, user?)
+ * Remove a reaction from a message
+ * If user is not specified, removes the bot's reaction
+ */
+export const removeReaction = makeNativeFunction('remove_reaction', async (args: RuntimeValue[]) => {
+  if (args.length < 2) {
+    throw new RuntimeError(`remove_reaction() expects at least 2 arguments, got ${args.length}`);
+  }
+
+  const message = getRawValue(args[0]) as Message;
+  if (!message || !message.reactions) {
+    throw new RuntimeError('Invalid message object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('Emoji must be a string');
+  }
+
+  const emoji = args[1].value;
+  const reaction = message.reactions.cache.get(emoji);
+
+  if (!reaction) {
+    throw new RuntimeError(`No reaction found with emoji: ${emoji}`);
+  }
+
+  if (args.length >= 3) {
+    const user = getRawValue(args[2]);
+    if (user) {
+      await reaction.users.remove(user.id);
+    } else {
+      await reaction.users.remove();
+    }
+  } else {
+    await reaction.users.remove();
+  }
+
+  return makeBoolean(true);
+});
+
+/**
+ * clear_reactions(message)
+ * Remove all reactions from a message
+ */
+export const clearReactions = makeNativeFunction('clear_reactions', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`clear_reactions() expects 1 argument, got ${args.length}`);
+  }
+
+  const message = getRawValue(args[0]) as Message;
+  if (!message || !message.reactions) {
+    throw new RuntimeError('Invalid message object');
+  }
+
+  await message.reactions.removeAll();
+  return makeBoolean(true);
+});
+
+/**
+ * fetch_reactions(message, emoji)
+ * Get users who reacted with a specific emoji
+ * Returns an array of user objects
+ */
+export const fetchReactions = makeNativeFunction('fetch_reactions', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`fetch_reactions() expects 2 arguments, got ${args.length}`);
+  }
+
+  const message = getRawValue(args[0]) as Message;
+  if (!message || !message.reactions) {
+    throw new RuntimeError('Invalid message object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('Emoji must be a string');
+  }
+
+  const emoji = args[1].value;
+  const reaction = message.reactions.cache.get(emoji);
+
+  if (!reaction) {
+    return makeArray([]);
+  }
+
+  const users = await reaction.users.fetch();
+  const userArray = users.map((user) => {
+    const properties = new Map<string, RuntimeValue>();
+    properties.set('__raw', { __rawValue: user } as any);
+    properties.set('id', makeString(user.id));
+    properties.set('username', makeString(user.username));
+    properties.set('tag', makeString(user.tag));
+    return makeObject(properties);
+  });
+
+  return makeArray(Array.from(userArray));
+});
+
+// ==================== PIN MANAGEMENT FUNCTIONS ====================
+
+/**
+ * pin_message(message)
+ * Pin a message in its channel
+ */
+export const pinMessage = makeNativeFunction('pin_message', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`pin_message() expects 1 argument, got ${args.length}`);
+  }
+
+  const message = getRawValue(args[0]) as Message;
+  if (!message || !message.pin) {
+    throw new RuntimeError('Invalid message object');
+  }
+
+  await message.pin();
+  return makeBoolean(true);
+});
+
+/**
+ * unpin_message(message)
+ * Unpin a message in its channel
+ */
+export const unpinMessage = makeNativeFunction('unpin_message', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`unpin_message() expects 1 argument, got ${args.length}`);
+  }
+
+  const message = getRawValue(args[0]) as Message;
+  if (!message || !message.unpin) {
+    throw new RuntimeError('Invalid message object');
+  }
+
+  await message.unpin();
+  return makeBoolean(true);
+});
+
+/**
+ * fetch_pinned_messages(channel)
+ * Get all pinned messages in a channel
+ * Returns an array of message objects
+ */
+export const fetchPinnedMessages = makeNativeFunction('fetch_pinned_messages', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`fetch_pinned_messages() expects 1 argument, got ${args.length}`);
+  }
+
+  const channel = getRawValue(args[0]);
+  if (!channel || !channel.messages) {
+    throw new RuntimeError('Invalid channel object');
+  }
+
+  const pinnedMessages = await channel.messages.fetchPinned();
+  const messageArray = pinnedMessages.map((message: Message) => {
+    const properties = new Map<string, RuntimeValue>();
+    properties.set('__raw', { __rawValue: message } as any);
+    properties.set('id', makeString(message.id));
+    properties.set('content', makeString(message.content));
+    properties.set('author', makeString(message.author.tag));
+    return makeObject(properties);
+  });
+
+  return makeArray(Array.from(messageArray));
+});
+
+// ==================== BULK MESSAGE OPERATIONS ====================
+
+/**
+ * bulk_delete(channel, amount)
+ * Delete multiple messages at once (2-100 messages, must be less than 14 days old)
+ */
+export const bulkDelete = makeNativeFunction('bulk_delete', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`bulk_delete() expects 2 arguments, got ${args.length}`);
+  }
+
+  const channel = getRawValue(args[0]);
+  if (!channel || !channel.bulkDelete) {
+    throw new RuntimeError('Invalid channel object');
+  }
+
+  if (!isNumber(args[1])) {
+    throw new TypeError('Amount must be a number');
+  }
+
+  const amount = args[1].value;
+  if (amount < 2 || amount > 100) {
+    throw new RuntimeError('Amount must be between 2 and 100');
+  }
+
+  const deletedMessages = await channel.bulkDelete(amount, true);
+  return makeNumber(deletedMessages.size);
+});
+
+/**
+ * fetch_messages(channel, limit?)
+ * Fetch message history from a channel
+ * Returns an array of message objects
+ */
+export const fetchMessages = makeNativeFunction('fetch_messages', async (args: RuntimeValue[]) => {
+  if (args.length < 1) {
+    throw new RuntimeError(`fetch_messages() expects at least 1 argument, got ${args.length}`);
+  }
+
+  const channel = getRawValue(args[0]);
+  if (!channel || !channel.messages) {
+    throw new RuntimeError('Invalid channel object');
+  }
+
+  const limit = args.length >= 2 && isNumber(args[1]) ? args[1].value : 50;
+
+  if (limit < 1 || limit > 100) {
+    throw new RuntimeError('Limit must be between 1 and 100');
+  }
+
+  const messages = await channel.messages.fetch({ limit });
+  const messageArray = messages.map((message: Message) => {
+    const properties = new Map<string, RuntimeValue>();
+    properties.set('__raw', { __rawValue: message } as any);
+    properties.set('id', makeString(message.id));
+    properties.set('content', makeString(message.content));
+    properties.set('author', makeString(message.author.tag));
+    return makeObject(properties);
+  });
+
+  return makeArray(Array.from(messageArray));
+});
+
 // ==================== BOT STATUS AND ADVANCED FUNCTIONS ====================
 
 /**
@@ -952,6 +1366,98 @@ const registerCommand = makeNativeFunction('register_command', async (args: Runt
   return makeBoolean(true);
 });
 
+// ==================== CONTEXT MENU COMMANDS ====================
+
+/**
+ * register_user_context_menu(name, callback)
+ * Register a user context menu command
+ * The callback will be called with the interaction and target user
+ */
+export const registerUserContextMenu = makeNativeFunction('register_user_context_menu', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`register_user_context_menu() expects 2 arguments, got ${args.length}`);
+  }
+
+  if (!isString(args[0])) {
+    throw new TypeError('Command name must be a string');
+  }
+
+  const client = getDiscordClient();
+  if (!client || !client.application) {
+    throw new RuntimeError('No Discord client available');
+  }
+
+  const commandName = args[0].value;
+  // Callback would be stored for handling interactions in a full implementation
+  // const callback = args[1];
+
+  // Build context menu command
+  const contextMenu = new ContextMenuCommandBuilder()
+    .setName(commandName)
+    .setType(ApplicationCommandType.User);
+
+  // Register the command
+  const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN || '');
+
+  try {
+    await rest.post(Routes.applicationCommands(client.user?.id || ''), {
+      body: contextMenu.toJSON(),
+    });
+
+    // Store callback for later use (would need to be handled in main bot logic)
+    // This is a simplified version - full implementation would need callback storage
+    return makeBoolean(true);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to register user context menu: ${errorMsg}`);
+  }
+});
+
+/**
+ * register_message_context_menu(name, callback)
+ * Register a message context menu command
+ * The callback will be called with the interaction and target message
+ */
+export const registerMessageContextMenu = makeNativeFunction('register_message_context_menu', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`register_message_context_menu() expects 2 arguments, got ${args.length}`);
+  }
+
+  if (!isString(args[0])) {
+    throw new TypeError('Command name must be a string');
+  }
+
+  const client = getDiscordClient();
+  if (!client || !client.application) {
+    throw new RuntimeError('No Discord client available');
+  }
+
+  const commandName = args[0].value;
+  // Callback would be stored for handling interactions in a full implementation
+  // const callback = args[1];
+
+  // Build context menu command
+  const contextMenu = new ContextMenuCommandBuilder()
+    .setName(commandName)
+    .setType(ApplicationCommandType.Message);
+
+  // Register the command
+  const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN || '');
+
+  try {
+    await rest.post(Routes.applicationCommands(client.user?.id || ''), {
+      body: contextMenu.toJSON(),
+    });
+
+    // Store callback for later use (would need to be handled in main bot logic)
+    // This is a simplified version - full implementation would need callback storage
+    return makeBoolean(true);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to register message context menu: ${errorMsg}`);
+  }
+});
+
 // Export all Discord builtin functions
 export const discordBuiltins = {
   // Slash Commands
@@ -960,6 +1466,12 @@ export const discordBuiltins = {
   // Embeds
   create_embed: createEmbed,
   embed_add_field: embedAddField,
+  embed_set_author: embedSetAuthor,
+  embed_set_footer: embedSetFooter,
+  embed_set_image: embedSetImage,
+  embed_set_thumbnail: embedSetThumbnail,
+  embed_set_timestamp: embedSetTimestamp,
+  embed_set_url: embedSetUrl,
 
   // Buttons
   create_button: createButton,
@@ -988,6 +1500,25 @@ export const discordBuiltins = {
   edit_message: editMessage,
   delete_message: deleteMessage,
   fetch_message: fetchMessage,
+
+  // Message Reactions
+  add_reaction: addReaction,
+  remove_reaction: removeReaction,
+  clear_reactions: clearReactions,
+  fetch_reactions: fetchReactions,
+
+  // Pin Management
+  pin_message: pinMessage,
+  unpin_message: unpinMessage,
+  fetch_pinned_messages: fetchPinnedMessages,
+
+  // Bulk Operations
+  bulk_delete: bulkDelete,
+  fetch_messages: fetchMessages,
+
+  // Context Menus
+  register_user_context_menu: registerUserContextMenu,
+  register_message_context_menu: registerMessageContextMenu,
 
   // Bot Status and Advanced Functions
   set_status: setBotStatus,

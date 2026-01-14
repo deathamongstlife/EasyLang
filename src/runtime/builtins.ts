@@ -35,6 +35,8 @@ import {
 } from 'discord.js';
 import { discordBuiltins } from './discord-builtins';
 import { advancedDiscordBuiltins } from './discord-advanced';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * print(...args) - Print values to console
@@ -346,6 +348,172 @@ const timeFunction = makeNativeFunction('time', async (args: RuntimeValue[]) => 
     throw new RuntimeError(`time() expects 0 arguments, got ${args.length}`);
   }
   return makeNumber(Date.now());
+});
+
+// ==================== FILE SYSTEM FUNCTIONS ====================
+
+/**
+ * fs_read_dir(path) - List files and directories in a directory
+ * Returns an array of file/directory names
+ */
+const fsReadDir = makeNativeFunction('fs_read_dir', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`fs_read_dir() expects 1 argument, got ${args.length}`);
+  }
+
+  if (!isString(args[0])) {
+    throw new TypeError('Path must be a string');
+  }
+
+  const dirPath = args[0].value;
+
+  try {
+    const files = fs.readdirSync(dirPath);
+    const fileArray = files.map(file => makeString(file));
+    return makeArray(fileArray);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to read directory: ${errorMsg}`);
+  }
+});
+
+/**
+ * fs_exists(path) - Check if a file or directory exists
+ * Returns true if exists, false otherwise
+ */
+const fsExists = makeNativeFunction('fs_exists', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`fs_exists() expects 1 argument, got ${args.length}`);
+  }
+
+  if (!isString(args[0])) {
+    throw new TypeError('Path must be a string');
+  }
+
+  const filePath = args[0].value;
+  return makeBoolean(fs.existsSync(filePath));
+});
+
+/**
+ * fs_is_file(path) - Check if a path is a file
+ * Returns true if it's a file, false otherwise
+ */
+const fsIsFile = makeNativeFunction('fs_is_file', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`fs_is_file() expects 1 argument, got ${args.length}`);
+  }
+
+  if (!isString(args[0])) {
+    throw new TypeError('Path must be a string');
+  }
+
+  const filePath = args[0].value;
+
+  try {
+    const stats = fs.statSync(filePath);
+    return makeBoolean(stats.isFile());
+  } catch (error) {
+    // If file doesn't exist or can't be accessed, return false
+    return makeBoolean(false);
+  }
+});
+
+/**
+ * fs_is_dir(path) - Check if a path is a directory
+ * Returns true if it's a directory, false otherwise
+ */
+const fsIsDir = makeNativeFunction('fs_is_dir', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`fs_is_dir() expects 1 argument, got ${args.length}`);
+  }
+
+  if (!isString(args[0])) {
+    throw new TypeError('Path must be a string');
+  }
+
+  const filePath = args[0].value;
+
+  try {
+    const stats = fs.statSync(filePath);
+    return makeBoolean(stats.isDirectory());
+  } catch (error) {
+    // If file doesn't exist or can't be accessed, return false
+    return makeBoolean(false);
+  }
+});
+
+/**
+ * path_join(...parts) - Join path segments
+ * Returns a normalized path
+ */
+const pathJoin = makeNativeFunction('path_join', async (args: RuntimeValue[]) => {
+  if (args.length === 0) {
+    throw new RuntimeError('path_join() expects at least 1 argument');
+  }
+
+  const parts: string[] = [];
+  for (const arg of args) {
+    if (!isString(arg)) {
+      throw new TypeError('All path segments must be strings');
+    }
+    parts.push(arg.value);
+  }
+
+  const joinedPath = path.join(...parts);
+  return makeString(joinedPath);
+});
+
+/**
+ * fs_read_file(path) - Read a file as a string
+ * Returns the file contents as a string
+ */
+const fsReadFile = makeNativeFunction('fs_read_file', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`fs_read_file() expects 1 argument, got ${args.length}`);
+  }
+
+  if (!isString(args[0])) {
+    throw new TypeError('Path must be a string');
+  }
+
+  const filePath = args[0].value;
+
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    return makeString(content);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to read file: ${errorMsg}`);
+  }
+});
+
+/**
+ * fs_write_file(path, content) - Write content to a file
+ * Creates or overwrites the file
+ */
+const fsWriteFile = makeNativeFunction('fs_write_file', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`fs_write_file() expects 2 arguments, got ${args.length}`);
+  }
+
+  if (!isString(args[0])) {
+    throw new TypeError('Path must be a string');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('Content must be a string');
+  }
+
+  const filePath = args[0].value;
+  const content = args[1].value;
+
+  try {
+    fs.writeFileSync(filePath, content, 'utf-8');
+    return makeBoolean(true);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to write file: ${errorMsg}`);
+  }
 });
 
 /**
@@ -1264,6 +1432,15 @@ export function createGlobalEnvironment(discordManager: DiscordManager, pythonBr
   env.define('split', splitFunction);
   env.define('append', appendFunction);
   env.define('time', timeFunction);
+
+  // File system functions
+  env.define('fs_read_dir', fsReadDir);
+  env.define('fs_exists', fsExists);
+  env.define('fs_is_file', fsIsFile);
+  env.define('fs_is_dir', fsIsDir);
+  env.define('path_join', pathJoin);
+  env.define('fs_read_file', fsReadFile);
+  env.define('fs_write_file', fsWriteFile);
 
   // Discord bot functions
   env.define('bot_start', createBotStartFunction(discordManager, pythonBridge));

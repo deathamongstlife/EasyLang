@@ -1,0 +1,60 @@
+// ========================================
+// HANDLERS/EVENT-ROUTER.EZ - Event Routing
+// ========================================
+// Routes Discord events to appropriate handlers
+
+// Parse message command from content
+function parse_message_command(content, prefix) {
+    if not starts_with(content, prefix) {
+        return {}
+    }
+
+    var without_prefix = substr(content, length(prefix), length(content))
+    var parts = split(without_prefix, " ")
+    var command_name = parts[0]
+
+    var args = []
+    var i = 1
+    while i < length(parts) {
+        args = append(args, parts[i])
+        i = i + 1
+    }
+
+    return {
+        name: command_name,
+        args: args
+    }
+}
+
+// Route interaction to correct handler
+function route_interaction(interaction) {
+    var interaction_type = interaction.type
+
+    if interaction_type == "APPLICATION_COMMAND" {
+        return handle_slash_command(interaction.commandName, interaction)
+    }
+
+    if interaction_type == "USER_CONTEXT_MENU" {
+        return handle_context_command(interaction.commandName, interaction)
+    }
+
+    if interaction_type == "MESSAGE_CONTEXT_MENU" {
+        return handle_context_command(interaction.commandName, interaction)
+    }
+
+    if interaction_type == "BUTTON" {
+        return handle_button_interaction(interaction)
+    }
+
+    if interaction_type == "SELECT_MENU" {
+        return handle_select_interaction(interaction)
+    }
+
+    if interaction_type == "MODAL_SUBMIT" {
+        return handle_modal_interaction(interaction)
+    }
+
+    return false
+}
+
+print("[EVENT-ROUTER] Event router loaded")

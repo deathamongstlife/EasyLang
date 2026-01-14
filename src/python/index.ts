@@ -100,7 +100,7 @@ export class PythonBridge {
   /**
    * Import a Python module
    */
-  async importModule(moduleName: string): Promise<void> {
+  async importModule(moduleName: string, autoInstall = true): Promise<void> {
     if (!this.isInitialized()) {
       throw new RuntimeError(
         `Python bridge not available: ${this.failureReason}`,
@@ -114,7 +114,10 @@ export class PythonBridge {
     }
 
     try {
-      const response = await this.ipcClient.send('import', { module: moduleName });
+      const response = await this.ipcClient.send('import', {
+        module: moduleName,
+        auto_install: autoInstall
+      });
 
       if (!response.success) {
         throw new RuntimeError(
@@ -134,6 +137,130 @@ export class PythonBridge {
         undefined
       );
     }
+  }
+
+  /**
+   * Install Python package using pip
+   */
+  async installPackage(packageName: string): Promise<void> {
+    if (!this.isInitialized()) {
+      throw new RuntimeError(
+        `Python bridge not available: ${this.failureReason}`,
+        undefined,
+        undefined
+      );
+    }
+
+    try {
+      const response = await this.ipcClient.send('install', { package: packageName });
+
+      if (!response.success) {
+        throw new RuntimeError(
+          `Failed to install Python package '${packageName}': ${response.error}`,
+          undefined,
+          undefined
+        );
+      }
+
+      logger.info(`Installed Python package: ${packageName}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new RuntimeError(
+        `Error installing Python package '${packageName}': ${errorMessage}`,
+        undefined,
+        undefined
+      );
+    }
+  }
+
+  /**
+   * Create an instance of a Python class
+   */
+  async createInstance(moduleName: string, className: string, args: unknown[]): Promise<string> {
+    if (!this.isInitialized()) {
+      throw new RuntimeError(
+        `Python bridge not available: ${this.failureReason}`,
+        undefined,
+        undefined
+      );
+    }
+
+    try {
+      const response = await this.ipcClient.send('create_instance', {
+        module: moduleName,
+        class: className,
+        args: args,
+      });
+
+      if (!response.success) {
+        throw new RuntimeError(
+          `Python error: ${response.error}`,
+          undefined,
+          undefined
+        );
+      }
+
+      return response.instance_id;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new RuntimeError(
+        `Error creating instance of '${moduleName}.${className}': ${errorMessage}`,
+        undefined,
+        undefined
+      );
+    }
+  }
+
+  /**
+   * Call method on Python instance
+   */
+  async callMethod(instanceId: string, methodName: string, args: unknown[]): Promise<unknown> {
+    if (!this.isInitialized()) {
+      throw new RuntimeError(
+        `Python bridge not available: ${this.failureReason}`,
+        undefined,
+        undefined
+      );
+    }
+
+    try {
+      const response = await this.ipcClient.send('call_method', {
+        instance_id: instanceId,
+        method: methodName,
+        args: args,
+      });
+
+      if (!response.success) {
+        throw new RuntimeError(
+          `Python error: ${response.error}`,
+          undefined,
+          undefined
+        );
+      }
+
+      return response.result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new RuntimeError(
+        `Error calling method '${methodName}': ${errorMessage}`,
+        undefined,
+        undefined
+      );
+    }
+  }
+
+  /**
+   * Get list of imported modules
+   */
+  getImportedModules(): string[] {
+    return Array.from(this.importedModules);
+  }
+
+  /**
+   * Check if module is imported
+   */
+  isModuleImported(moduleName: string): boolean {
+    return this.importedModules.has(moduleName);
   }
 
   /**
