@@ -48,3 +48,8 @@ ENV/
 *.tmp
 .cache/
 temp/
+
+# Test bots (DO NOT COMMIT)
+test-bot.ez
+test-bot-*.ez
+*-test.ez
