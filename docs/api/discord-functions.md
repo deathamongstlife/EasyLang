@@ -1,234 +1,503 @@
 ---
-layout: default
+layout: docs
 title: Discord Functions
 description: Core Discord bot functions for messages, embeds, and components
+category: api
 ---
 
 # Discord Functions
 
-Core functions for Discord bot operations.
+Core functions for Discord bot operations including messaging, embeds, components, and reactions.
+
+<div class="callout info">
+  <strong>Quick Navigation:</strong>
+  Jump to <a href="#message-functions">Messages</a> | <a href="#embed-functions">Embeds</a> | <a href="#component-functions">Components</a> | <a href="#reaction-functions">Reactions</a>
+</div>
+
+---
 
 ## Message Functions
 
-### send_message(channel_id, content, embed?, components?)
-Send a message to a channel.
+Functions for sending, editing, and managing Discord messages.
 
-**Parameters:**
-- `channel_id` (String) - Channel ID
-- `content` (String) - Message text
-- `embed` (Object, optional) - Embed object
-- `components` (Array, optional) - Component rows
+<div class="api-function" id="send_message">
 
-**Returns:** Message object
+### send_message()
 
-**Example:**
+Sends a message to a Discord channel with optional embeds and components.
+
+#### Syntax
 ```ezlang
-send_message(channel_id, "Hello!")
+send_message(channel_id, content, embed?, components?)
+```
+
+#### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `channel_id` | String | Yes | The ID of the channel to send to |
+| `content` | String | Yes | The text content of the message |
+| `embed` | Object | No | An embed object created with `create_embed()` |
+| `components` | Array | No | Array of component rows (buttons, select menus) |
+
+#### Returns
+**Message** - The sent message object
+
+#### Examples
+
+<div class="callout success">
+  <strong>Basic Message:</strong>
+</div>
+
+```ezlang
+// Send a simple text message
+send_message(channel_id, "Hello, world!")
+```
+
+<div class="callout success">
+  <strong>Message with Embed:</strong>
+</div>
+
+```ezlang
+// Create an embed
+let embed = create_embed({
+    "title": "Welcome!",
+    "description": "Thanks for joining our server",
+    "color": "#5865F2"
+})
+
+// Send message with embed
 send_message(channel_id, "", embed)
-send_message(channel_id, "Click!", null, [button_row])
 ```
 
-### reply(message, content, embed?, components?)
-Reply to a message.
+<div class="callout success">
+  <strong>Message with Components:</strong>
+</div>
 
-**Example:**
 ```ezlang
-reply(message, "Thanks for your message!")
+// Create button
+let button = create_button({
+    "customId": "click_me",
+    "label": "Click Me!",
+    "style": 1
+})
+
+let row = create_action_row([button])
+
+// Send with components
+send_message(channel_id, "Interactive message!", null, [row])
 ```
 
-### edit_message(message_id, channel_id, new_content, embed?)
-Edit an existing message.
+#### Throws
+- **Error** - If channel ID is invalid
+- **PermissionError** - If bot lacks `SEND_MESSAGES` permission
 
-### delete_message(message_id, channel_id)
-Delete a message.
+#### See Also
+- [reply()](#reply) - Reply to a message
+- [edit_message()](#edit_message) - Edit an existing message
+- [delete_message()](#delete_message) - Delete a message
 
-### bulk_delete(channel_id, message_ids)
-Delete multiple messages (2-100).
+</div>
 
-### fetch_message(channel_id, message_id)
-Fetch a specific message.
+<div class="api-function" id="reply">
 
-### fetch_messages(channel_id, options?)
-Fetch multiple messages.
+### reply()
 
-**Options:**
-- `limit` (Number) - Max messages (1-100)
-- `before` (String) - Message ID to fetch before
-- `after` (String) - Message ID to fetch after
+Replies to a message with a mention of the original sender.
+
+#### Syntax
+```ezlang
+reply(message, content, embed?, components?)
+```
+
+#### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `message` | Message | Yes | The message object to reply to |
+| `content` | String | Yes | Reply text content |
+| `embed` | Object | No | Optional embed object |
+| `components` | Array | No | Optional component rows |
+
+#### Returns
+**Message** - The reply message object
+
+#### Example
+
+```ezlang
+listen("messageCreate", function(message) {
+    if message.content == "!ping" {
+        reply(message, "Pong! 🏓")
+    }
+})
+```
+
+</div>
+
+<div class="api-function" id="edit_message">
+
+### edit_message()
+
+Edits the content of an existing message.
+
+#### Syntax
+```ezlang
+edit_message(message_id, channel_id, new_content, embed?)
+```
+
+#### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `message_id` | String | Yes | ID of message to edit |
+| `channel_id` | String | Yes | ID of the channel |
+| `new_content` | String | Yes | New message content |
+| `embed` | Object | No | New embed object |
+
+#### Returns
+**Message** - The edited message object
+
+#### Example
+
+```ezlang
+// Edit a message
+edit_message(msg_id, channel_id, "Updated content!")
+
+// Edit with new embed
+let new_embed = create_embed({"title": "Updated"})
+edit_message(msg_id, channel_id, "", new_embed)
+```
+
+<div class="callout warning">
+  <strong>Note:</strong> You can only edit messages sent by your bot.
+</div>
+
+</div>
+
+<div class="api-function" id="delete_message">
+
+### delete_message()
+
+Deletes a message from a channel.
+
+#### Syntax
+```ezlang
+delete_message(message_id, channel_id)
+```
+
+#### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `message_id` | String | Yes | ID of message to delete |
+| `channel_id` | String | Yes | ID of the channel |
+
+#### Example
+
+```ezlang
+// Delete a message
+delete_message(message.id, channel_id)
+```
+
+<div class="callout danger">
+  <strong>Warning:</strong> Deleted messages cannot be recovered.
+</div>
+
+</div>
+
+<div class="api-function" id="bulk_delete">
+
+### bulk_delete()
+
+Deletes multiple messages at once (2-100 messages).
+
+#### Syntax
+```ezlang
+bulk_delete(channel_id, message_ids)
+```
+
+#### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `channel_id` | String | Yes | ID of the channel |
+| `message_ids` | Array | Yes | Array of message IDs (2-100) |
+
+#### Example
+
+```ezlang
+// Delete last 10 messages
+let messages = fetch_messages(channel_id, {"limit": 10})
+let ids = []
+
+for msg in messages {
+    push(ids, msg.id)
+}
+
+bulk_delete(channel_id, ids)
+```
+
+<div class="callout warning">
+  <strong>Limitations:</strong>
+  - Messages must be less than 14 days old
+  - Minimum 2 messages, maximum 100 messages
+  - Requires <code>MANAGE_MESSAGES</code> permission
+</div>
+
+</div>
+
+---
 
 ## Embed Functions
 
-### create_embed(options)
-Create embed object.
+Functions for creating and customizing rich embed messages.
 
-**Options:**
-- `title` (String) - Embed title
-- `description` (String) - Description
-- `color` (String) - Hex color
-- `url` (String) - Title URL
-- `thumbnail` (String) - Thumbnail URL
-- `image` (String) - Image URL
-- `footer` (Object) - Footer object
-- `author` (Object) - Author object
-- `fields` (Array) - Field array
+<div class="api-function" id="create_embed">
 
-**Example:**
+### create_embed()
+
+Creates a rich embed object for enhanced messages.
+
+#### Syntax
 ```ezlang
-let embed = create_embed({
-    "title": "My Embed",
-    "description": "Description here",
-    "color": "#5865F2"
-})
+create_embed(options)
 ```
 
-### embed_add_field(embed, name, value, inline?)
-Add field to embed.
+#### Parameters
 
-### embed_set_author(embed, name, icon_url?, url?)
-Set embed author.
+| Option | Type | Description |
+|--------|------|-------------|
+| `title` | String | Embed title text |
+| `description` | String | Main embed description |
+| `color` | String | Hex color code (e.g., "#5865F2") |
+| `url` | String | URL for title link |
+| `thumbnail` | String | Small image URL (top right) |
+| `image` | String | Large image URL (bottom) |
+| `footer` | Object | Footer with `text` and optional `icon_url` |
+| `author` | Object | Author with `name`, optional `icon_url` and `url` |
+| `fields` | Array | Array of field objects |
+| `timestamp` | String | ISO timestamp string |
 
-### embed_set_footer(embed, text, icon_url?)
-Set embed footer.
+#### Returns
+**Embed** - An embed object
 
-### embed_set_image(embed, url)
-Set large image.
+#### Examples
 
-### embed_set_thumbnail(embed, url)
-Set thumbnail image.
+<div class="callout success">
+  <strong>Simple Embed:</strong>
+</div>
 
-### embed_set_timestamp(embed, timestamp?)
-Add timestamp (defaults to now).
+```ezlang
+let embed = create_embed({
+    "title": "My First Embed",
+    "description": "This is a description",
+    "color": "#5865F2"
+})
+
+send_message(channel_id, "", embed)
+```
+
+<div class="callout success">
+  <strong>Rich Embed:</strong>
+</div>
+
+```ezlang
+let embed = create_embed({
+    "title": "Server Stats",
+    "description": "Current server statistics",
+    "color": "#3BA55D",
+    "thumbnail": guild.iconURL,
+    "footer": {
+        "text": "Stats updated",
+        "icon_url": bot.user.avatarURL
+    },
+    "timestamp": new Date().toISOString(),
+    "fields": [
+        {
+            "name": "Members",
+            "value": to_string(guild.memberCount),
+            "inline": true
+        },
+        {
+            "name": "Channels",
+            "value": to_string(length(guild.channels)),
+            "inline": true
+        }
+    ]
+})
+
+send_message(channel_id, "", embed)
+```
+
+</div>
+
+<div class="api-function" id="embed_add_field">
+
+### embed_add_field()
+
+Adds a field to an existing embed.
+
+#### Syntax
+```ezlang
+embed_add_field(embed, name, value, inline?)
+```
+
+#### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `embed` | Embed | Yes | The embed object |
+| `name` | String | Yes | Field title (max 256 chars) |
+| `value` | String | Yes | Field content (max 1024 chars) |
+| `inline` | Boolean | No | Display field inline (default: false) |
+
+#### Example
+
+```ezlang
+let embed = create_embed({"title": "User Info"})
+
+embed_add_field(embed, "Username", user.username, true)
+embed_add_field(embed, "ID", user.id, true)
+embed_add_field(embed, "Joined", user.joinedAt, false)
+
+send_message(channel_id, "", embed)
+```
+
+<div class="callout info">
+  <strong>Tip:</strong> Inline fields appear side-by-side if there's enough space. Maximum 3 inline fields per row.
+</div>
+
+</div>
+
+---
 
 ## Component Functions
 
-### create_button(options)
-Create button component.
+Functions for creating interactive buttons and select menus.
 
-**Options:**
-- `customId` (String) - Button ID
-- `label` (String) - Button text
-- `style` (Number) - 1=Blurple, 2=Gray, 3=Green, 4=Red
-- `emoji` (String) - Emoji
-- `disabled` (Boolean) - Disable button
+<div class="api-function" id="create_button">
 
-**Example:**
+### create_button()
+
+Creates an interactive button component.
+
+#### Syntax
 ```ezlang
-let button = create_button({
-    "customId": "my_button",
-    "label": "Click Me",
-    "style": 1
+create_button(options)
+```
+
+#### Parameters
+
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `customId` | String | Yes* | Unique identifier for the button |
+| `label` | String | Yes | Button text |
+| `style` | Number | Yes | Button style (1-5) |
+| `emoji` | String | No | Emoji to display |
+| `url` | String | No** | URL for link buttons |
+| `disabled` | Boolean | No | Whether button is disabled |
+
+*Required for non-link buttons
+**Required for link buttons (style 5)
+
+#### Button Styles
+
+| Style | Value | Color | Description |
+|-------|-------|-------|-------------|
+| Primary | 1 | Blurple | Main action button |
+| Secondary | 2 | Grey | Secondary action |
+| Success | 3 | Green | Positive action |
+| Danger | 4 | Red | Destructive action |
+| Link | 5 | Grey | Opens URL (no interaction event) |
+
+#### Example
+
+```ezlang
+// Create action buttons
+let yes_button = create_button({
+    "customId": "confirm_yes",
+    "label": "Yes",
+    "style": 3,  // Green
+    "emoji": "✅"
 })
-```
 
-### create_link_button(options)
-Create URL button.
-
-**Options:**
-- `label` (String) - Button text
-- `url` (String) - Target URL
-- `emoji` (String) - Emoji
-
-### create_string_select(options)
-Create select menu.
-
-**Options:**
-- `customId` (String) - Menu ID
-- `placeholder` (String) - Placeholder text
-- `options` (Array) - Option objects
-- `minValues` (Number) - Min selections
-- `maxValues` (Number) - Max selections
-
-**Example:**
-```ezlang
-let select = create_string_select({
-    "customId": "color_select",
-    "placeholder": "Choose a color",
-    "options": [
-        {"label": "Red", "value": "red", "emoji": "🔴"},
-        {"label": "Blue", "value": "blue", "emoji": "🔵"}
-    ]
+let no_button = create_button({
+    "customId": "confirm_no",
+    "label": "No",
+    "style": 4,  // Red
+    "emoji": "❌"
 })
+
+// Create link button
+let docs_button = create_button({
+    "label": "Documentation",
+    "style": 5,
+    "url": "https://example.com/docs"
+})
+
+// Add to action row
+let row = create_action_row([yes_button, no_button, docs_button])
+
+send_message(channel_id, "Confirm action?", null, [row])
 ```
 
-### create_action_row(components)
-Create component row.
+<div class="callout warning">
+  <strong>Limitations:</strong>
+  - Maximum 5 buttons per action row
+  - Maximum 5 action rows per message
+  - Link buttons don't trigger interaction events
+</div>
 
-**Example:**
-```ezlang
-let row = create_action_row([button1, button2])
-```
+</div>
 
-## Interaction Functions
-
-### interaction_reply(interaction, content, ephemeral?, embed?, components?)
-Reply to interaction.
-
-**Parameters:**
-- `ephemeral` (Boolean) - Only visible to user
-
-**Example:**
-```ezlang
-interaction_reply(interaction, "Success!", true)
-```
-
-### interaction_defer(interaction, ephemeral?)
-Defer interaction response.
-
-### interaction_followup(interaction, content, embed?, components?)
-Send followup message.
-
-### interaction_update(interaction, content, embed?, components?)
-Update interaction response.
+---
 
 ## Reaction Functions
 
-### react(message, emoji)
-Add reaction to message.
+Functions for adding and managing message reactions.
 
-**Example:**
+<div class="api-function" id="add_reaction">
+
+### add_reaction()
+
+Adds an emoji reaction to a message.
+
+#### Syntax
 ```ezlang
-react(message, "👍")
-react(message, "<:custom:123456789>")
+add_reaction(message, emoji)
 ```
 
-### remove_reaction(message_id, channel_id, emoji, user_id?)
-Remove reaction.
+#### Parameters
 
-### remove_all_reactions(message_id, channel_id)
-Remove all reactions.
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `message` | Message | Yes | Message object to react to |
+| `emoji` | String | Yes | Emoji to add (Unicode or custom) |
 
-## Utility Functions
+#### Example
 
-### mention_user(user_id)
-Create user mention.
-
-**Example:**
 ```ezlang
-mention_user("123456789")  // "<@123456789>"
+// Unicode emoji
+add_reaction(message, "👍")
+add_reaction(message, "🎉")
+
+// Custom emoji
+add_reaction(message, "<:custom:123456789>")
 ```
 
-### mention_channel(channel_id)
-Create channel mention.
+</div>
 
-### mention_role(role_id)
-Create role mention.
+---
 
-### bot_user()
-Get bot's user object.
+## Next Steps
 
-**Example:**
-```ezlang
-let bot = bot_user()
-print("Bot username: " + bot.username)
-```
-
-### get_member(guild_id, user_id)
-Get guild member object.
-
-### get_channel(channel_id)
-Get channel object.
-
-### get_guild(guild_id)
-Get guild object.
-
-[← Back to API Reference](/EasyLang/api/)
+<div class="page-nav">
+  <a href="{{ '/api/built-in-functions' | relative_url }}" class="prev">
+    <div><small>Previous</small></div>
+    <div><strong>Built-in Functions</strong></div>
+  </a>
+  <a href="{{ '/api/voice-functions' | relative_url }}" class="next">
+    <div><small>Next</small></div>
+    <div><strong>Voice Functions</strong></div>
+  </a>
+</div>

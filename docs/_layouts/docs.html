@@ -1,0 +1,53 @@
+---
+layout: default
+---
+
+<div class="docs-container">
+  <aside class="sidebar">
+    {% include sidebar.html %}
+  </aside>
+
+  <article class="content">
+    {% if page.breadcrumbs %}
+      <nav class="breadcrumbs">
+        <a href="{{ '/' | relative_url }}">Home</a>
+        <span>/</span>
+        {% for crumb in page.breadcrumbs %}
+          <a href="{{ crumb.url | relative_url }}">{{ crumb.title }}</a>
+          <span>/</span>
+        {% endfor %}
+        <span>{{ page.title }}</span>
+      </nav>
+    {% endif %}
+
+    <h1>
+      {{ page.title }}
+      {% if page.badge %}
+        <span class="badge {{ page.badge_type | default: 'new' }}">{{ page.badge }}</span>
+      {% endif %}
+    </h1>
+
+    {% if page.description %}
+      <p class="text-muted">{{ page.description }}</p>
+    {% endif %}
+
+    {{ content }}
+
+    {% if page.next or page.prev %}
+      <nav class="page-nav">
+        {% if page.prev %}
+          <a href="{{ page.prev.url | relative_url }}" class="prev">
+            <div><small>Previous</small></div>
+            <div><strong>{{ page.prev.title }}</strong></div>
+          </a>
+        {% endif %}
+        {% if page.next %}
+          <a href="{{ page.next.url | relative_url }}" class="next">
+            <div><small>Next</small></div>
+            <div><strong>{{ page.next.title }}</strong></div>
+          </a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  </article>
+</div>

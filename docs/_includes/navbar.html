@@ -1,0 +1,39 @@
+<nav class="navbar">
+  <div class="container">
+    <a href="{{ '/' | relative_url }}" class="logo">
+      EasyLang
+    </a>
+
+    <button class="mobile-menu-toggle" aria-label="Toggle menu">
+      ☰
+    </button>
+
+    <ul class="nav-links">
+      <li>
+        <a href="{{ '/' | relative_url }}" {% if page.url == '/' %}class="active"{% endif %}>
+          Home
+        </a>
+      </li>
+      <li>
+        <a href="{{ '/getting-started/' | relative_url }}" {% if page.category == 'getting-started' %}class="active"{% endif %}>
+          Guide
+        </a>
+      </li>
+      <li>
+        <a href="{{ '/api/' | relative_url }}" {% if page.category == 'api' %}class="active"{% endif %}>
+          API
+        </a>
+      </li>
+      <li>
+        <a href="{{ '/examples/' | relative_url }}" {% if page.category == 'examples' %}class="active"{% endif %}>
+          Examples
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/{{ site.repository }}" target="_blank" rel="noopener noreferrer">
+          GitHub
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>

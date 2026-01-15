@@ -4,14 +4,17 @@ title: Home
 description: EasyLang - A beginner-friendly programming language for Discord bot development
 ---
 
-# EasyLang
+<div class="hero">
+  <h1>EasyLang</h1>
+  <p class="tagline">The beginner-friendly language for Discord bots</p>
 
-## Discord Bot Programming Made Easy
+  <div class="hero-buttons">
+    <a href="{{ '/getting-started/' | relative_url }}" class="button primary">Get Started</a>
+    <a href="{{ '/api/' | relative_url }}" class="button secondary">Documentation</a>
+  </div>
 
-EasyLang is a beginner-friendly programming language specifically designed for creating Discord bots. Write powerful bots with simple, readable code that anyone can understand.
-
-```ezlang
-// A complete Discord bot in just a few lines!
+  <div class="code-preview">
+    <pre><code class="language-ezlang">// A complete Discord bot in just a few lines!
 listen("ready", function() {
     print("Bot is online!")
 })
@@ -22,218 +25,111 @@ listen("messageCreate", function(message) {
     }
 })
 
-bot_start("YOUR_TOKEN_HERE")
-```
-
-[Get Started →](/EasyLang/getting-started/){: .btn .btn-primary .btn-lg}
-[View Examples →](/EasyLang/examples/){: .btn .btn-secondary .btn-lg}
-
----
+bot_start("YOUR_TOKEN_HERE")</code></pre>
+  </div>
+</div>
 
 ## Why EasyLang?
 
-### 🎯 Beginner-Friendly Syntax
-No complex syntax or confusing patterns. Write code that reads like English and makes sense from day one.
+<div class="features">
+  <div class="feature-card">
+    <h3>🎯 Beginner-Friendly</h3>
+    <p>Simple, intuitive syntax that anyone can learn. No complex patterns or confusing APIs.</p>
+    <ul>
+      <li>Python-like syntax</li>
+      <li>Easy to read and write</li>
+      <li>Perfect for learning</li>
+      <li>Quick to master</li>
+    </ul>
+  </div>
 
-```ezlang
-// Simple and intuitive
-if message.content == "!ping" {
-    reply(message, "Pong!")
-}
-```
+  <div class="feature-card">
+    <h3>🤖 Discord-First</h3>
+    <p>Every function is built specifically for Discord. No need to learn complex Discord.js APIs.</p>
+    <ul>
+      <li>148+ built-in functions</li>
+      <li>All Discord features supported</li>
+      <li>No external dependencies</li>
+      <li>Just write and run</li>
+    </ul>
+  </div>
 
-### 🤖 Discord-First Design
-Every function is built specifically for Discord. No need to learn complex Discord.js APIs or wrapper libraries.
+  <div class="feature-card">
+    <h3>🎵 Voice Built-In</h3>
+    <p>Play music and audio with simple commands. No complex setup required.</p>
+    <ul>
+      <li>YouTube integration</li>
+      <li>Audio file playback</li>
+      <li>Queue management</li>
+      <li>Filters and effects</li>
+    </ul>
+  </div>
 
-```ezlang
-// Create embeds with ease
-let embed = create_embed({
-    "title": "Welcome!",
-    "description": "Thanks for joining our server",
-    "color": "#5865F2"
-})
-send_message(channel_id, "", embed)
-```
+  <div class="feature-card">
+    <h3>🔧 Python + NPM Bridge</h3>
+    <p>Access thousands of packages seamlessly. Use any library without leaving EasyLang.</p>
+    <ul>
+      <li>Python packages</li>
+      <li>NPM modules</li>
+      <li>Seamless integration</li>
+      <li>No complex setup</li>
+    </ul>
+  </div>
 
-### 🔧 Powerful Bridge System
-Access thousands of Python and npm packages seamlessly. Use any library you need without leaving EasyLang.
+  <div class="feature-card">
+    <h3>⚡ Modern Features</h3>
+    <p>Full support for Discord's latest features including components, slash commands, and more.</p>
+    <ul>
+      <li>Buttons & select menus</li>
+      <li>Slash commands</li>
+      <li>Modals & forms</li>
+      <li>Threads & forums</li>
+    </ul>
+  </div>
 
-```ezlang
-// Use Python packages
-use_python_package("requests")
-let response = python_call("requests.get", "https://api.example.com")
-
-// Use npm packages
-use_npm_package("axios")
-let data = await npm_call("axios.get", "https://api.example.com")
-```
-
-### 🎵 Built-in Voice Support
-Play music and audio with simple commands. No complex setup or external dependencies.
-
-```ezlang
-listen("messageCreate", function(message) {
-    if message.content == "!play" {
-        let voice_channel = get_user_voice_channel(message.author.id)
-        let connection = join_voice_channel(voice_channel)
-        play_youtube(connection, "https://youtube.com/watch?v=...")
-    }
-})
-```
-
----
-
-## Feature Categories
-
-<div class="feature-grid">
-
-### 📨 Messaging & Communication
-- Send, edit, and delete messages
-- Rich embeds with images and fields
-- Reactions and emoji support
-- Direct messages and replies
-[Learn more →](/EasyLang/features/messaging)
-
-### 🎮 Interactive Components
-- Buttons and link buttons
-- Select menus (string, role, user, channel)
-- Modal forms
-- Action rows
-[Learn more →](/EasyLang/features/components)
-
-### ⚡ Slash Commands
-- Register global and guild commands
-- Command options and choices
-- Autocomplete support
-- Ephemeral responses
-[Learn more →](/EasyLang/features/slash-commands)
-
-### 🎵 Voice & Audio
-- Join voice channels
-- Play audio files and YouTube videos
-- Queue management
-- Volume control and filters
-[Learn more →](/EasyLang/features/voice)
-
-### 🔨 Moderation Tools
-- Kick, ban, and timeout users
-- Bulk message deletion
-- Role and permission management
-- AutoMod rules and filters
-[Learn more →](/EasyLang/features/moderation)
-
-### 📊 Polls & Voting
-- Create polls with multiple choices
-- Set duration and allow multi-select
-- Fetch results programmatically
-- End polls early
-[Learn more →](/EasyLang/features/polls)
-
-### ⏰ Tasks & Loops
-- Background tasks
-- Scheduled jobs
-- Periodic loops
-- Cron-like scheduling
-[Learn more →](/EasyLang/features/tasks)
-
-### 🛡️ AutoMod
-- Keyword filters
-- Spam protection
-- Mention spam limits
-- Custom AutoMod rules
-[Learn more →](/EasyLang/features/automod)
-
-### 🔗 Webhooks
-- Create and manage webhooks
-- Send messages as webhooks
-- Custom avatars and usernames
-- Edit and delete webhook messages
-[Learn more →](/EasyLang/features/webhooks)
-
-### 💬 Advanced Communication
-- Thread and forum support
-- Stage channels
-- Scheduled events
-- Invite management
-[Learn more →](/EasyLang/features/)
-
-### 📝 Audit Logs
-- Track server changes
-- Monitor moderation actions
-- Filter by action type
-- Fetch detailed logs
-[Learn more →](/EasyLang/features/audit-logs)
-
-### ⏱️ Cooldowns
-- Per-user cooldowns
-- Global cooldowns
-- Channel-specific limits
-- Custom cooldown messages
-[Learn more →](/EasyLang/features/cooldowns)
-
+  <div class="feature-card">
+    <h3>🛡️ AutoMod & Tools</h3>
+    <p>Professional moderation tools built right in. Create powerful bots with ease.</p>
+    <ul>
+      <li>AutoMod rules</li>
+      <li>Cooldown system</li>
+      <li>Task scheduling</li>
+      <li>Webhooks & polls</li>
+    </ul>
+  </div>
 </div>
 
 ---
 
-## Quick Examples
+## Quick Example
 
-### Simple Command Bot
-
-```ezlang
-listen("messageCreate", function(message) {
-    // Ignore bot messages
-    if message.author.bot {
-        return
-    }
-
-    // Ping command
-    if message.content == "!ping" {
-        reply(message, "Pong! 🏓")
-    }
-
-    // Info command
-    if message.content == "!info" {
-        let embed = create_embed({
-            "title": "Server Info",
-            "description": "Information about this server",
-            "color": "#5865F2"
-        })
-        embed_add_field(embed, "Members", to_string(message.guild.memberCount), true)
-        embed_add_field(embed, "Channels", to_string(length(message.guild.channels)), true)
-        send_message(message.channel.id, "", embed)
-    }
-})
-
-bot_start(get_env("BOT_TOKEN"))
-```
-
-### Interactive Button Example
+See how easy it is to create interactive bots with EasyLang:
 
 ```ezlang
 listen("messageCreate", function(message) {
     if message.content == "!button" {
+        // Create interactive buttons
         let button1 = create_button({
-            "customId": "yes_button",
+            "customId": "yes",
             "label": "Yes",
             "style": 3  // Green
         })
 
         let button2 = create_button({
-            "customId": "no_button",
+            "customId": "no",
             "label": "No",
             "style": 4  // Red
         })
 
         let row = create_action_row([button1, button2])
-
         send_message(message.channel.id, "Do you like EasyLang?", null, [row])
     }
 })
 
 listen("interactionCreate", function(interaction) {
-    if interaction.customId == "yes_button" {
+    if interaction.customId == "yes" {
         interaction_reply(interaction, "Great! 🎉", true)
-    } else if interaction.customId == "no_button" {
+    } else if interaction.customId == "no" {
         interaction_reply(interaction, "That's okay! 😊", true)
     }
 })
@@ -241,103 +137,120 @@ listen("interactionCreate", function(interaction) {
 bot_start(get_env("BOT_TOKEN"))
 ```
 
-### Music Bot Example
-
-```ezlang
-let queue = []
-
-listen("messageCreate", function(message) {
-    if message.content starts_with "!play " {
-        let url = split(message.content, " ")[1]
-        let voice_channel = get_user_voice_channel(message.author.id)
-
-        if voice_channel == null {
-            reply(message, "You need to be in a voice channel!")
-            return
-        }
-
-        let connection = join_voice_channel(voice_channel)
-        play_youtube(connection, url)
-        reply(message, "Now playing! 🎵")
-    }
-
-    if message.content == "!stop" {
-        let voice_channel = get_user_voice_channel(message.author.id)
-        if voice_channel != null {
-            leave_voice_channel(voice_channel)
-            reply(message, "Stopped and left voice channel!")
-        }
-    }
-})
-
-bot_start(get_env("BOT_TOKEN"))
-```
-
 ---
 
-## 148+ Built-in Functions
+## Feature Highlights
 
-EasyLang provides over 148 functions covering every aspect of Discord bot development:
+<div class="features">
+  <div class="feature-card">
+    <h3>📨 Messaging</h3>
+    <p>Send, edit, and manage messages with ease. Rich embeds, reactions, and more.</p>
+    <a href="{{ '/features/messaging' | relative_url }}">Learn more →</a>
+  </div>
 
-- **Core Functions**: 20+ functions for basic operations
-- **Messaging**: 15+ functions for messages and embeds
-- **Components**: 10+ functions for buttons and menus
-- **Voice**: 12+ functions for audio playback
-- **Moderation**: 15+ functions for server management
-- **Advanced Features**: 75+ functions for AutoMod, polls, tasks, webhooks, threads, forums, and more
+  <div class="feature-card">
+    <h3>🎮 Components</h3>
+    <p>Buttons, select menus, and modals for interactive experiences.</p>
+    <a href="{{ '/features/components' | relative_url }}">Learn more →</a>
+  </div>
 
-[View Complete API Reference →](/EasyLang/api/)
+  <div class="feature-card">
+    <h3>⚡ Slash Commands</h3>
+    <p>Modern Discord commands with autocomplete and options.</p>
+    <a href="{{ '/features/slash-commands' | relative_url }}">Learn more →</a>
+  </div>
 
----
+  <div class="feature-card">
+    <h3>🎵 Voice & Audio</h3>
+    <p>Play music, join voice channels, and manage audio playback.</p>
+    <a href="{{ '/features/voice' | relative_url }}">Learn more →</a>
+  </div>
 
-## Get Started Today
+  <div class="feature-card">
+    <h3>🔨 Moderation</h3>
+    <p>Kick, ban, timeout, and manage your server with powerful tools.</p>
+    <a href="{{ '/features/moderation' | relative_url }}">Learn more →</a>
+  </div>
 
-Ready to create your first Discord bot? Follow our step-by-step guide and have a working bot in minutes.
-
-[Installation Guide →](/EasyLang/getting-started/installation){: .btn .btn-primary}
-[Your First Bot →](/EasyLang/getting-started/first-bot){: .btn .btn-secondary}
-
----
-
-## Community & Support
-
-- **GitHub**: [Report issues and contribute](https://github.com/deathamongstlife/EasyLang)
-- **Examples**: [Browse complete bot examples](/EasyLang/examples/)
-- **API Docs**: [Comprehensive API reference](/EasyLang/api/)
-
----
-
-## Features at a Glance
-
-| Feature | Description |
-|---------|-------------|
-| Simple Syntax | Easy to learn, Python-like syntax |
-| Discord Integration | Built specifically for Discord bots |
-| Voice Support | Play music and audio out of the box |
-| Slash Commands | Full support for Discord's slash commands |
-| Components | Buttons, select menus, and modals |
-| AutoMod | Powerful moderation automation |
-| Tasks & Loops | Background jobs and scheduled tasks |
-| Bridge System | Access Python and npm packages |
-| Rich Embeds | Beautiful message embeds |
-| Webhooks | Custom webhook integration |
-| Threads & Forums | Full support for Discord's newest features |
-| No Compilation | Run directly with Node.js |
-
-[Explore All Features →](/EasyLang/features/)
-
----
-
-<div class="footer-cta">
-
-## Ready to Build Amazing Bots?
-
-Join developers creating powerful Discord bots with EasyLang's simple and intuitive syntax.
-
-[Get Started Now →](/EasyLang/getting-started/){: .btn .btn-primary .btn-lg}
-
+  <div class="feature-card">
+    <h3>⏰ Tasks & Loops</h3>
+    <p>Background tasks, scheduled jobs, and periodic loops.</p>
+    <a href="{{ '/features/tasks' | relative_url }}">Learn more →</a>
+  </div>
 </div>
 
 ---
 
-<small>EasyLang is an open-source project. Contributions welcome on [GitHub](https://github.com/deathamongstlife/EasyLang).</small>
+## What Makes EasyLang Special?
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Simple Syntax</strong></td>
+      <td>Easy to learn, Python-like syntax that makes sense</td>
+    </tr>
+    <tr>
+      <td><strong>148+ Functions</strong></td>
+      <td>Comprehensive Discord API coverage built-in</td>
+    </tr>
+    <tr>
+      <td><strong>Voice Support</strong></td>
+      <td>Play music and audio out of the box</td>
+    </tr>
+    <tr>
+      <td><strong>Modern Features</strong></td>
+      <td>Full support for components, slash commands, threads, and more</td>
+    </tr>
+    <tr>
+      <td><strong>Bridge System</strong></td>
+      <td>Access Python and NPM packages seamlessly</td>
+    </tr>
+    <tr>
+      <td><strong>No Compilation</strong></td>
+      <td>Run directly with Node.js - no build step required</td>
+    </tr>
+    <tr>
+      <td><strong>AutoMod</strong></td>
+      <td>Powerful moderation automation built right in</td>
+    </tr>
+    <tr>
+      <td><strong>Open Source</strong></td>
+      <td>Free and open source on GitHub</td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
+## Ready to Get Started?
+
+<div class="text-center">
+  <p style="font-size: 1.2rem; margin-bottom: 2rem;">
+    Join developers creating powerful Discord bots with EasyLang's simple and intuitive syntax.
+  </p>
+
+  <a href="{{ '/getting-started/' | relative_url }}" class="btn btn-primary btn-lg">Get Started Now</a>
+  <a href="{{ '/examples/' | relative_url }}" class="btn btn-secondary btn-lg">Browse Examples</a>
+</div>
+
+---
+
+<div class="callout info">
+  <h3>Need Help?</h3>
+  <p>
+    Check out our <a href="{{ '/getting-started/' | relative_url }}">Getting Started guide</a> for installation instructions and your first bot.
+    Browse the <a href="{{ '/api/' | relative_url }}">API Reference</a> for detailed documentation of all 148+ functions.
+  </p>
+</div>
+
+---
+
+<div class="text-center text-muted">
+  <p>EasyLang is an open-source project. Contributions welcome on <a href="https://github.com/{{ site.repository }}">GitHub</a>.</p>
+</div>

@@ -1,0 +1,25 @@
+{% for section in site.navigation %}
+  <h3>{{ section.title }}</h3>
+
+  {% if section.url %}
+    <ul>
+      <li>
+        <a href="{{ section.url | relative_url }}" {% if page.url == section.url %}class="active"{% endif %}>
+          Overview
+        </a>
+      </li>
+    </ul>
+  {% endif %}
+
+  {% if section.children %}
+    <ul>
+      {% for child in section.children %}
+        <li>
+          <a href="{{ child.url | relative_url }}" {% if page.url == child.url %}class="active"{% endif %}>
+            {{ child.title }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endfor %}
