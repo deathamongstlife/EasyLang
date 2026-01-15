@@ -1,0 +1,47 @@
+# Python NumPy Example
+# Mathematical operations with NumPy
+
+# Import Python numpy package
+use python "numpy" as np
+
+print("NumPy Mathematical Operations Demo")
+print("=" * 40)
+
+# Create arrays
+var arr1 = np.array([1, 2, 3, 4, 5])
+var arr2 = np.array([10, 20, 30, 40, 50])
+
+print("\nArray 1:", arr1)
+print("Array 2:", arr2)
+
+# Mathematical operations
+var sum_arr = np.add(arr1, arr2)
+print("\nSum:", sum_arr)
+
+var product_arr = np.multiply(arr1, arr2)
+print("Product:", product_arr)
+
+# Statistics
+print("\nStatistics on Array 1:")
+print("Mean:", np.mean(arr1))
+print("Median:", np.median(arr1))
+print("Std Dev:", np.std(arr1))
+print("Min:", np.min(arr1))
+print("Max:", np.max(arr1))
+
+# Matrix operations
+var matrix = np.array([[1, 2], [3, 4]])
+print("\nMatrix:")
+print(matrix)
+
+var det = np.linalg.det(matrix)
+print("Determinant:", det)
+
+# Random numbers
+var random_arr = np.random.rand(5)
+print("\nRandom array (5 numbers):", random_arr)
+
+var random_int = np.random.randint(1, 100, 10)
+print("Random integers (1-100, 10 numbers):", random_int)
+
+print("\nNumPy is working perfectly!")

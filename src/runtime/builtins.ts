@@ -35,6 +35,11 @@ import {
 } from 'discord.js';
 import { discordBuiltins } from './discord-builtins';
 import { advancedDiscordBuiltins } from './discord-advanced';
+import { webhookBuiltins } from './discord-webhooks';
+import { taskBuiltins } from './discord-tasks';
+import { cooldownBuiltins } from './discord-cooldowns';
+import { pollBuiltins } from './discord-polls';
+import { errorBuiltins } from './discord-errors';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -1408,9 +1413,128 @@ function createBotStartFunction(discordManager: DiscordManager, pythonBridge: an
 }
 
 /**
+ * Create use() function for package imports (Python and npm)
+ */
+function createUseFunction(pythonBridge: any, jsBridge: any, resolver: any) {
+  return makeNativeFunction('use', async (args: RuntimeValue[]) => {
+    if (args.length < 1 || args.length > 2) {
+      throw new RuntimeError('use() expects 1 or 2 arguments: use("package") or use("type", "package")');
+    }
+
+    let packageType: string | null = null;
+    let packageName: string;
+
+    if (args.length === 2) {
+      // Explicit type: use("python", "requests") or use("npm", "axios")
+      if (!isString(args[0]) || !isString(args[1])) {
+        throw new RuntimeError('use() expects string arguments');
+      }
+      packageType = (args[0] as any).value.toLowerCase();
+      packageName = (args[1] as any).value;
+
+      if (packageType !== 'python' && packageType !== 'npm') {
+        throw new RuntimeError('use() type must be "python" or "npm"');
+      }
+    } else {
+      // Auto-detect: use("package")
+      if (!isString(args[0])) {
+        throw new RuntimeError('use() expects a string package name');
+      }
+      packageName = (args[0] as any).value;
+    }
+
+    try {
+      // Resolve package type if not specified
+      if (!packageType) {
+        const resolvedType = await resolver.resolvePackageType(packageName);
+        packageType = resolvedType === 'python' ? 'python' : 'npm';
+      }
+
+      // Import the package based on type
+      if (packageType === 'python') {
+        await pythonBridge.importModule(packageName, true);
+        const { PythonProxy } = await import('../python/proxy');
+        const proxy = new PythonProxy(packageName, pythonBridge);
+        return proxy.createProxy();
+      } else {
+        return await jsBridge.importPackage(packageName, true);
+      }
+    } catch (error: any) {
+      throw new RuntimeError(
+        `Failed to import package '${packageName}': ${error.message}`,
+        undefined,
+        undefined
+      );
+    }
+  });
+}
+
+/**
+ * Create require() function for npm packages
+ */
+function createRequireFunction(jsBridge: any) {
+  return makeNativeFunction('require', async (args: RuntimeValue[]) => {
+    if (args.length !== 1) {
+      throw new RuntimeError('require() expects 1 argument: require("package")');
+    }
+
+    if (!isString(args[0])) {
+      throw new RuntimeError('require() expects a string package name');
+    }
+
+    const packageName = (args[0] as any).value;
+
+    try {
+      return await jsBridge.importPackage(packageName, true);
+    } catch (error: any) {
+      throw new RuntimeError(
+        `Failed to require package '${packageName}': ${error.message}`,
+        undefined,
+        undefined
+      );
+    }
+  });
+}
+
+/**
+ * Create import_python() function for Python packages
+ */
+function createImportPythonFunction(pythonBridge: any) {
+  return makeNativeFunction('import_python', async (args: RuntimeValue[]) => {
+    if (args.length !== 1) {
+      throw new RuntimeError('import_python() expects 1 argument: import_python("module")');
+    }
+
+    if (!isString(args[0])) {
+      throw new RuntimeError('import_python() expects a string module name');
+    }
+
+    const moduleName = (args[0] as any).value;
+
+    try {
+      await pythonBridge.importModule(moduleName, true);
+      const { PythonProxy } = await import('../python/proxy');
+      const proxy = new PythonProxy(moduleName, pythonBridge);
+      return proxy.createProxy();
+    } catch (error: any) {
+      throw new RuntimeError(
+        `Failed to import Python module '${moduleName}': ${error.message}`,
+        undefined,
+        undefined
+      );
+    }
+  });
+}
+
+/**
  * Create and populate the global environment with built-in functions
  */
-export function createGlobalEnvironment(discordManager: DiscordManager, pythonBridge?: any): Environment {
+export function createGlobalEnvironment(
+  discordManager: DiscordManager,
+  pythonBridge?: any,
+  jsBridge?: any,
+  resolver?: any
+): Environment {
   const env = new Environment();
 
   // Register core built-in functions
@@ -1442,6 +1566,13 @@ export function createGlobalEnvironment(discordManager: DiscordManager, pythonBr
   env.define('fs_read_file', fsReadFile);
   env.define('fs_write_file', fsWriteFile);
 
+  // Package import functions (if bridges are available)
+  if (pythonBridge && jsBridge && resolver) {
+    env.define('use', createUseFunction(pythonBridge, jsBridge, resolver));
+    env.define('require', createRequireFunction(jsBridge));
+    env.define('import_python', createImportPythonFunction(pythonBridge));
+  }
+
   // Discord bot functions
   env.define('bot_start', createBotStartFunction(discordManager, pythonBridge));
 
@@ -1452,6 +1583,31 @@ export function createGlobalEnvironment(discordManager: DiscordManager, pythonBr
 
   // Register all advanced Discord functions from discord-advanced.ts
   Object.entries(advancedDiscordBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register webhook functions
+  Object.entries(webhookBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register task/loop functions
+  Object.entries(taskBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register cooldown functions
+  Object.entries(cooldownBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register poll functions
+  Object.entries(pollBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register error handling functions
+  Object.entries(errorBuiltins).forEach(([name, func]) => {
     env.define(name, func);
   });
 

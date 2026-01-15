@@ -1,0 +1,33 @@
+# Python Requests Example
+# HTTP requests using the Python requests library
+
+# Import Python requests package
+use python "requests" as requests
+
+print("Making HTTP request with Python requests...")
+
+# Make GET request
+var response = requests.get("https://api.github.com/zen")
+print("Response status:", response.status_code)
+print("Response text:", response.text)
+
+# Make GET request with JSON response
+var api_response = requests.get("https://api.github.com/users/octocat")
+var data = api_response.json()
+
+print("\nGitHub User Data:")
+print("Username:", data["login"])
+print("Name:", data["name"])
+print("Public Repos:", data["public_repos"])
+print("Followers:", data["followers"])
+
+# POST request example
+var post_data = {"title": "Test", "body": "This is a test", "userId": 1}
+var post_response = requests.post(
+  "https://jsonplaceholder.typicode.com/posts",
+  post_data
+)
+
+print("\nPOST Response:")
+print("Status:", post_response.status_code)
+print("Created ID:", post_response.json()["id"])

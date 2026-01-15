@@ -1,0 +1,74 @@
+# npm Moment.js Example
+# Date and time manipulation
+
+# Import moment.js npm package
+use npm "moment" as moment
+
+print("Moment.js Date/Time Operations Demo")
+print("=" * 40)
+
+# Current date/time
+var now = moment()
+print("\nCurrent Date/Time:")
+print("Full:", now.format("LLLL"))
+print("Date:", now.format("LL"))
+print("Time:", now.format("LT"))
+print("ISO:", now.toISOString())
+print("Unix timestamp:", now.unix())
+
+# Date arithmetic
+print("\nDate Arithmetic:")
+var tomorrow = moment().add(1, "day")
+print("Tomorrow:", tomorrow.format("LL"))
+
+var next_week = moment().add(1, "week")
+print("Next week:", next_week.format("LL"))
+
+var last_month = moment().subtract(1, "month")
+print("Last month:", last_month.format("LL"))
+
+var next_year = moment().add(1, "year")
+print("Next year:", next_year.format("LL"))
+
+# Relative time
+print("\nRelative Time:")
+var two_days_ago = moment().subtract(2, "days")
+print("Two days ago:", two_days_ago.fromNow())
+
+var in_five_hours = moment().add(5, "hours")
+print("In 5 hours:", in_five_hours.fromNow())
+
+# Specific dates
+print("\nSpecific Dates:")
+var birthday = moment("1990-01-15", "YYYY-MM-DD")
+print("Birthday:", birthday.format("LL"))
+
+var days_since = now.diff(birthday, "days")
+print("Days since birthday:", days_since)
+
+var years_since = now.diff(birthday, "years")
+print("Years since birthday:", years_since)
+
+# Start/End of periods
+print("\nStart/End of Periods:")
+var start_of_day = moment().startOf("day")
+print("Start of day:", start_of_day.format("LLL"))
+
+var end_of_month = moment().endOf("month")
+print("End of month:", end_of_month.format("LL"))
+
+# Formatting options
+print("\nFormatting Options:")
+print("YYYY-MM-DD:", now.format("YYYY-MM-DD"))
+print("DD/MM/YYYY:", now.format("DD/MM/YYYY"))
+print("MMMM Do, YYYY:", now.format("MMMM Do, YYYY"))
+print("h:mm:ss A:", now.format("h:mm:ss A"))
+
+# Day of week/year
+print("\nCalendar Info:")
+print("Day of week:", now.format("dddd"))
+print("Day of year:", now.dayOfYear())
+print("Week of year:", now.week())
+print("Quarter:", now.quarter())
+
+print("\nMoment.js is working perfectly!")

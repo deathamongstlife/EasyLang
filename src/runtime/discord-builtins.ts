@@ -39,6 +39,11 @@ import {
   Interaction,
   TextChannel,
   Client,
+  User,
+  Guild,
+  Role,
+  Channel,
+  Invite,
 } from 'discord.js';
 
 /**
@@ -84,6 +89,144 @@ function getRawValue(value: RuntimeValue): any {
     }
   }
   return null;
+}
+
+/**
+ * Convert Discord.js User to RuntimeValue
+ */
+function convertUserToRuntime(user: User): RuntimeValue {
+  const properties = new Map<string, RuntimeValue>();
+  properties.set('__raw', { __rawValue: user } as any);
+  properties.set('id', makeString(user.id));
+  properties.set('username', makeString(user.username));
+  properties.set('tag', makeString(user.tag));
+  properties.set('bot', makeBoolean(user.bot));
+  properties.set('discriminator', makeString(user.discriminator));
+
+  if (user.avatar) {
+    properties.set('avatar', makeString(user.avatar));
+    properties.set('avatarURL', makeString(user.displayAvatarURL()));
+  }
+
+  return makeObject(properties);
+}
+
+/**
+ * Convert Discord.js Guild to RuntimeValue
+ */
+function convertGuildToRuntime(guild: Guild): RuntimeValue {
+  const properties = new Map<string, RuntimeValue>();
+  properties.set('__raw', { __rawValue: guild } as any);
+  properties.set('id', makeString(guild.id));
+  properties.set('name', makeString(guild.name));
+  properties.set('memberCount', makeNumber(guild.memberCount));
+  properties.set('ownerId', makeString(guild.ownerId));
+
+  if (guild.icon) {
+    properties.set('icon', makeString(guild.icon));
+    properties.set('iconURL', makeString(guild.iconURL() || ''));
+  }
+
+  return makeObject(properties);
+}
+
+/**
+ * Convert Discord.js Channel to RuntimeValue
+ */
+function convertChannelToRuntime(channel: Channel | null): RuntimeValue {
+  if (!channel) {
+    return makeObject();
+  }
+
+  const properties = new Map<string, RuntimeValue>();
+  properties.set('__raw', { __rawValue: channel } as any);
+  properties.set('id', makeString(channel.id));
+  properties.set('type', makeNumber(channel.type));
+
+  if ('name' in channel && channel.name) {
+    properties.set('name', makeString(channel.name));
+  }
+
+  if ('guildId' in channel && channel.guildId) {
+    properties.set('guildId', makeString(channel.guildId));
+  }
+
+  if ('parentId' in channel && channel.parentId) {
+    properties.set('parentId', makeString(channel.parentId));
+  }
+
+  return makeObject(properties);
+}
+
+/**
+ * Convert Discord.js Role to RuntimeValue
+ */
+function convertRoleToRuntime(role: Role): RuntimeValue {
+  const properties = new Map<string, RuntimeValue>();
+  properties.set('__raw', { __rawValue: role } as any);
+  properties.set('id', makeString(role.id));
+  properties.set('name', makeString(role.name));
+  properties.set('color', makeNumber(role.color));
+  properties.set('position', makeNumber(role.position));
+  properties.set('permissions', makeString(role.permissions.bitfield.toString()));
+  properties.set('mentionable', makeBoolean(role.mentionable));
+  properties.set('hoist', makeBoolean(role.hoist));
+
+  return makeObject(properties);
+}
+
+/**
+ * Convert Discord.js Message to RuntimeValue (extended version)
+ */
+function convertMessageToRuntime(message: Message): RuntimeValue {
+  const properties = new Map<string, RuntimeValue>();
+  properties.set('__raw', { __rawValue: message } as any);
+  properties.set('id', makeString(message.id));
+  properties.set('content', makeString(message.content));
+  properties.set('channelId', makeString(message.channelId));
+  properties.set('guildId', makeString(message.guildId || ''));
+
+  // Timestamps
+  properties.set('created_at', makeString(message.createdAt.toISOString()));
+  properties.set('created_timestamp', makeNumber(message.createdTimestamp));
+
+  if (message.editedAt) {
+    properties.set('edited_at', makeString(message.editedAt.toISOString()));
+    properties.set('edited_timestamp', makeNumber(message.editedTimestamp || 0));
+  }
+
+  properties.set('pinned', makeBoolean(message.pinned));
+  properties.set('type', makeNumber(message.type));
+
+  // Author
+  if (message.author) {
+    properties.set('author', convertUserToRuntime(message.author));
+  }
+
+  // Channel
+  if (message.channel) {
+    properties.set('channel', convertChannelToRuntime(message.channel));
+  }
+
+  // Mentions
+  const mentionedUsers = Array.from(message.mentions.users.values()).map(user => convertUserToRuntime(user));
+  properties.set('mentioned_users', makeArray(mentionedUsers));
+
+  const mentionedRoles = Array.from(message.mentions.roles.values()).map(role => convertRoleToRuntime(role));
+  properties.set('mentioned_roles', makeArray(mentionedRoles));
+
+  properties.set('mentions_everyone', makeBoolean(message.mentions.everyone));
+
+  // Reference (reply info)
+  if (message.reference) {
+    const refProps = new Map<string, RuntimeValue>();
+    if (message.reference.messageId) refProps.set('message_id', makeString(message.reference.messageId));
+    if (message.reference.channelId) refProps.set('channel_id', makeString(message.reference.channelId));
+    if (message.reference.guildId) refProps.set('guild_id', makeString(message.reference.guildId));
+    properties.set('reference', makeObject(refProps));
+  }
+
+  return makeObject(properties);
 }
 
 // ==================== SLASH COMMAND FUNCTIONS ====================
@@ -1458,6 +1601,371 @@ export const registerMessageContextMenu = makeNativeFunction('register_message_c
   }
 });
 
+// ==================== GUILD/CHANNEL/USER/ROLE FETCHING FUNCTIONS ====================
+
+/**
+ * get_guild(guild_id)
+ * Fetch a guild by ID
+ */
+export const getGuild = makeNativeFunction('get_guild', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`get_guild() expects 1 argument (guild_id), got ${args.length}`);
+  }
+  if (!isString(args[0])) {
+    throw new TypeError('guild_id must be a string');
+  }
+
+  const client = getDiscordClient();
+  if (!client) {
+    throw new RuntimeError('Discord client not initialized');
+  }
+
+  try {
+    const guild = await client.guilds.fetch(args[0].value);
+    return convertGuildToRuntime(guild);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to fetch guild: ${errorMsg}`);
+  }
+});
+
+/**
+ * get_channel(channel_id)
+ * Fetch a channel by ID
+ */
+export const getChannel = makeNativeFunction('get_channel', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`get_channel() expects 1 argument (channel_id), got ${args.length}`);
+  }
+  if (!isString(args[0])) {
+    throw new TypeError('channel_id must be a string');
+  }
+
+  const client = getDiscordClient();
+  if (!client) {
+    throw new RuntimeError('Discord client not initialized');
+  }
+
+  try {
+    const channel = await client.channels.fetch(args[0].value);
+    return convertChannelToRuntime(channel);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to fetch channel: ${errorMsg}`);
+  }
+});
+
+/**
+ * get_user(user_id)
+ * Fetch a user by ID
+ */
+export const getUser = makeNativeFunction('get_user', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`get_user() expects 1 argument (user_id), got ${args.length}`);
+  }
+  if (!isString(args[0])) {
+    throw new TypeError('user_id must be a string');
+  }
+
+  const client = getDiscordClient();
+  if (!client) {
+    throw new RuntimeError('Discord client not initialized');
+  }
+
+  try {
+    const user = await client.users.fetch(args[0].value);
+    return convertUserToRuntime(user);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to fetch user: ${errorMsg}`);
+  }
+});
+
+/**
+ * get_role(guild_id, role_id)
+ * Fetch a role by guild ID and role ID
+ */
+export const getRole = makeNativeFunction('get_role', async (args: RuntimeValue[]) => {
+  if (args.length !== 2) {
+    throw new RuntimeError(`get_role() expects 2 arguments (guild_id, role_id), got ${args.length}`);
+  }
+  if (!isString(args[0]) || !isString(args[1])) {
+    throw new TypeError('guild_id and role_id must be strings');
+  }
+
+  const client = getDiscordClient();
+  if (!client) {
+    throw new RuntimeError('Discord client not initialized');
+  }
+
+  try {
+    const guild = await client.guilds.fetch(args[0].value);
+    const role = await guild.roles.fetch(args[1].value);
+    if (!role) {
+      throw new RuntimeError('Role not found');
+    }
+    return convertRoleToRuntime(role);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to fetch role: ${errorMsg}`);
+  }
+});
+
+/**
+ * list_guilds()
+ * List all guilds the bot is in
+ */
+export const listGuilds = makeNativeFunction('list_guilds', async (_args: RuntimeValue[]) => {
+  const client = getDiscordClient();
+  if (!client) {
+    throw new RuntimeError('Discord client not initialized');
+  }
+
+  const guilds = (Array.from(client.guilds.cache.values()) as Guild[]).map(guild => convertGuildToRuntime(guild));
+  return makeArray(guilds);
+});
+
+// ==================== DM SUPPORT FUNCTIONS ====================
+
+/**
+ * send_dm(user, content, options?)
+ * Send a direct message to a user
+ */
+export const sendDM = makeNativeFunction('send_dm', async (args: RuntimeValue[]) => {
+  if (args.length < 2) {
+    throw new RuntimeError(`send_dm() expects at least 2 arguments (user, content), got ${args.length}`);
+  }
+
+  const userObj = getRawValue(args[0]);
+  if (!userObj || !userObj.send) {
+    throw new TypeError('First argument must be a User object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('content must be a string');
+  }
+
+  const content = args[1].value;
+  const options: any = { content };
+
+  // Parse options if provided
+  if (args.length >= 3 && isObject(args[2])) {
+    const opts = args[2];
+
+    // Embeds
+    const embeds = opts.properties.get('embeds');
+    if (embeds && isArray(embeds)) {
+      options.embeds = embeds.elements.map(e => getRawValue(e)).filter(e => e);
+    }
+
+    // Components
+    const components = opts.properties.get('components');
+    if (components && isArray(components)) {
+      options.components = components.elements.map(c => getRawValue(c)).filter(c => c);
+    }
+
+    // Files
+    const files = opts.properties.get('files');
+    if (files && isArray(files)) {
+      options.files = files.elements.map(f => isString(f) ? f.value : null).filter(f => f !== null);
+    }
+  }
+
+  try {
+    const message = await userObj.send(options);
+    return convertMessageToRuntime(message);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to send DM: ${errorMsg}`);
+  }
+});
+
+/**
+ * create_dm_channel(user)
+ * Create a DM channel with a user
+ */
+export const createDMChannel = makeNativeFunction('create_dm_channel', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`create_dm_channel() expects 1 argument (user), got ${args.length}`);
+  }
+
+  const userObj = getRawValue(args[0]);
+  if (!userObj || !userObj.createDM) {
+    throw new TypeError('Argument must be a User object');
+  }
+
+  try {
+    const dmChannel = await userObj.createDM();
+    return convertChannelToRuntime(dmChannel);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to create DM channel: ${errorMsg}`);
+  }
+});
+
+// ==================== INVITE MANAGEMENT FUNCTIONS ====================
+
+/**
+ * create_invite(channel, options?)
+ * Create an invite for a channel
+ *
+ * Options:
+ * - max_age: Seconds until expiration (0 = never, default: 86400)
+ * - max_uses: Max number of uses (0 = unlimited, default: 0)
+ * - temporary: Whether members are temporary (default: false)
+ * - unique: Create unique invite even if similar exists (default: false)
+ * - reason: Audit log reason
+ */
+export const createInvite = makeNativeFunction('create_invite', async (args: RuntimeValue[]) => {
+  if (args.length < 1) {
+    throw new RuntimeError(`create_invite() expects at least 1 argument (channel), got ${args.length}`);
+  }
+
+  const channelObj = getRawValue(args[0]);
+  if (!channelObj || !channelObj.createInvite) {
+    throw new TypeError('First argument must be a Channel object that supports invites');
+  }
+
+  const options: any = {};
+
+  if (args.length >= 2 && isObject(args[1])) {
+    const opts = args[1];
+
+    const maxAge = opts.properties.get('max_age');
+    if (maxAge && isNumber(maxAge)) {
+      options.maxAge = maxAge.value;
+    }
+
+    const maxUses = opts.properties.get('max_uses');
+    if (maxUses && isNumber(maxUses)) {
+      options.maxUses = maxUses.value;
+    }
+
+    const temporary = opts.properties.get('temporary');
+    if (temporary) {
+      options.temporary = isBoolean(temporary) ? temporary.value : false;
+    }
+
+    const unique = opts.properties.get('unique');
+    if (unique) {
+      options.unique = isBoolean(unique) ? unique.value : false;
+    }
+
+    const reason = opts.properties.get('reason');
+    if (reason && isString(reason)) {
+      options.reason = reason.value;
+    }
+  }
+
+  try {
+    const invite = await channelObj.createInvite(options);
+
+    const properties = new Map<string, RuntimeValue>();
+    properties.set('__raw', { __rawValue: invite } as any);
+    properties.set('code', makeString(invite.code));
+    properties.set('url', makeString(invite.url));
+    properties.set('uses', makeNumber(invite.uses || 0));
+    properties.set('max_uses', makeNumber(invite.maxUses || 0));
+    properties.set('max_age', makeNumber(invite.maxAge || 0));
+    properties.set('temporary', makeBoolean(invite.temporary || false));
+    properties.set('created_at', makeString(invite.createdAt?.toISOString() || ''));
+
+    if (invite.expiresAt) {
+      properties.set('expires_at', makeString(invite.expiresAt.toISOString()));
+    }
+
+    if (invite.inviter) {
+      properties.set('inviter', convertUserToRuntime(invite.inviter));
+    }
+
+    return makeObject(properties);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to create invite: ${errorMsg}`);
+  }
+});
+
+/**
+ * fetch_invites(guild)
+ * Fetch all invites for a guild
+ */
+export const fetchInvites = makeNativeFunction('fetch_invites', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`fetch_invites() expects 1 argument (guild), got ${args.length}`);
+  }
+
+  const guildObj = getRawValue(args[0]);
+  if (!guildObj || !guildObj.invites) {
+    throw new TypeError('Argument must be a Guild object');
+  }
+
+  try {
+    const invites = await guildObj.invites.fetch();
+    const inviteArray = (Array.from(invites.values()) as Invite[]).map(invite => {
+      const properties = new Map<string, RuntimeValue>();
+      properties.set('__raw', { __rawValue: invite } as any);
+      properties.set('code', makeString(invite.code));
+      properties.set('url', makeString(invite.url));
+      properties.set('uses', makeNumber(invite.uses || 0));
+      properties.set('max_uses', makeNumber(invite.maxUses || 0));
+      properties.set('max_age', makeNumber(invite.maxAge || 0));
+      properties.set('temporary', makeBoolean(invite.temporary || false));
+      properties.set('created_at', makeString(invite.createdAt?.toISOString() || ''));
+
+      if (invite.expiresAt) {
+        properties.set('expires_at', makeString(invite.expiresAt.toISOString()));
+      }
+
+      if (invite.inviter) {
+        properties.set('inviter', convertUserToRuntime(invite.inviter));
+      }
+
+      return makeObject(properties);
+    });
+
+    return makeArray(inviteArray);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to fetch invites: ${errorMsg}`);
+  }
+});
+
+/**
+ * delete_invite(code_or_invite)
+ * Delete an invite by code or invite object
+ */
+export const deleteInvite = makeNativeFunction('delete_invite', async (args: RuntimeValue[]) => {
+  if (args.length !== 1) {
+    throw new RuntimeError(`delete_invite() expects 1 argument (code_or_invite), got ${args.length}`);
+  }
+
+  const client = getDiscordClient();
+  if (!client) {
+    throw new RuntimeError('Discord client not initialized');
+  }
+
+  let code: string;
+
+  if (isString(args[0])) {
+    code = args[0].value;
+  } else {
+    const inviteObj = getRawValue(args[0]);
+    if (!inviteObj || !inviteObj.code) {
+      throw new TypeError('Argument must be an invite code (string) or Invite object');
+    }
+    code = inviteObj.code;
+  }
+
+  try {
+    const invite = await client.fetchInvite(code);
+    await invite.delete();
+    return makeBoolean(true);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to delete invite: ${errorMsg}`);
+  }
+});
+
 // Export all Discord builtin functions
 export const discordBuiltins = {
   // Slash Commands
@@ -1527,4 +2035,20 @@ export const discordBuiltins = {
   add_modal_text_input: addModalTextInput,
   get_modal_field: getModalField,
   register_command: registerCommand,
+
+  // Guild/Channel/User/Role Fetching
+  get_guild: getGuild,
+  get_channel: getChannel,
+  get_user: getUser,
+  get_role: getRole,
+  list_guilds: listGuilds,
+
+  // DM Support
+  send_dm: sendDM,
+  create_dm_channel: createDMChannel,
+
+  // Invite Management
+  create_invite: createInvite,
+  fetch_invites: fetchInvites,
+  delete_invite: deleteInvite,
 };

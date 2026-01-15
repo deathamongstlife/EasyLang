@@ -166,6 +166,18 @@ export class EventManager {
     properties.set('channelId', makeString(message.channelId));
     properties.set('guildId', makeString(message.guildId || ''));
 
+    // Timestamps
+    properties.set('created_at', makeString(message.createdAt.toISOString()));
+    properties.set('created_timestamp', makeNumber(message.createdTimestamp));
+
+    if (message.editedAt) {
+      properties.set('edited_at', makeString(message.editedAt.toISOString()));
+      properties.set('edited_timestamp', makeNumber(message.editedTimestamp || 0));
+    }
+
+    properties.set('pinned', makeBoolean(message.pinned));
+    properties.set('type', makeNumber(message.type));
+
     // Author information
     if (message.author) {
       properties.set('author', this.userToRuntimeValue(message.author));
@@ -179,6 +191,24 @@ export class EventManager {
     // Member information (if in guild)
     if (message.member) {
       properties.set('member', this.memberToRuntimeValue(message.member));
+    }
+
+    // Mentions
+    const mentionedUsers = Array.from(message.mentions.users.values()).map(user => this.userToRuntimeValue(user));
+    properties.set('mentioned_users', makeArray(mentionedUsers));
+
+    const mentionedRoles = Array.from(message.mentions.roles.values()).map(role => this.roleToRuntimeValue(role));
+    properties.set('mentioned_roles', makeArray(mentionedRoles));
+
+    properties.set('mentions_everyone', makeBoolean(message.mentions.everyone));
+
+    // Reference (reply info)
+    if (message.reference) {
+      const refProps = new Map<string, RuntimeValue>();
+      if (message.reference.messageId) refProps.set('message_id', makeString(message.reference.messageId));
+      if (message.reference.channelId) refProps.set('channel_id', makeString(message.reference.channelId));
+      if (message.reference.guildId) refProps.set('guild_id', makeString(message.reference.guildId));
+      properties.set('reference', makeObject(refProps));
     }
 
     // Embeds

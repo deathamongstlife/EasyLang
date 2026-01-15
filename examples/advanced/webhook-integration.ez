@@ -1,0 +1,183 @@
+# Webhook Integration Example
+# Demonstrates comprehensive webhook usage in EasyLang
+
+# Get your Discord bot token
+var token = get_argument("token", "")
+
+if token == "" {
+    print("Usage: ezlang webhook-integration.ez token=YOUR_BOT_TOKEN")
+    return
+}
+
+# Start the bot
+bot_start(token)
+
+# Global webhook storage
+var status_webhook = null
+var log_webhook = null
+
+on("ready", function(client) {
+    print("✅ Bot ready! Setting up webhooks...")
+
+    # Get a channel (replace with your channel ID)
+    var channel_id = "YOUR_CHANNEL_ID_HERE"
+    var channel = get_channel(channel_id)
+
+    if channel {
+        # Create status webhook
+        status_webhook = create_webhook(channel, "Status Bot", "https://i.imgur.com/AfFp7pu.png")
+        print("✅ Status webhook created: " + status_webhook.name)
+
+        # Create log webhook
+        log_webhook = create_webhook(channel, "Log Bot", "https://i.imgur.com/AfFp7pu.png")
+        print("✅ Log webhook created: " + log_webhook.name)
+
+        # Send initial status
+        webhook_send(status_webhook.url, "🟢 Bot is now online!", {
+            username: "Status Monitor",
+            avatar_url: "https://i.imgur.com/AfFp7pu.png"
+        })
+
+        print("📝 Use !webhook commands in Discord to test")
+    } else {
+        print("❌ Channel not found. Update the channel_id variable!")
+    }
+})
+
+on("messageCreate", function(message) {
+    if message.author.bot {
+        return
+    }
+
+    var content = message.content
+
+    # List all webhooks
+    if content == "!webhooks" {
+        var webhooks = fetch_webhooks(message.channel)
+        var embed = create_embed("Channel Webhooks", "Found " + str(length(webhooks)) + " webhooks")
+        embed_set_color(embed, 0x5865F2)
+
+        for webhook in webhooks {
+            embed_add_field(embed, webhook.name, "ID: " + webhook.id, false)
+        }
+
+        reply(message, "", { embeds: [embed] })
+    }
+
+    # Send message via webhook
+    if starts_with(content, "!send ") {
+        if status_webhook {
+            var text = substr(content, 6, length(content))
+            webhook_send(status_webhook.url, text, {
+                username: message.author.username,
+                avatar_url: message.author.avatar_url
+            })
+            add_reaction(message, "✅")
+        } else {
+            reply(message, "❌ No webhook available!")
+        }
+    }
+
+    # Send embed via webhook
+    if content == "!sendembed" {
+        if status_webhook {
+            var embed = create_embed(
+                "Webhook Embed",
+                "This message was sent via webhook!"
+            )
+            embed_set_color(embed, 0x00FF00)
+            embed_set_footer(embed, "Sent by " + message.author.username)
+            embed_set_timestamp(embed)
+
+            webhook_send(status_webhook.url, "", {
+                embeds: [embed],
+                username: "Embed Bot",
+                avatar_url: "https://i.imgur.com/AfFp7pu.png"
+            })
+
+            add_reaction(message, "✅")
+        }
+    }
+
+    # Edit webhook name
+    if starts_with(content, "!editwebhook ") {
+        if status_webhook {
+            var new_name = substr(content, 13, length(content))
+
+            webhook_edit(status_webhook.url, {
+                name: new_name
+            })
+
+            reply(message, "✅ Webhook renamed to: " + new_name)
+        }
+    }
+
+    # Log action via webhook
+    if content == "!logtest" {
+        if log_webhook {
+            var embed = create_embed("Action Logged", "User performed test action")
+            embed_set_color(embed, 0xFFAA00)
+            embed_add_field(embed, "User", message.author.tag, true)
+            embed_add_field(embed, "Channel", message.channel.name, true)
+            embed_add_field(embed, "Time", str(time()), true)
+            embed_set_timestamp(embed)
+
+            webhook_send(log_webhook.url, "", {
+                embeds: [embed],
+                username: "Audit Log",
+                avatar_url: "https://i.imgur.com/AfFp7pu.png"
+            })
+
+            add_reaction(message, "📝")
+        }
+    }
+
+    # Fetch and display webhook info
+    if content == "!webhookinfo" {
+        if status_webhook {
+            var webhook = fetch_webhook(status_webhook.url)
+            var embed = create_embed("Webhook Information", "")
+            embed_set_color(embed, 0x5865F2)
+            embed_add_field(embed, "Name", webhook.name, true)
+            embed_add_field(embed, "ID", webhook.id, true)
+            embed_add_field(embed, "Token", webhook.token ? "✅ Present" : "❌ Missing", true)
+
+            reply(message, "", { embeds: [embed] })
+        }
+    }
+
+    # Delete webhook (admin only)
+    if content == "!deletewebhook" {
+        if has_permission(message.author, "ADMINISTRATOR") {
+            if status_webhook {
+                var webhook_name = status_webhook.name
+                webhook_delete(status_webhook.url)
+                status_webhook = null
+                reply(message, "✅ Webhook '" + webhook_name + "' deleted")
+            }
+        } else {
+            reply(message, "❌ Administrator permission required!")
+        }
+    }
+
+    # Help command
+    if content == "!webhook" {
+        var embed = create_embed("Webhook Commands", "Test webhook functionality")
+        embed_set_color(embed, 0x5865F2)
+        embed_add_field(embed, "!webhooks", "List all webhooks in channel", false)
+        embed_add_field(embed, "!send <text>", "Send message via webhook", false)
+        embed_add_field(embed, "!sendembed", "Send embed via webhook", false)
+        embed_add_field(embed, "!editwebhook <name>", "Rename webhook", false)
+        embed_add_field(embed, "!webhookinfo", "Show webhook details", false)
+        embed_add_field(embed, "!logtest", "Test logging webhook", false)
+        embed_add_field(embed, "!deletewebhook", "Delete webhook (admin)", false)
+
+        reply(message, "", { embeds: [embed] })
+    }
+})
+
+print("🤖 Webhook bot starting...")
+print("Commands:")
+print("  !webhook - Show help")
+print("  !webhooks - List webhooks")
+print("  !send <text> - Send via webhook")

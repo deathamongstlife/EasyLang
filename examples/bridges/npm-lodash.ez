@@ -1,0 +1,73 @@
+# npm Lodash Example
+# Utility library for JavaScript
+
+# Import lodash npm package
+use npm "lodash" as _
+
+print("Lodash Utility Functions Demo")
+print("=" * 40)
+
+# Array operations
+var numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+print("\nOriginal array:", numbers)
+
+var chunked = _.chunk(numbers, 3)
+print("Chunked (size 3):", chunked)
+
+var shuffled = _.shuffle(numbers)
+print("Shuffled:", shuffled)
+
+var evens = _.filter(numbers, function(n) { return n % 2 == 0 })
+print("Even numbers:", evens)
+
+var doubled = _.map(numbers, function(n) { return n * 2 })
+print("Doubled:", doubled)
+
+# Math operations
+print("\nMath operations:")
+print("Sum:", _.sum(numbers))
+print("Mean:", _.mean(numbers))
+print("Min:", _.min(numbers))
+print("Max:", _.max(numbers))
+
+# String operations
+var text = "hello world from ezlang"
+print("\nString operations:")
+print("Original:", text)
+print("Capitalize:", _.capitalize(text))
+print("Uppercase:", _.upperCase(text))
+print("Camel Case:", _.camelCase(text))
+print("Kebab Case:", _.kebabCase(text))
+
+# Object operations
+var users = [
+  {name: "Alice", age: 25, active: true},
+  {name: "Bob", age: 30, active: false},
+  {name: "Charlie", age: 25, active: true},
+  {name: "Diana", age: 28, active: true}
+]
+
+print("\nObject operations:")
+print("Total users:", length(users))
+
+var active_users = _.filter(users, {active: true})
+print("Active users:", length(active_users))
+
+var grouped = _.groupBy(users, "age")
+print("Grouped by age:", grouped)
+
+var names = _.map(users, "name")
+print("Names only:", names)
+
+# Deep object access
+var nested = {a: {b: {c: {d: "deep value"}}}}
+var deep_value = _.get(nested, "a.b.c.d", "default")
+print("\nDeep object access:", deep_value)
+
+# Remove duplicates
+var with_duplicates = [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5]
+var unique = _.uniq(with_duplicates)
+print("\nRemove duplicates:", unique)
+
+print("\nLodash integration working perfectly!")

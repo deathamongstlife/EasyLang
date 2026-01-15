@@ -1,0 +1,208 @@
+# EasyLang Discord Bot - Testing New High-Priority Features
+# This example demonstrates the newly added features for beginners
+
+# Get Discord token from environment
+let token = env("DISCORD_TOKEN")
+
+# Initialize Discord bot
+discord_init(token)
+
+# ==================== GUILD/CHANNEL/USER/ROLE FETCHING ====================
+
+# Test: List all guilds
+on("ready", fn(client) {
+  println("Bot is ready!")
+
+  # List all guilds the bot is in
+  let guilds = list_guilds()
+  println("Bot is in " + str(len(guilds)) + " guilds")
+
+  # Example: Get a specific guild by ID (replace with your guild ID)
+  # let guild = get_guild("YOUR_GUILD_ID")
+  # println("Guild name: " + guild.name)
+
+  # Example: Get a specific channel by ID
+  # let channel = get_channel("YOUR_CHANNEL_ID")
+  # println("Channel name: " + channel.name)
+
+  # Example: Get a specific user by ID
+  # let user = get_user("YOUR_USER_ID")
+  # println("User: " + user.username)
+
+  # Example: Get a role by guild ID and role ID
+  # let role = get_role("YOUR_GUILD_ID", "YOUR_ROLE_ID")
+  # println("Role: " + role.name)
+end)
+
+# ==================== MESSAGE PROPERTIES ====================
+
+on("messageCreate", fn(message) {
+  # Skip bot messages
+  if message.author.bot {
+    return
+  }
+
+  # Test: Show expanded message properties
+  if message.content == "!msginfo" {
+    let info = "**Message Information:**\n"
+    info = info + "ID: " + message.id + "\n"
+    info = info + "Created: " + message.created_at + "\n"
+    info = info + "Pinned: " + str(message.pinned) + "\n"
+
+    # Show edit info if edited
+    if message.edited_at != null {
+      info = info + "Edited: " + message.edited_at + "\n"
+    }
+
+    # Show mentions
+    if len(message.mentioned_users) > 0 {
+      info = info + "Mentioned " + str(len(message.mentioned_users)) + " users\n"
+    }
+
+    if message.mentions_everyone {
+      info = info + "Mentions @everyone!\n"
+    }
+
+    # Show if it's a reply
+    if message.reference != null {
+      info = info + "This is a reply to message: " + message.reference.message_id + "\n"
+    }
+
+    send(message.channel, info)
+  }
+end)
+
+# ==================== DM SUPPORT ====================
+
+on("messageCreate", fn(message) {
+  # Skip bot messages
+  if message.author.bot {
+    return
+  }
+
+  # Test: Send DM to user
+  if message.content == "!dm" {
+    # Get the message author (user object)
+    let user = message.author
+
+    # Send a DM
+    send_dm(user, "Hello! This is a direct message from the bot!")
+
+    # You can also send DMs with embeds
+    let embed = create_embed("DM Test", "This is an embed in a DM", 0x00ff00)
+    send_dm(user, "Here's an embed!", {
+      embeds: [embed]
+    })
+
+    # Reply in the channel
+    send(message.channel, "Check your DMs!")
+  }
+end)
+
+# ==================== INVITE MANAGEMENT ====================
+
+on("messageCreate", fn(message) {
+  # Skip bot messages
+  if message.author.bot {
+    return
+  }
+
+  # Test: Create an invite
+  if message.content == "!createinvite" {
+    # Create an invite that expires in 1 hour (3600 seconds)
+    let invite = create_invite(message.channel, {
+      max_age: 3600,
+      max_uses: 10,
+      temporary: false,
+      unique: true,
+      reason: "Created by bot command"
+    })
+
+    send(message.channel, "Invite created: " + invite.url + "\nMax uses: " + str(invite.max_uses))
+  }
+
+  # Test: List invites (requires manage_guild permission)
+  if message.content == "!listinvites" {
+    # You need to get the guild from the message
+    # For this example, we'll show how to do it if you have the guild object
+    # let guild = message.guild (you'd need to fetch this separately in practice)
+    # let invites = fetch_invites(guild)
+    # let info = "Found " + str(len(invites)) + " invites\n"
+    # send(message.channel, info)
+
+    send(message.channel, "Invite listing requires guild object (see code comments)")
+  }
+
+  # Test: Delete an invite by code
+  if message.content.startsWith("!delinvite ") {
+    let code = message.content.substring(11)
+    delete_invite(code)
+    send(message.channel, "Invite deleted: " + code)
+  }
+end)
+
+# ==================== NICKNAME MANAGEMENT ====================
+
+on("messageCreate", fn(message) {
+  # Skip bot messages or DMs
+  if message.author.bot {
+    return
+  }
+
+  if message.guildId == "" {
+    return
+  }
+
+  # Test: Set nickname (requires manage_nicknames permission)
+  if message.content.startsWith("!setnick ") {
+    let nickname = message.content.substring(9)
+
+    # In a real implementation, you'd get the member object
+    # For example: let member = message.member
+    # set_nickname(member, nickname, "Changed via bot command")
+    # send(message.channel, "Nickname set to: " + nickname)
+
+    send(message.channel, "Nickname command requires member object (see code comments)")
+  }
+
+  # Test: Reset nickname
+  if message.content == "!resetnick" {
+    # In a real implementation:
+    # let member = message.member
+    # reset_nickname(member, "Reset via bot command")
+    # send(message.channel, "Nickname reset!")
+
+    send(message.channel, "Reset nickname command requires member object (see code comments)")
+  }
+end)
+
+# ==================== HELP COMMAND ====================
+
+on("messageCreate", fn(message) {
+  # Skip bot messages
+  if message.author.bot {
+    return
+  }
+
+  if message.content == "!help" {
+    let embed = create_embed(
+      "New Features Test Bot",
+      "Test the new high-priority Discord features!",
+      0x5865F2
+    )
+
+    embed = embed_add_field(embed, "Message Info", "!msginfo - Show message properties", false)
+    embed = embed_add_field(embed, "Direct Messages", "!dm - Get a DM from the bot", false)
+    embed = embed_add_field(embed, "Invites", "!createinvite - Create a channel invite", false)
+    embed = embed_add_field(embed, "Guild Info", "Lists all guilds on bot ready", false)
+    embed = embed_add_field(embed, "Features", "Guild/Channel/User/Role fetching, DM support, Invite management, Nickname management, Enhanced message properties", false)
+
+    embed = embed_set_footer(embed, "EasyLang Discord Bot")
+    embed = embed_set_timestamp(embed)
+
+    send(message.channel, "", { embeds: [embed] })
+  }
+end)
+
+# Start the bot
+bot_start()

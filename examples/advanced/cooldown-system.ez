@@ -1,0 +1,290 @@
+# Cooldown System Example
+# Demonstrates comprehensive cooldown management in EasyLang
+
+var token = get_argument("token", "")
+
+if token == "" {
+    print("Usage: ezlang cooldown-system.ez token=YOUR_BOT_TOKEN")
+    return
+}
+
+bot_start(token)
+
+# Command configuration with cooldowns
+var commands = {
+    "daily": { cooldown: 86400, bucket: "user" },        # 24 hours per user
+    "hourly": { cooldown: 3600, bucket: "user" },        # 1 hour per user
+    "vote": { cooldown: 43200, bucket: "user" },         # 12 hours per user
+    "giveaway": { cooldown: 300, bucket: "guild" },      # 5 min per server
+    "announcement": { cooldown: 600, bucket: "channel" }, # 10 min per channel
+    "ping": { cooldown: 5, bucket: "user" }              # 5 sec per user
+}
+
+on("ready", function(client) {
+    print("✅ Bot ready with cooldown system!")
+    print("")
+    print("📋 Commands with cooldowns:")
+    print("  !daily - 24 hour cooldown (per user)")
+    print("  !hourly - 1 hour cooldown (per user)")
+    print("  !vote - 12 hour cooldown (per user)")
+    print("  !giveaway - 5 min cooldown (per server)")
+    print("  !announcement - 10 min cooldown (per channel)")
+    print("  !ping - 5 second cooldown (per user)")
+    print("")
+    print("Use !cooldowns to see your active cooldowns")
+})
+
+# Helper function to format time
+function format_time(seconds) {
+    if seconds >= 86400 {
+        var days = seconds / 86400
+        var hours = (seconds % 86400) / 3600
+        return str(days) + "d " + str(hours) + "h"
+    }
+
+    if seconds >= 3600 {
+        var hours = seconds / 3600
+        var minutes = (seconds % 3600) / 60
+        return str(hours) + "h " + str(minutes) + "m"
+    }
+
+    if seconds >= 60 {
+        var minutes = seconds / 60
+        var secs = seconds % 60
+        return str(minutes) + "m " + str(secs) + "s"
+    }
+
+    return str(seconds) + "s"
+}
+
+# Check and apply cooldown
+function check_cooldown(user_id, command, channel_id, guild_id) {
+    var config = commands[command]
+    if config == null {
+        return { allowed: true }
+    }
+
+    var options = { bucket: config.bucket }
+
+    if config.bucket == "channel" {
+        options.channel_id = channel_id
+    }
+
+    if config.bucket == "guild" {
+        options.guild_id = guild_id
+    }
+
+    # Check if on cooldown
+    if is_on_cooldown(user_id, command, options) {
+        var remaining = get_cooldown_remaining(user_id, command, options)
+        return {
+            allowed: false,
+            remaining: remaining,
+            formatted: format_time(remaining)
+        }
+    }
+
+    # Add cooldown
+    add_cooldown(user_id, command, config.cooldown, options)
+
+    return { allowed: true }
+}
+
+on("messageCreate", function(message) {
+    if message.author.bot {
+        return
+    }
+
+    var content = message.content
+
+    # Daily reward command
+    if content == "!daily" {
+        var result = check_cooldown(
+            message.author.id,
+            "daily",
+            message.channel.id,
+            message.guild.id
+        )
+
+        if result.allowed {
+            var coins = random(50, 150)
+            var embed = create_embed("Daily Reward", "You received " + str(coins) + " coins!")
+            embed_set_color(embed, 0xFFD700)
+            embed_set_footer(embed, "Come back in 24 hours!")
+
+            reply(message, "", { embeds: [embed] })
+        } else {
+            reply(message, "⏰ Daily reward on cooldown! Come back in " + result.formatted)
+        }
+    }
+
+    # Hourly reward command
+    if content == "!hourly" {
+        var result = check_cooldown(
+            message.author.id,
+            "hourly",
+            message.channel.id,
+            message.guild.id
+        )
+
+        if result.allowed {
+            var coins = random(10, 30)
+            reply(message, "🎁 You received " + str(coins) + " coins! Come back in 1 hour!")
+        } else {
+            reply(message, "⏰ Hourly reward on cooldown! Wait " + result.formatted)
+        }
+    }
+
+    # Vote reminder command
+    if content == "!vote" {
+        var result = check_cooldown(
+            message.author.id,
+            "vote",
+            message.channel.id,
+            message.guild.id
+        )
+
+        if result.allowed {
+            var embed = create_embed("Vote for Us!", "Click the link to vote and earn rewards!")
+            embed_set_color(embed, 0x5865F2)
+            embed_add_field(embed, "Vote Link", "https://example.com/vote", false)
+            embed_add_field(embed, "Reward", "50 coins + bonus perks!", false)
+            embed_set_footer(embed, "You can vote again in 12 hours")
+
+            reply(message, "", { embeds: [embed] })
+        } else {
+            reply(message, "🗳️ Already voted! Vote again in " + result.formatted)
+        }
+    }
+
+    # Guild-wide giveaway command
+    if content == "!giveaway" {
+        var result = check_cooldown(
+            message.author.id,
+            "giveaway",
+            message.channel.id,
+            message.guild.id
+        )
+
+        if result.allowed {
+            var embed = create_embed("🎉 Giveaway!", "React with 🎁 to enter!")
+            embed_set_color(embed, 0xFF00FF)
+            embed_set_footer(embed, "Guild giveaway - one every 5 minutes")
+
+            var msg = send(message.channel, "", { embeds: [embed] })
+            add_reaction(msg, "🎁")
+        } else {
+            reply(message, "⏰ Server giveaway on cooldown! Wait " + result.formatted)
+        }
+    }
+
+    # Channel announcement (channel-specific cooldown)
+    if content == "!announcement" {
+        var result = check_cooldown(
+            message.author.id,
+            "announcement",
+            message.channel.id,
+            message.guild.id
+        )
+
+        if result.allowed {
+            var embed = create_embed("📢 Important Announcement", "This is a test announcement!")
+            embed_set_color(embed, 0xFF0000)
+            embed_set_footer(embed, "Channel cooldown: 10 minutes")
+
+            send(message.channel, "", { embeds: [embed] })
+        } else {
+            reply(message, "⏰ Announcement cooldown for this channel! Wait " + result.formatted)
+        }
+    }
+
+    # Ping command with short cooldown
+    if content == "!ping" {
+        var result = check_cooldown(
+            message.author.id,
+            "ping",
+            message.channel.id,
+            message.guild.id
+        )
+
+        if result.allowed {
+            reply(message, "🏓 Pong!")
+        } else {
+            reply(message, "⏰ Ping on cooldown: " + result.formatted)
+        }
+    }
+
+    # Show user's cooldowns
+    if content == "!cooldowns" {
+        var cooldowns = get_user_cooldowns(message.author.id)
+
+        if length(cooldowns) == 0 {
+            reply(message, "✅ You have no active cooldowns!")
+            return
+        }
+
+        var embed = create_embed("Your Cooldowns", "Active cooldowns: " + str(length(cooldowns)))
+        embed_set_color(embed, 0x5865F2)
+
+        for cd in cooldowns {
+            var time_left = format_time(cd.remaining_seconds)
+            var bucket_info = " (" + cd.bucket + " bucket)"
+
+            embed_add_field(embed, cd.command_name, time_left + bucket_info, true)
+        }
+
+        reply(message, "", { embeds: [embed] })
+    }
+
+    # Reset user cooldowns (admin only)
+    if starts_with(content, "!resetcooldowns ") {
+        if has_permission(message.author, "ADMINISTRATOR") {
+            var user_mention = substr(content, 16, length(content))
+            # Extract user ID from mention <@123456>
+            var user_id = user_mention
+
+            var count = reset_all_cooldowns(user_id)
+            reply(message, "✅ Reset " + str(count) + " cooldowns for user")
+        } else {
+            reply(message, "❌ Administrator permission required!")
+        }
+    }
+
+    # Show cooldown statistics (admin only)
+    if content == "!cdstats" {
+        if has_permission(message.author, "ADMINISTRATOR") {
+            var stats = get_cooldown_stats()
+
+            var embed = create_embed("Cooldown Statistics", "System-wide cooldown data")
+            embed_set_color(embed, 0x5865F2)
+            embed_add_field(embed, "Total Cooldowns", str(stats.total), true)
+            embed_add_field(embed, "Active", str(stats.active), true)
+            embed_add_field(embed, "Expired", str(stats.expired), true)
+            embed_add_field(embed, "User Bucket", str(stats.user_bucket), true)
+            embed_add_field(embed, "Channel Bucket", str(stats.channel_bucket), true)
+            embed_add_field(embed, "Guild Bucket", str(stats.guild_bucket), true)
+
+            reply(message, "", { embeds: [embed] })
+        }
+    }
+
+    # Help command
+    if content == "!cdhelp" {
+        var embed = create_embed("Cooldown System Help", "Commands with cooldowns")
+        embed_set_color(embed, 0x5865F2)
+        embed_add_field(embed, "User Commands", "!daily, !hourly, !vote, !ping", false)
+        embed_add_field(embed, "Server Commands", "!giveaway (guild cooldown)", false)
+        embed_add_field(embed, "Channel Commands", "!announcement (channel cooldown)", false)
+        embed_add_field(embed, "Info", "!cooldowns - Your active cooldowns", false)
+        embed_add_field(embed, "Admin", "!resetcooldowns <user>, !cdstats", false)
+        embed_set_footer(embed, "Different commands use different cooldown types")
+
+        reply(message, "", { embeds: [embed] })
+    }
+})
+
+print("🤖 Cooldown system bot starting...")
+print("Commands:")
+print("  !cdhelp - Show help")
+print("  !cooldowns - Your cooldowns")
+print("  !daily, !hourly, !vote - Test cooldowns")

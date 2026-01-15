@@ -1,0 +1,429 @@
+# All Advanced Features Demo
+# Comprehensive demonstration of webhooks, tasks, cooldowns, polls, and error handling
+
+var token = get_argument("token", "")
+
+if token == "" {
+    print("Usage: ezlang all-features-demo.ez token=YOUR_BOT_TOKEN")
+    return
+}
+
+bot_start(token)
+
+# Global state
+var main_channel = null
+var status_webhook = null
+var status_task = null
+var reminder_task = null
+
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("🚀 EasyLang Advanced Features Demo")
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("")
+print("This demo showcases:")
+print("  ✓ Webhooks")
+print("  ✓ Background Tasks & Loops")
+print("  ✓ Cooldowns (all bucket types)")
+print("  ✓ Polls")
+print("  ✓ Error Handling")
+print("")
+
+on("ready", function(client) {
+    print("✅ Bot connected!")
+    print("👤 Logged in as: " + client.user.tag)
+    print("")
+    print("📝 Commands available:")
+    print("  !help - Show all commands")
+    print("  !demo - Show this info")
+    print("")
+
+    # Try to get channel (update with your channel ID)
+    var channel_id = "YOUR_CHANNEL_ID_HERE"
+    main_channel = get_channel(channel_id)
+
+    if main_channel {
+        print("✅ Main channel found: " + main_channel.name)
+
+        # Setup webhook
+        try {
+            status_webhook = create_webhook(main_channel, "Demo Bot", "https://i.imgur.com/AfFp7pu.png")
+            print("✅ Webhook created: " + status_webhook.name)
+
+            # Send startup message
+            webhook_send(status_webhook.url, "🟢 Demo bot is online!", {
+                username: "Status Monitor",
+                avatar_url: "https://i.imgur.com/AfFp7pu.png"
+            })
+        } catch error {
+            print("⚠️ Could not create webhook: " + format_error_message(error))
+        }
+
+        # Setup status update task (every 10 minutes)
+        status_task = create_loop(function() {
+            if status_webhook {
+                var embed = create_embed("Bot Status", "All systems operational")
+                embed_set_color(embed, 0x00FF00)
+                embed_add_field(embed, "Uptime", str(time() / 1000) + "s", true)
+                embed_add_field(embed, "Memory", "OK", true)
+                embed_set_timestamp(embed)
+
+                try {
+                    webhook_send(status_webhook.url, "", {
+                        embeds: [embed],
+                        username: "Status Monitor"
+                    })
+                } catch error {
+                    log_error(error, "Status update")
+                }
+            }
+        }, 600) # 10 minutes
+
+        # Setup reminder task (at specific times)
+        reminder_task = create_scheduled_task(function() {
+            if main_channel {
+                try {
+                    send(main_channel, "🔔 Scheduled reminder - Test at " + str(time()))
+                } catch error {
+                    log_error(error, "Reminder")
+                }
+            }
+        }, ["09:00", "15:00", "21:00"])
+
+        start_task(status_task)
+        start_task(reminder_task)
+        print("✅ Background tasks started")
+    } else {
+        print("⚠️ Main channel not found - update channel_id in code")
+    }
+
+    print("")
+    print("✅ Demo bot fully initialized!")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+})
+
+# Helper function - format cooldown time
+function format_cooldown(seconds) {
+    if seconds >= 86400 {
+        return str(seconds / 86400) + " days"
+    }
+    if seconds >= 3600 {
+        return str(seconds / 3600) + " hours"
+    }
+    if seconds >= 60 {
+        return str(seconds / 60) + " minutes"
+    }
+    return str(seconds) + " seconds"
+}
+
+on("messageCreate", function(message) {
+    if message.author.bot {
+        return
+    }
+
+    var content = message.content
+
+    # ============== HELP COMMANDS ==============
+    if content == "!help" or content == "!demo" {
+        var embed = create_embed("🎯 Advanced Features Demo", "All commands available")
+        embed_set_color(embed, 0x5865F2)
+
+        embed_add_field(embed, "💬 Basic", "!help, !ping, !info", false)
+        embed_add_field(embed, "🪝 Webhooks", "!webhook, !sendhook <msg>, !hooktest", false)
+        embed_add_field(embed, "⏰ Tasks", "!tasks, !taskinfo, !taskstats", false)
+        embed_add_field(embed, "❄️ Cooldowns", "!daily, !hourly, !mycooldowns, !cdstats", false)
+        embed_add_field(embed, "📊 Polls", "!poll, !quickpoll, !pollresults", false)
+        embed_add_field(embed, "⚠️ Errors", "!testerror, !errortest", false)
+        embed_add_field(embed, "🎮 Combined", "!fulltest - Test all features", false)
+
+        try {
+            reply(message, "", { embeds: [embed] })
+        } catch error {
+            var msg = format_error_message(error)
+            reply(message, msg)
+        }
+    }
+
+    # ============== BASIC COMMANDS ==============
+    if content == "!ping" {
+        try {
+            reply(message, "🏓 Pong! All systems operational.")
+        } catch error {
+            log_error(error, "Ping command")
+        }
+    }
+
+    if content == "!info" {
+        var embed = create_embed("Bot Information", "Advanced features demonstration")
+        embed_set_color(embed, 0x5865F2)
+        embed_add_field(embed, "Features", "Webhooks, Tasks, Cooldowns, Polls, Errors", false)
+        embed_add_field(embed, "Language", "EasyLang v1.0", true)
+        embed_add_field(embed, "Runtime", "Node.js", true)
+        embed_set_timestamp(embed)
+
+        try {
+            reply(message, "", { embeds: [embed] })
+        } catch error {
+            reply(message, format_error_message(error))
+        }
+    }
+
+    # ============== WEBHOOK COMMANDS ==============
+    if content == "!webhook" {
+        if status_webhook {
+            try {
+                webhook_send(status_webhook.url, "✅ Webhook test successful!", {
+                    username: "Webhook Tester",
+                    avatar_url: "https://i.imgur.com/AfFp7pu.png"
+                })
+                add_reaction(message, "✅")
+            } catch error {
+                reply(message, "❌ Webhook error: " + format_error_message(error))
+            }
+        } else {
+            reply(message, "❌ No webhook available")
+        }
+    }
+
+    if starts_with(content, "!sendhook ") {
+        if status_webhook {
+            var text = substr(content, 10, length(content))
+            try {
+                webhook_send(status_webhook.url, text, {
+                    username: message.author.username,
+                    avatar_url: message.author.avatar_url
+                })
+                add_reaction(message, "📤")
+            } catch error {
+                reply(message, format_error_message(error))
+            }
+        }
+    }
+
+    if content == "!hooktest" {
+        if status_webhook {
+            var embed = create_embed("Webhook Embed Test", "This was sent via webhook!")
+            embed_set_color(embed, 0x00FF00)
+            embed_set_footer(embed, "Sent by " + message.author.username)
+            embed_set_timestamp(embed)
+
+            try {
+                webhook_send(status_webhook.url, "", {
+                    embeds: [embed],
+                    username: "Embed Bot"
+                })
+                add_reaction(message, "✅")
+            } catch error {
+                reply(message, format_error_message(error))
+            }
+        }
+    }
+
+    # ============== TASK COMMANDS ==============
+    if content == "!tasks" {
+        var tasks = list_tasks()
+        var embed = create_embed("Background Tasks", "Total: " + str(length(tasks)))
+        embed_set_color(embed, 0x5865F2)
+
+        for task in tasks {
+            var status = task.running ? "🟢 Running" : "🔴 Stopped"
+            var type_info = task.type
+
+            if task.interval {
+                type_info = type_info + " (" + str(task.interval) + "s)"
+            }
+
+            embed_add_field(embed, task.id, status + " - " + type_info, false)
+        }
+
+        try {
+            reply(message, "", { embeds: [embed] })
+        } catch error {
+            reply(message, format_error_message(error))
+        }
+    }
+
+    if content == "!taskstats" {
+        var tasks = list_tasks()
+        var running = 0
+        var stopped = 0
+
+        for task in tasks {
+            if task.running {
+                running = running + 1
+            } else {
+                stopped = stopped + 1
+            }
+        }
+
+        var embed = create_embed("Task Statistics", "")
+        embed_set_color(embed, 0x5865F2)
+        embed_add_field(embed, "Total Tasks", str(length(tasks)), true)
+        embed_add_field(embed, "Running", str(running), true)
+        embed_add_field(embed, "Stopped", str(stopped), true)
+
+        reply(message, "", { embeds: [embed] })
+    }
+
+    # ============== COOLDOWN COMMANDS ==============
+    if content == "!daily" {
+        if is_on_cooldown(message.author.id, "daily") {
+            var remaining = get_cooldown_remaining(message.author.id, "daily")
+            reply(message, "⏰ Daily reward on cooldown! " + format_cooldown(remaining) + " remaining")
+        } else {
+            var coins = random(50, 150)
+            add_cooldown(message.author.id, "daily", 86400) # 24 hours
+            reply(message, "🎁 You received " + str(coins) + " coins! Come back in 24 hours!")
+        }
+    }
+
+    if content == "!hourly" {
+        if is_on_cooldown(message.author.id, "hourly") {
+            var remaining = get_cooldown_remaining(message.author.id, "hourly")
+            reply(message, "⏰ Hourly reward on cooldown! " + format_cooldown(remaining))
+        } else {
+            var coins = random(10, 30)
+            add_cooldown(message.author.id, "hourly", 3600) # 1 hour
+            reply(message, "💰 You got " + str(coins) + " coins! Next in 1 hour!")
+        }
+    }
+
+    if content == "!mycooldowns" {
+        var cooldowns = get_user_cooldowns(message.author.id)
+
+        if length(cooldowns) == 0 {
+            reply(message, "✅ You have no active cooldowns!")
+        } else {
+            var embed = create_embed("Your Cooldowns", "Active: " + str(length(cooldowns)))
+            embed_set_color(embed, 0x5865F2)
+
+            for cd in cooldowns {
+                var time_left = format_cooldown(cd.remaining_seconds)
+                embed_add_field(embed, cd.command_name, time_left, true)
+            }
+
+            reply(message, "", { embeds: [embed] })
+        }
+    }
+
+    if content == "!cdstats" {
+        var stats = get_cooldown_stats()
+        var embed = create_embed("Cooldown Statistics", "System-wide cooldown data")
+        embed_set_color(embed, 0x5865F2)
+        embed_add_field(embed, "Total", str(stats.total), true)
+        embed_add_field(embed, "Active", str(stats.active), true)
+        embed_add_field(embed, "Expired", str(stats.expired), true)
+        embed_add_field(embed, "User Bucket", str(stats.user_bucket), true)
+        embed_add_field(embed, "Channel Bucket", str(stats.channel_bucket), true)
+        embed_add_field(embed, "Guild Bucket", str(stats.guild_bucket), true)
+
+        reply(message, "", { embeds: [embed] })
+    }
+
+    # ============== POLL COMMANDS ==============
+    if content == "!poll" {
+        var poll = create_poll(
+            "What feature do you like most?",
+            ["Webhooks", "Tasks", "Cooldowns", "Polls"],
+            24,
+            false
+        )
+
+        try {
+            send_poll(message.channel, poll)
+            add_reaction(message, "✅")
+        } catch error {
+            reply(message, "❌ " + format_error_message(error))
+        }
+    }
+
+    if content == "!quickpoll" {
+        var poll = create_poll(
+            "Quick poll: Yes or No?",
+            ["Yes", "No"],
+            1, # 1 hour
+            false
+        )
+
+        try {
+            send_poll(message.channel, poll)
+        } catch error {
+            reply(message, format_error_message(error))
+        }
+    }
+
+    # ============== ERROR HANDLING TEST ==============
+    if content == "!testerror" {
+        try {
+            # Intentionally cause an error
+            var invalid_channel = get_channel("invalid_id_123")
+            send(invalid_channel, "This will fail")
+        } catch error {
+            var formatted = handle_discord_error(error, "Test error command")
+            var user_msg = format_error_message(formatted)
+            reply(message, "✅ Error handling working!\n" + user_msg)
+        }
+    }
+
+    if content == "!errortest" {
+        var custom_error = create_error("TestError", "This is a test error", {
+            test_field: "test_value",
+            user_id: message.author.id
+        })
+
+        var formatted = format_error_message(custom_error)
+        log_error(custom_error, "Error test command")
+        reply(message, "✅ Custom error created and logged!\n" + formatted)
+    }
+
+    # ============== FULL INTEGRATION TEST ==============
+    if content == "!fulltest" {
+        reply(message, "🧪 Running full integration test...")
+
+        # Test 1: Webhook
+        var test_results = "**Test Results:**\n\n"
+
+        if status_webhook {
+            try {
+                webhook_send(status_webhook.url, "Test 1/5: Webhook ✅")
+                test_results = test_results + "✅ Webhooks\n"
+            } catch error {
+                test_results = test_results + "❌ Webhooks\n"
+            }
+        } else {
+            test_results = test_results + "⚠️ Webhooks (not configured)\n"
+        }
+
+        # Test 2: Tasks
+        var tasks = list_tasks()
+        test_results = test_results + "✅ Tasks (" + str(length(tasks)) + " active)\n"
+
+        # Test 3: Cooldowns
+        var stats = get_cooldown_stats()
+        test_results = test_results + "✅ Cooldowns (" + str(stats.active) + " active)\n"
+
+        # Test 4: Polls
+        try {
+            var test_poll = create_poll("Test?", ["A", "B"], 1, false)
+            test_results = test_results + "✅ Polls\n"
+        } catch error {
+            test_results = test_results + "❌ Polls\n"
+        }
+
+        # Test 5: Error Handling
+        try {
+            var test_error = create_error("Test", "Test error")
+            test_results = test_results + "✅ Error Handling\n"
+        } catch error {
+            test_results = test_results + "❌ Error Handling\n"
+        }
+
+        var embed = create_embed("Integration Test Results", test_results)
+        embed_set_color(embed, 0x00FF00)
+        embed_set_timestamp(embed)
+
+        reply(message, "", { embeds: [embed] })
+    }
+})
+
+print("🤖 Demo bot starting...")
+print("Use !help in Discord for commands")

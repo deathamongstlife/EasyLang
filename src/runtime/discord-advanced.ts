@@ -680,6 +680,63 @@ export const lockThread = makeNativeFunction('lock_thread', async (args: Runtime
   return makeBoolean(true);
 });
 
+// ==================== NICKNAME MANAGEMENT ====================
+
+/**
+ * set_nickname(member, nickname, reason?)
+ * Set a member's nickname
+ */
+export const setNickname = makeNativeFunction('set_nickname', async (args: RuntimeValue[]) => {
+  if (args.length < 2) {
+    throw new RuntimeError(`set_nickname() expects at least 2 arguments (member, nickname), got ${args.length}`);
+  }
+
+  const member = getRawValue(args[0]);
+  if (!member || !member.setNickname) {
+    throw new TypeError('First argument must be a GuildMember object');
+  }
+
+  if (!isString(args[1])) {
+    throw new TypeError('nickname must be a string');
+  }
+
+  const nickname = args[1].value;
+  const reason = args.length >= 3 && isString(args[2]) ? args[2].value : undefined;
+
+  try {
+    await member.setNickname(nickname, reason);
+    return makeBoolean(true);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to set nickname: ${errorMsg}`);
+  }
+});
+
+/**
+ * reset_nickname(member, reason?)
+ * Reset a member's nickname (clear it)
+ */
+export const resetNickname = makeNativeFunction('reset_nickname', async (args: RuntimeValue[]) => {
+  if (args.length < 1) {
+    throw new RuntimeError(`reset_nickname() expects at least 1 argument (member), got ${args.length}`);
+  }
+
+  const member = getRawValue(args[0]);
+  if (!member || !member.setNickname) {
+    throw new TypeError('First argument must be a GuildMember object');
+  }
+
+  const reason = args.length >= 2 && isString(args[1]) ? args[1].value : undefined;
+
+  try {
+    await member.setNickname(null, reason);
+    return makeBoolean(true);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to reset nickname: ${errorMsg}`);
+  }
+});
+
 // Export all advanced Discord functions
 export const advancedDiscordBuiltins = {
   // Permissions
@@ -711,4 +768,8 @@ export const advancedDiscordBuiltins = {
   archive_thread: archiveThread,
   unarchive_thread: unarchiveThread,
   lock_thread: lockThread,
+
+  // Nickname Management
+  set_nickname: setNickname,
+  reset_nickname: resetNickname,
 };

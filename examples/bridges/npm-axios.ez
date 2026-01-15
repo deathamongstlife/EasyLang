@@ -1,0 +1,51 @@
+# npm Axios Example
+# HTTP client for JavaScript
+
+# Import axios npm package
+use npm "axios" as axios
+
+print("Making HTTP requests with axios...")
+
+# Simple GET request
+var response = axios.get("https://api.github.com/zen")
+print("\nGitHub Zen Quote:")
+print(response.data)
+
+# GET with JSON data
+var user_response = axios.get("https://api.github.com/users/octocat")
+var user_data = user_response.data
+
+print("\nGitHub User Info:")
+print("Username:", user_data.login)
+print("Name:", user_data.name)
+print("Bio:", user_data.bio)
+print("Public Repos:", user_data.public_repos)
+print("Followers:", user_data.followers)
+print("Following:", user_data.following)
+
+# GET request with parameters
+var search_response = axios.get("https://api.github.com/search/repositories", {
+  params: {
+    q: "language:javascript",
+    sort: "stars",
+    per_page: 3
+  }
+})
+
+print("\nTop JavaScript Repositories:")
+var repos = search_response.data.items
+for var i = 0; i < length(repos); i = i + 1 {
+  var repo = repos[i]
+  print(i + 1, "-", repo.full_name, "-", repo.stargazers_count, "stars")
+}
+
+# POST request
+var post_response = axios.post("https://jsonplaceholder.typicode.com/posts", {
+  title: "EzLang Test",
+  body: "Posted from EzLang using axios!",
+  userId: 1
+})
+
+print("\nPOST Response:")
+print("Status:", post_response.status)
+print("Created Post ID:", post_response.data.id)

@@ -1,0 +1,139 @@
+# Mixed Python and npm Packages Example
+# Demonstrates using both Python and JavaScript packages together
+
+print("Mixed Package Integration Demo")
+print("=" * 40)
+
+# Import Python packages
+use python "math" as math
+use python "random" as random
+
+# Import npm packages
+use npm "lodash" as _
+use npm "moment" as moment
+
+print("\n1. Python Math + Lodash Array Operations")
+print("-" * 40)
+
+# Generate random numbers with Python
+var python_randoms = []
+for var i = 0; i < 10; i = i + 1 {
+  var rand_num = random.randint(1, 100)
+  push(python_randoms, rand_num)
+}
+
+print("Random numbers (Python):", python_randoms)
+
+# Process with lodash
+var sorted_nums = _.sortBy(python_randoms)
+print("Sorted (Lodash):", sorted_nums)
+
+var sum = _.sum(python_randoms)
+var mean = _.mean(python_randoms)
+print("Sum (Lodash):", sum)
+print("Mean (Lodash):", mean)
+
+# Calculate std deviation with Python
+var py_mean = sum / length(python_randoms)
+var variance_sum = 0
+for var i = 0; i < length(python_randoms); i = i + 1 {
+  var diff = python_randoms[i] - py_mean
+  variance_sum = variance_sum + (diff * diff)
+}
+var std_dev = math.sqrt(variance_sum / length(python_randoms))
+print("Std Dev (Python math):", std_dev)
+
+print("\n2. Date/Time with Python and Moment.js")
+print("-" * 40)
+
+# Current time with moment
+var now = moment()
+print("Current time (Moment):", now.format("LLLL"))
+
+# Mathematical date calculations
+var timestamp = now.unix()
+print("Unix timestamp:", timestamp)
+
+var days_in_year = 365
+var seconds_per_day = 86400
+var year_ago_timestamp = timestamp - (days_in_year * seconds_per_day)
+
+var year_ago = moment.unix(year_ago_timestamp)
+print("One year ago:", year_ago.format("LL"))
+
+print("\n3. String Processing with Both")
+print("-" * 40)
+
+var text = "hello world from ezlang"
+print("Original:", text)
+
+# Lodash string operations
+var camelCase = _.camelCase(text)
+print("Camel Case (Lodash):", camelCase)
+
+var upperCase = _.upperCase(text)
+print("Upper Case (Lodash):", upperCase)
+
+# Calculate word stats
+var words = split(text, " ")
+print("Word count:", length(words))
+
+var total_length = 0
+for var i = 0; i < length(words); i = i + 1 {
+  total_length = total_length + length(words[i])
+}
+var avg_word_length = total_length / length(words)
+print("Average word length:", avg_word_length)
+
+print("\n4. Advanced Math Combinations")
+print("-" * 40)
+
+# Python trigonometry
+var angle = 45
+var radians = math.radians(angle)
+var sine = math.sin(radians)
+var cosine = math.cos(radians)
+var tangent = math.tan(radians)
+
+print("Angle:", angle, "degrees")
+print("Sin:", sine)
+print("Cos:", cosine)
+print("Tan:", tangent)
+
+# Lodash array of results
+var trig_results = [sine, cosine, tangent]
+var max_trig = _.max(trig_results)
+var min_trig = _.min(trig_results)
+print("Max value:", max_trig)
+print("Min value:", min_trig)
+
+print("\n5. Data Transformation Pipeline")
+print("-" * 40)
+
+# Generate data with Python
+var data = []
+for var i = 1; i <= 5; i = i + 1 {
+  var obj = {
+    id: i,
+    value: random.randint(10, 100),
+    squared: math.pow(i, 2),
+    timestamp: moment().subtract(i, "days").format("YYYY-MM-DD")
+  }
+  push(data, obj)
+}
+
+print("Generated data:")
+for var i = 0; i < length(data); i = i + 1 {
+  var item = data[i]
+  print("  ID:", item.id, "Value:", item.value, "Squared:", item.squared, "Date:", item.timestamp)
+}
+
+# Process with lodash
+var sorted_by_value = _.sortBy(data, "value")
+print("\nSorted by value:", sorted_by_value[0].id, "to", sorted_by_value[length(sorted_by_value) - 1].id)
+
+var total_values = _.sumBy(data, "value")
+print("Total values:", total_values)
+
+print("\nMixed package integration working perfectly!")
+print("Python and npm packages work seamlessly together!")

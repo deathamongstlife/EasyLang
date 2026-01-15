@@ -1,0 +1,221 @@
+# Background Tasks Example
+# Demonstrates loops and scheduled tasks in EasyLang
+
+var token = get_argument("token", "")
+
+if token == "" {
+    print("Usage: ezlang background-tasks.ez token=YOUR_BOT_TOKEN")
+    return
+}
+
+bot_start(token)
+
+var status_channel = null
+var reminder_task = null
+var stats_task = null
+var cleanup_task = null
+
+on("ready", function(client) {
+    print("✅ Bot ready! Setting up background tasks...")
+
+    # Get status channel (replace with your channel ID)
+    var channel_id = "YOUR_CHANNEL_ID_HERE"
+    status_channel = get_channel(channel_id)
+
+    if status_channel == null {
+        print("⚠️ Status channel not found. Update channel_id!")
+        print("ℹ️ Tasks will still work, but won't send messages.")
+    }
+
+    # Task 1: Status update every 5 minutes
+    stats_task = create_loop(function() {
+        if status_channel {
+            var member_count = get_member_count()
+            var uptime = time() / 1000
+
+            var embed = create_embed("Bot Status", "System operational")
+            embed_set_color(embed, 0x00FF00)
+            embed_add_field(embed, "Uptime", str(uptime) + "s", true)
+            embed_add_field(embed, "Members", str(member_count), true)
+            embed_set_timestamp(embed)
+            embed_set_footer(embed, "Auto-update every 5 minutes")
+
+            send(status_channel, "", { embeds: [embed] })
+            print("📊 Status update sent")
+        }
+    }, 300) # 5 minutes
+
+    # Task 2: Daily reminders at specific times
+    reminder_task = create_scheduled_task(function() {
+        if status_channel {
+            var embed = create_embed("Daily Reminder", "Time for your daily check-in!")
+            embed_set_color(embed, 0xFFAA00)
+            embed_set_timestamp(embed)
+
+            send(status_channel, "@everyone", { embeds: [embed] })
+            print("🔔 Daily reminder sent")
+        }
+    }, ["08:00", "20:00"]) # 8 AM and 8 PM
+
+    # Task 3: Cleanup loop every hour
+    cleanup_task = create_loop(function() {
+        print("🧹 Running cleanup task...")
+
+        # Clear old cooldowns
+        var stats = get_cooldown_stats()
+        if stats.expired > 0 {
+            print("  Cleaned " + str(stats.expired) + " expired cooldowns")
+        }
+
+        # Could add more cleanup logic here
+        print("✅ Cleanup complete")
+    }, 3600) # 1 hour
+
+    # Start all tasks
+    start_task(stats_task)
+    start_task(reminder_task)
+    start_task(cleanup_task)
+
+    print("✅ All tasks started!")
+    print("")
+    print("📋 Active Tasks:")
+    print("  - Status Updates: Every 5 minutes")
+    print("  - Daily Reminders: 08:00 and 20:00")
+    print("  - Cleanup: Every hour")
+    print("")
+    print("Use !tasks in Discord to manage tasks")
+})
+
+on("messageCreate", function(message) {
+    if message.author.bot {
+        return
+    }
+
+    var content = message.content
+
+    # List all tasks
+    if content == "!tasks" {
+        var tasks = list_tasks()
+        var embed = create_embed("Background Tasks", "Total: " + str(length(tasks)))
+        embed_set_color(embed, 0x5865F2)
+
+        for task in tasks {
+            var status = task.running ? "🟢 Running" : "🔴 Stopped"
+            var info = task.type
+
+            if task.type == "loop" {
+                info = info + " (" + str(task.interval) + "s)"
+            } else {
+                info = info + " (scheduled)"
+            }
+
+            embed_add_field(embed, task.id, status + " - " + info, false)
+        }
+
+        reply(message, "", { embeds: [embed] })
+    }
+
+    # Get detailed task info
+    if starts_with(content, "!taskinfo ") {
+        var task_id = substr(content, 10, length(content))
+
+        try {
+            var info = get_task_info(task_id)
+            var embed = create_embed("Task Information", "ID: " + info.id)
+            embed_set_color(embed, 0x5865F2)
+            embed_add_field(embed, "Type", info.type, true)
+            embed_add_field(embed, "Running", str(info.running), true)
+            embed_add_field(embed, "Errors", str(info.error_count) + "/" + str(info.max_retries), true)
+
+            if info.interval {
+                embed_add_field(embed, "Interval", str(info.interval) + " seconds", true)
+            }
+
+            if info.times {
+                embed_add_field(embed, "Times", str(info.times), false)
+            }
+
+            if info.last_run {
+                embed_add_field(embed, "Last Run", info.last_run, true)
+            }
+
+            if info.next_run {
+                embed_add_field(embed, "Next Run", info.next_run, true)
+            }
+
+            reply(message, "", { embeds: [embed] })
+        } catch error {
+            reply(message, "❌ Task not found: " + task_id)
+        }
+    }
+
+    # Stop a task (admin only)
+    if starts_with(content, "!stoptask ") {
+        if has_permission(message.author, "ADMINISTRATOR") {
+            var task_id = substr(content, 10, length(content))
+
+            try {
+                stop_task(task_id)
+                reply(message, "✅ Task stopped: " + task_id)
+            } catch error {
+                reply(message, "❌ Failed to stop task: " + task_id)
+            }
+        } else {
+            reply(message, "❌ Administrator permission required!")
+        }
+    }
+
+    # Start a task (admin only)
+    if starts_with(content, "!starttask ") {
+        if has_permission(message.author, "ADMINISTRATOR") {
+            var task_id = substr(content, 11, length(content))
+
+            try {
+                start_task(task_id)
+                reply(message, "✅ Task started: " + task_id)
+            } catch error {
+                reply(message, "❌ Failed to start task: " + task_id)
+            }
+        } else {
+            reply(message, "❌ Administrator permission required!")
+        }
+    }
+
+    # Create a custom loop task (admin only)
+    if starts_with(content, "!createloop ") {
+        if has_permission(message.author, "ADMINISTRATOR") {
+            var args = split(content, " ")
+            if length(args) >= 2 {
+                var interval = num(args[1])
+
+                var task = create_loop(function() {
+                    send(message.channel, "⏰ Custom task executed!")
+                }, interval)
+
+                start_task(task)
+                reply(message, "✅ Created loop task with " + str(interval) + "s interval\nTask ID: " + task.id)
+            } else {
+                reply(message, "Usage: !createloop <seconds>")
+            }
+        }
+    }
+
+    # Help command
+    if content == "!taskhelp" {
+        var embed = create_embed("Task Commands", "Manage background tasks")
+        embed_set_color(embed, 0x5865F2)
+        embed_add_field(embed, "!tasks", "List all tasks", false)
+        embed_add_field(embed, "!taskinfo <id>", "Get task details", false)
+        embed_add_field(embed, "!stoptask <id>", "Stop a task (admin)", false)
+        embed_add_field(embed, "!starttask <id>", "Start a task (admin)", false)
+        embed_add_field(embed, "!createloop <seconds>", "Create custom loop (admin)", false)
+
+        reply(message, "", { embeds: [embed] })
+    }
+})
+
+print("🤖 Background tasks bot starting...")
+print("Commands:")
+print("  !taskhelp - Show help")
+print("  !tasks - List tasks")
+print("  !taskinfo <id> - Task details")
