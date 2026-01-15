@@ -29,7 +29,7 @@ import {
   VoiceConnection,
   AudioPlayer,
 } from '@discordjs/voice';
-import { VoiceChannel, StageChannel, Guild } from 'discord.js';
+import { VoiceChannel, StageChannel } from 'discord.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -89,7 +89,7 @@ export const joinVoiceChannelFunc = makeNativeFunction('join_voice_channel', asy
       connection.subscribe(player);
 
       // Handle player events
-      player.on('error', error => {
+      player.on('error', (error: Error) => {
         console.error(`Audio player error in guild ${channel.guild.id}:`, error);
       });
 
@@ -395,7 +395,6 @@ export const setVolumeFunc = makeNativeFunction('set_volume', async (args: Runti
     throw new TypeError('guild_id must be string, volume must be number');
   }
 
-  const guildId = args[0].value;
   const volume = args[1].value;
 
   if (volume < 0 || volume > 2) {
