@@ -1,0 +1,217 @@
+# Jekyll Configuration for EasyLang Documentation
+
+# Site settings
+title: "EasyLang"
+description: "A beginner-friendly programming language for Discord bot development"
+tagline: "Discord Bot Programming Made Easy"
+url: "https://deathamongstlife.github.io"
+baseurl: "/EasyLang"
+repository: "deathamongstlife/EasyLang"
+
+# Theme
+theme: jekyll-theme-cayman
+# remote_theme: pages-themes/cayman@v0.2.0
+
+# Plugins
+plugins:
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - jekyll-relative-links
+
+# Navigation
+navigation:
+  - title: "Home"
+    url: "/"
+  - title: "Getting Started"
+    url: "/getting-started/"
+    children:
+      - title: "Installation"
+        url: "/getting-started/installation"
+      - title: "Your First Bot"
+        url: "/getting-started/first-bot"
+      - title: "Basic Concepts"
+        url: "/getting-started/basic-concepts"
+  - title: "Features"
+    url: "/features/"
+    children:
+      - title: "Messaging"
+        url: "/features/messaging"
+      - title: "Embeds"
+        url: "/features/embeds"
+      - title: "Components"
+        url: "/features/components"
+      - title: "Slash Commands"
+        url: "/features/slash-commands"
+      - title: "Voice"
+        url: "/features/voice"
+      - title: "Webhooks"
+        url: "/features/webhooks"
+      - title: "Tasks & Loops"
+        url: "/features/tasks"
+      - title: "Cooldowns"
+        url: "/features/cooldowns"
+      - title: "Polls"
+        url: "/features/polls"
+      - title: "AutoMod"
+        url: "/features/automod"
+      - title: "Audit Logs"
+        url: "/features/audit-logs"
+      - title: "Invites"
+        url: "/features/invites"
+      - title: "Roles & Permissions"
+        url: "/features/roles-and-permissions"
+      - title: "Moderation"
+        url: "/features/moderation"
+      - title: "Channels"
+        url: "/features/channels"
+      - title: "Threads"
+        url: "/features/threads"
+      - title: "Forums"
+        url: "/features/forums"
+      - title: "Stages"
+        url: "/features/stages"
+      - title: "Events"
+        url: "/features/events"
+      - title: "Stickers & Emoji"
+        url: "/features/stickers-emoji"
+      - title: "Presence"
+        url: "/features/presence"
+  - title: "API Reference"
+    url: "/api/"
+    children:
+      - title: "Built-in Functions"
+        url: "/api/built-in-functions"
+      - title: "Discord Functions"
+        url: "/api/discord-functions"
+      - title: "Voice Functions"
+        url: "/api/voice-functions"
+      - title: "Webhook Functions"
+        url: "/api/webhook-functions"
+      - title: "Task Functions"
+        url: "/api/task-functions"
+      - title: "Cooldown Functions"
+        url: "/api/cooldown-functions"
+      - title: "Poll Functions"
+        url: "/api/poll-functions"
+      - title: "AutoMod Functions"
+        url: "/api/automod-functions"
+      - title: "Audit Functions"
+        url: "/api/audit-functions"
+      - title: "Moderation Functions"
+        url: "/api/moderation-functions"
+      - title: "Channel Functions"
+        url: "/api/channel-functions"
+      - title: "Thread Functions"
+        url: "/api/thread-functions"
+      - title: "Forum Functions"
+        url: "/api/forum-functions"
+      - title: "Stage Functions"
+        url: "/api/stage-functions"
+      - title: "Event Functions"
+        url: "/api/event-functions"
+      - title: "Sticker Functions"
+        url: "/api/sticker-functions"
+      - title: "Discord Objects"
+        url: "/api/objects"
+  - title: "Examples"
+    url: "/examples/"
+    children:
+      - title: "Basic Bot"
+        url: "/examples/basic-bot"
+      - title: "Music Bot"
+        url: "/examples/music-bot"
+      - title: "Moderation Bot"
+        url: "/examples/moderation-bot"
+      - title: "Utility Bot"
+        url: "/examples/utility-bot"
+      - title: "Event Bot"
+        url: "/examples/event-bot"
+      - title: "Advanced Bot"
+        url: "/examples/advanced-bot"
+  - title: "Bridge System"
+    url: "/bridge-system/"
+    children:
+      - title: "Python Packages"
+        url: "/bridge-system/python-packages"
+      - title: "NPM Packages"
+        url: "/bridge-system/npm-packages"
+
+# Build settings
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: 'highlight'
+    span:
+      line_numbers: false
+    block:
+      line_numbers: false
+
+# Exclude from build
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - README.md
+
+# Include files
+include:
+  - _pages
+
+# Relative links configuration
+relative_links:
+  enabled: true
+  collections: false
+
+# Collections
+collections:
+  pages:
+    output: true
+    permalink: /:path/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+      author: "EasyLang Team"
+  - scope:
+      path: "getting-started"
+    values:
+      layout: "default"
+      category: "getting-started"
+  - scope:
+      path: "features"
+    values:
+      layout: "default"
+      category: "features"
+  - scope:
+      path: "api"
+    values:
+      layout: "default"
+      category: "api"
+  - scope:
+      path: "examples"
+    values:
+      layout: "default"
+      category: "examples"
+  - scope:
+      path: "bridge-system"
+    values:
+      layout: "default"
+      category: "bridge-system"
+
+# SEO settings
+twitter:
+  username: easylang_bot
+  card: summary_large_image
+
+# Google Analytics (uncomment and add your tracking ID)
+# google_analytics: UA-XXXXXXXXX-X
+
+# Additional metadata
+lang: en
+logo: /assets/images/logo.png

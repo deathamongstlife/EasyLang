@@ -252,16 +252,44 @@ export class EventManager {
   private userToRuntimeValue(user: User): ObjectValue {
     const properties = new Map<string, RuntimeValue>();
 
+    // Basic properties
     properties.set('id', makeString(user.id));
     properties.set('username', makeString(user.username));
     properties.set('tag', makeString(user.tag));
     properties.set('bot', makeBoolean(user.bot));
+    properties.set('system', makeBoolean(user.system || false));
     properties.set('discriminator', makeString(user.discriminator));
 
+    // Display name (global name)
+    properties.set('display_name', makeString(user.displayName));
+
+    // Avatar
     if (user.avatar) {
       properties.set('avatar', makeString(user.avatar));
       properties.set('avatarURL', makeString(user.displayAvatarURL()));
     }
+
+    // Avatar decoration
+    if (user.avatarDecoration) {
+      properties.set('avatar_decoration', makeString(user.avatarDecoration));
+    }
+
+    // Banner
+    if (user.banner) {
+      properties.set('banner', makeString(user.banner));
+      properties.set('bannerURL', makeString(user.bannerURL() || ''));
+    }
+
+    // Accent color
+    if (user.accentColor) {
+      properties.set('accent_color', makeNumber(user.accentColor));
+    }
+
+    // Flags
+    properties.set('public_flags', makeNumber(user.flags?.bitfield || 0));
+
+    // Timestamps
+    properties.set('created_at', makeString(user.createdAt.toISOString()));
 
     // Store raw user
     const rawValue: any = { __rawValue: user };
@@ -278,22 +306,99 @@ export class EventManager {
   private channelToRuntimeValue(channel: Channel): ObjectValue {
     const properties = new Map<string, RuntimeValue>();
 
+    // Basic properties
     properties.set('id', makeString(channel.id));
     properties.set('type', makeNumber(channel.type));
+    properties.set('created_at', makeString(channel.createdAt.toISOString()));
 
-    // Add channel name if available
+    // Name
     if ('name' in channel && channel.name) {
       properties.set('name', makeString(channel.name));
     }
 
-    // Add guild ID if available
+    // Guild ID
     if ('guildId' in channel && channel.guildId) {
       properties.set('guildId', makeString(channel.guildId));
     }
 
-    // Add parent ID if available (for threads)
+    // Parent ID (category/thread parent)
     if ('parentId' in channel && channel.parentId) {
       properties.set('parentId', makeString(channel.parentId));
+    }
+
+    // Topic (text channels)
+    if ('topic' in channel && channel.topic) {
+      properties.set('topic', makeString(channel.topic));
+    }
+
+    // NSFW flag
+    if ('nsfw' in channel) {
+      properties.set('nsfw', makeBoolean(channel.nsfw || false));
+    }
+
+    // Position
+    if ('position' in channel) {
+      properties.set('position', makeNumber(channel.position));
+    }
+
+    // Rate limit (slowmode)
+    if ('rateLimitPerUser' in channel && channel.rateLimitPerUser !== undefined) {
+      properties.set('rate_limit_per_user', makeNumber(channel.rateLimitPerUser));
+    }
+
+    // Voice channel properties
+    if ('bitrate' in channel) {
+      properties.set('bitrate', makeNumber(channel.bitrate || 0));
+    }
+    if ('userLimit' in channel) {
+      properties.set('user_limit', makeNumber(channel.userLimit || 0));
+    }
+    if ('rtcRegion' in channel) {
+      properties.set('rtc_region', makeString(channel.rtcRegion || ''));
+    }
+    if ('videoQualityMode' in channel) {
+      properties.set('video_quality_mode', makeNumber(channel.videoQualityMode || 0));
+    }
+
+    // Last message ID
+    if ('lastMessageId' in channel && channel.lastMessageId) {
+      properties.set('last_message_id', makeString(channel.lastMessageId));
+    }
+
+    // Thread metadata
+    if ('archived' in channel) {
+      properties.set('archived', makeBoolean(channel.archived || false));
+    }
+    if ('locked' in channel) {
+      properties.set('locked', makeBoolean(channel.locked || false));
+    }
+    if ('autoArchiveDuration' in channel) {
+      properties.set('auto_archive_duration', makeNumber(channel.autoArchiveDuration || 0));
+    }
+
+    // Forum channel properties
+    if ('defaultSortOrder' in channel && channel.defaultSortOrder !== undefined && channel.defaultSortOrder !== null) {
+      properties.set('default_sort_order', makeNumber(channel.defaultSortOrder));
+    }
+    if ('defaultForumLayout' in channel && channel.defaultForumLayout !== undefined) {
+      properties.set('default_forum_layout', makeNumber(channel.defaultForumLayout));
+    }
+    if ('availableTags' in channel && channel.availableTags) {
+      const tags = channel.availableTags.map(tag => {
+        const tagProps = new Map<string, RuntimeValue>();
+        tagProps.set('id', makeString(tag.id));
+        tagProps.set('name', makeString(tag.name));
+        if (tag.emoji) {
+          tagProps.set('emoji', makeString(tag.emoji.name || ''));
+        }
+        return makeObject(tagProps);
+      });
+      properties.set('available_tags', makeArray(tags));
+    }
+
+    // Flags
+    if ('flags' in channel) {
+      properties.set('flags', makeNumber(channel.flags?.bitfield || 0));
     }
 
     // Store raw channel for send command
@@ -420,15 +525,60 @@ export class EventManager {
   private guildToRuntimeValue(guild: Guild): ObjectValue {
     const properties = new Map<string, RuntimeValue>();
 
+    // Basic properties
     properties.set('id', makeString(guild.id));
     properties.set('name', makeString(guild.name));
     properties.set('memberCount', makeNumber(guild.memberCount));
     properties.set('ownerId', makeString(guild.ownerId));
 
+    // Description and features
+    properties.set('description', makeString(guild.description || ''));
+    properties.set('features', makeArray(guild.features.map(f => makeString(f))));
+
+    // Images
     if (guild.icon) {
       properties.set('icon', makeString(guild.icon));
       properties.set('iconURL', makeString(guild.iconURL() || ''));
     }
+    if (guild.banner) {
+      properties.set('banner', makeString(guild.banner));
+      properties.set('bannerURL', makeString(guild.bannerURL() || ''));
+    }
+    if (guild.splash) {
+      properties.set('splash', makeString(guild.splash));
+      properties.set('splashURL', makeString(guild.splashURL() || ''));
+    }
+    if (guild.discoverySplash) {
+      properties.set('discovery_splash', makeString(guild.discoverySplash));
+      properties.set('discovery_splash_url', makeString(guild.discoverySplashURL() || ''));
+    }
+
+    // Settings
+    properties.set('preferred_locale', makeString(guild.preferredLocale));
+    properties.set('verification_level', makeNumber(guild.verificationLevel));
+    properties.set('explicit_content_filter', makeNumber(guild.explicitContentFilter));
+    properties.set('mfa_level', makeNumber(guild.mfaLevel));
+    properties.set('premium_tier', makeNumber(guild.premiumTier));
+    properties.set('premium_subscription_count', makeNumber(guild.premiumSubscriptionCount || 0));
+    properties.set('vanity_url_code', makeString(guild.vanityURLCode || ''));
+    properties.set('nsfw_level', makeNumber(guild.nsfwLevel));
+    properties.set('premium_progress_bar_enabled', makeBoolean(guild.premiumProgressBarEnabled));
+
+    // Channels
+    properties.set('system_channel_id', makeString(guild.systemChannelId || ''));
+    properties.set('rules_channel_id', makeString(guild.rulesChannelId || ''));
+    properties.set('public_updates_channel_id', makeString(guild.publicUpdatesChannelId || ''));
+    properties.set('afk_channel_id', makeString(guild.afkChannelId || ''));
+    properties.set('afk_timeout', makeNumber(guild.afkTimeout));
+
+    // Widget
+    properties.set('widget_enabled', makeBoolean(guild.widgetEnabled || false));
+    properties.set('widget_channel_id', makeString(guild.widgetChannelId || ''));
+
+    // Timestamps
+    properties.set('created_at', makeString(guild.createdAt.toISOString()));
+    properties.set('available', makeBoolean(guild.available));
+    properties.set('large', makeBoolean(guild.large));
 
     // Store raw guild
     const rawValue: any = { __rawValue: guild };
@@ -443,10 +593,41 @@ export class EventManager {
   private memberToRuntimeValue(member: GuildMember): ObjectValue {
     const properties = new Map<string, RuntimeValue>();
 
+    // Basic properties
     properties.set('id', makeString(member.id));
     properties.set('user', this.userToRuntimeValue(member.user));
     properties.set('nickname', makeString(member.nickname || ''));
+
+    // Display properties
+    properties.set('display_name', makeString(member.displayName));
+    properties.set('display_color', makeNumber(member.displayColor));
+    properties.set('display_hex_color', makeString(member.displayHexColor));
+
+    // Guild-specific avatar
+    if (member.avatar) {
+      properties.set('avatar', makeString(member.avatar));
+      properties.set('avatarURL', makeString(member.displayAvatarURL()));
+    }
+
+    // Timestamps
     properties.set('joinedAt', makeString(member.joinedAt?.toISOString() || ''));
+
+    // Premium (boost) status
+    if (member.premiumSince) {
+      properties.set('premium_since', makeString(member.premiumSince.toISOString()));
+    }
+
+    // Timeout status
+    if (member.communicationDisabledUntil) {
+      properties.set('communication_disabled_until', makeString(member.communicationDisabledUntil.toISOString()));
+    }
+
+    // Membership screening
+    properties.set('pending', makeBoolean(member.pending || false));
+
+    // Voice state
+    properties.set('deaf', makeBoolean(member.voice.deaf || false));
+    properties.set('mute', makeBoolean(member.voice.mute || false));
 
     // Roles
     const roles = Array.from(member.roles.cache.values()).map(role => this.roleToRuntimeValue(role));
@@ -454,6 +635,9 @@ export class EventManager {
 
     // Permissions
     properties.set('permissions', makeString(member.permissions.bitfield.toString()));
+
+    // Flags
+    properties.set('flags', makeNumber(member.flags.bitfield || 0));
 
     // Store raw member
     const rawValue: any = { __rawValue: member };
@@ -468,6 +652,7 @@ export class EventManager {
   private roleToRuntimeValue(role: Role): ObjectValue {
     const properties = new Map<string, RuntimeValue>();
 
+    // Basic properties
     properties.set('id', makeString(role.id));
     properties.set('name', makeString(role.name));
     properties.set('color', makeNumber(role.color));
@@ -475,6 +660,37 @@ export class EventManager {
     properties.set('permissions', makeString(role.permissions.bitfield.toString()));
     properties.set('mentionable', makeBoolean(role.mentionable));
     properties.set('hoist', makeBoolean(role.hoist));
+    properties.set('managed', makeBoolean(role.managed));
+
+    // Tags (bot, integration, premium subscriber)
+    if (role.tags) {
+      const tagsProps = new Map<string, RuntimeValue>();
+      if (role.tags.botId) {
+        tagsProps.set('bot_id', makeString(role.tags.botId));
+      }
+      if (role.tags.integrationId) {
+        tagsProps.set('integration_id', makeString(role.tags.integrationId));
+      }
+      if (role.tags.premiumSubscriberRole !== null && role.tags.premiumSubscriberRole !== undefined) {
+        tagsProps.set('premium_subscriber', makeBoolean(true));
+      }
+      properties.set('tags', makeObject(tagsProps));
+    }
+
+    // Icon and unicode emoji
+    if (role.icon) {
+      properties.set('icon', makeString(role.icon));
+      properties.set('iconURL', makeString(role.iconURL() || ''));
+    }
+    if (role.unicodeEmoji) {
+      properties.set('unicode_emoji', makeString(role.unicodeEmoji));
+    }
+
+    // Timestamps
+    properties.set('created_at', makeString(role.createdAt.toISOString()));
+
+    // Flags
+    properties.set('flags', makeNumber(role.flags.bitfield || 0));
 
     // Store raw role
     const rawValue: any = { __rawValue: role };
@@ -489,15 +705,31 @@ export class EventManager {
   private voiceStateToRuntimeValue(voiceState: VoiceState): ObjectValue {
     const properties = new Map<string, RuntimeValue>();
 
-    properties.set('channelId', makeString(voiceState.channelId || ''));
-    properties.set('guildId', makeString(voiceState.guild.id));
-    properties.set('mute', makeBoolean(voiceState.mute || false));
-    properties.set('deaf', makeBoolean(voiceState.deaf || false));
-    properties.set('selfMute', makeBoolean(voiceState.selfMute || false));
-    properties.set('selfDeaf', makeBoolean(voiceState.selfDeaf || false));
+    // Basic properties
+    properties.set('guild_id', makeString(voiceState.guild.id));
+    properties.set('channel_id', makeString(voiceState.channelId || ''));
+    properties.set('user_id', makeString(voiceState.id));
+    properties.set('session_id', makeString(voiceState.sessionId || ''));
 
+    // Member
     if (voiceState.member) {
       properties.set('member', this.memberToRuntimeValue(voiceState.member));
+    }
+
+    // Mute/Deaf states
+    properties.set('deaf', makeBoolean(voiceState.deaf || false));
+    properties.set('mute', makeBoolean(voiceState.mute || false));
+    properties.set('self_deaf', makeBoolean(voiceState.selfDeaf || false));
+    properties.set('self_mute', makeBoolean(voiceState.selfMute || false));
+    properties.set('self_stream', makeBoolean(voiceState.streaming || false));
+    properties.set('self_video', makeBoolean(voiceState.selfVideo || false));
+
+    // Suppress (stage channel audience)
+    properties.set('suppress', makeBoolean(voiceState.suppress || false));
+
+    // Request to speak timestamp (stage channels)
+    if (voiceState.requestToSpeakTimestamp) {
+      properties.set('request_to_speak_timestamp', makeString(voiceState.requestToSpeakTimestamp.toISOString()));
     }
 
     // Store raw voice state

@@ -40,6 +40,10 @@ import { taskBuiltins } from './discord-tasks';
 import { cooldownBuiltins } from './discord-cooldowns';
 import { pollBuiltins } from './discord-polls';
 import { errorBuiltins } from './discord-errors';
+import { voiceBuiltins } from './discord-voice';
+import { autoModBuiltins } from './discord-automod';
+import { auditLogBuiltins } from './discord-audit';
+import { extendedDiscordBuiltins } from './discord-extended';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -1608,6 +1612,26 @@ export function createGlobalEnvironment(
 
   // Register error handling functions
   Object.entries(errorBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register voice channel functions
+  Object.entries(voiceBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register AutoMod functions
+  Object.entries(autoModBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register audit log functions
+  Object.entries(auditLogBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register extended Discord functions (events, forums, stages, stickers, presence)
+  Object.entries(extendedDiscordBuiltins).forEach(([name, func]) => {
     env.define(name, func);
   });
 

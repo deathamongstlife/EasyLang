@@ -1,26 +1,67 @@
-# EzLang
+# EasyLang (EzLang)
 
-A simple, intuitive programming language designed specifically for Discord bot development with seamless Python package integration.
+A beginner-friendly programming language designed specifically for Discord bot development with seamless Python and npm package integration.
+
+## 📚 Documentation
+
+**[View Complete Documentation →](https://deathamongstlife.github.io/EasyLang/)**
+
+- [Getting Started Guide](https://deathamongstlife.github.io/EasyLang/getting-started/)
+- [Feature Documentation](https://deathamongstlife.github.io/EasyLang/features/)
+- [API Reference](https://deathamongstlife.github.io/EasyLang/api/)
+- [Example Bots](https://deathamongstlife.github.io/EasyLang/examples/)
 
 ## Overview
 
-EzLang is a domain-specific language that makes creating Discord bots easy and fun. It features:
+EasyLang is a domain-specific programming language that makes creating Discord bots accessible to absolute beginners while providing power users with professional-grade features. It features:
 
-- Clean, readable syntax inspired by Python and JavaScript
-- Built-in Discord API integration
-- Python package support for extending functionality
-- Dynamic typing with intuitive type coercion
-- Extension system for custom functionality
-- Interactive REPL for rapid prototyping
+- **Beginner-Friendly Syntax**: Clean, readable code inspired by Python and JavaScript
+- **Discord-First Design**: Built-in Discord API integration with 148+ functions
+- **Dual Bridge System**: Use any Python package AND npm package directly in your bot
+- **Voice Support**: Full music bot capabilities with queue management
+- **Advanced Features**: Webhooks, tasks, cooldowns, polls, AutoMod, and more
+- **Complete Coverage**: 95%+ Discord.js v14 and discord.py feature parity
+- **Interactive REPL**: Rapid prototyping and learning environment
 
 ## Features
 
-- **Discord-First Design**: Built-in commands for sending messages, reactions, and event handling
-- **Python Bridge**: Use any Python package directly in your bot code
-- **Simple Syntax**: Easy to learn, especially for beginners
-- **Type System**: Dynamic typing with automatic conversions
-- **Extension System**: Extend the language with custom modules
-- **REPL**: Interactive environment for testing and learning
+### Core Language Features
+- **Simple Syntax**: Easy to learn with Python-like readability
+- **Dynamic Typing**: Automatic type conversions and coercion
+- **Control Flow**: if/else, while loops, for-in loops
+- **Functions**: First-class functions with closures
+- **Arrays & Objects**: Built-in collection types
+- **Error Handling**: Comprehensive error system with helpful messages
+
+### Discord Features (148+ Functions)
+- **Messaging**: Send, edit, delete, bulk delete, fetch messages
+- **Embeds**: Rich embed builder with all Discord features
+- **Components**: Buttons, select menus, modals, text inputs
+- **Slash Commands**: Register and handle application commands
+- **Voice Channels**: Full music bot support with queue management
+- **Webhooks**: Create, send, edit, delete webhooks
+- **Background Tasks**: Scheduled tasks and interval-based loops
+- **Cooldowns**: Multi-bucket cooldown system (user/channel/guild/global)
+- **Polls**: Native Discord poll support
+- **AutoMod**: Content moderation with keyword/spam filters
+- **Audit Logs**: Track server changes and moderation actions
+- **Roles & Permissions**: Complete role and permission management
+- **Moderation**: Kick, ban, timeout, nickname management
+- **Channels**: Create, edit, delete all channel types
+- **Threads**: Thread creation and management
+- **Forums**: Forum post and tag management
+- **Stage Channels**: Stage instance and speaker management
+- **Scheduled Events**: Create and manage server events
+- **Stickers & Emoji**: Custom emoji and sticker management
+- **Presence & Activities**: Bot status and rich presence
+- **Invites**: Create, fetch, and manage invites
+
+### Bridge System
+- **Python Integration**: Use any Python package (requests, numpy, pandas, etc.)
+- **npm Integration**: Use any npm package (axios, lodash, moment, etc.)
+- **Auto-Install**: Automatically installs missing packages
+- **Type Conversion**: Seamless conversion between EzLang, JavaScript, and Python
+- **Async Support**: Full async/await support across bridges
 
 ## Installation
 
