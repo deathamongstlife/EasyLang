@@ -9,7 +9,8 @@ description: EasyLang - A beginner-friendly programming language for Discord bot
   <p class="tagline">The beginner-friendly language for Discord bots</p>
 
   <div class="hero-buttons">
-    <a href="{{ '/getting-started/' | relative_url }}" class="button primary">Get Started</a>
+    <a href="{{ '/tutorial/' | relative_url }}" class="button primary">Start Tutorial</a>
+    <a href="{{ '/getting-started/' | relative_url }}" class="button secondary">Get Started</a>
     <a href="{{ '/api/' | relative_url }}" class="button secondary">Documentation</a>
   </div>
 
@@ -97,6 +98,16 @@ bot_start("YOUR_TOKEN_HERE")</code></pre>
       <li>Webhooks & polls</li>
     </ul>
   </div>
+</div>
+
+---
+
+## 🎓 Learn by Doing
+
+<div class="cta-box" style="background: linear-gradient(135deg, rgba(88, 101, 242, 0.1), rgba(59, 165, 93, 0.1)); padding: 2rem; border-radius: 12px; border: 2px solid #E3E5E8; margin: 2rem 0; text-align: center;">
+  <h3 style="margin: 0 0 1rem 0;">Interactive Tutorial</h3>
+  <p style="margin: 0 0 1.5rem 0; color: #5E6772;">Learn EasyLang by writing real code in your browser. Get instant feedback and progress at your own pace through 10 interactive lessons.</p>
+  <a href="{{ '/tutorial/' | relative_url }}" class="button primary" style="display: inline-block; padding: 0.75rem 1.5rem; background: #5865F2; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Start Tutorial →</a>
 </div>
 
 ---

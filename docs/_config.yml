@@ -20,6 +20,10 @@ plugins:
 
 # Navigation structure for sidebar
 navigation:
+  - title: "Interactive Tutorial"
+    url: "/tutorial/"
+    description: "Learn by coding in your browser"
+
   - title: "Getting Started"
     url: "/getting-started/"
     children:
@@ -179,6 +183,11 @@ defaults:
     values:
       layout: "docs"
       category: "bridge-system"
+  - scope:
+      path: "tutorial"
+    values:
+      layout: "default"
+      category: "tutorial"
 
 # Exclude from build
 exclude:
