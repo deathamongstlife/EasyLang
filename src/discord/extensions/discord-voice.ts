@@ -14,8 +14,8 @@ import {
   isString,
   isNumber,
   isObject,
-} from './values';
-import { RuntimeError, TypeError } from '../utils/errors';
+} from '../../core/runtime/values';
+import { RuntimeError, TypeError } from '../../utils/errors';
 import {
   joinVoiceChannel,
   createAudioPlayer,

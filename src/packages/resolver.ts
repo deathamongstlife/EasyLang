@@ -197,8 +197,6 @@ export class PackageResolver {
    * Suggest alternative package names
    */
   suggestAlternatives(packageName: string): string[] {
-    const suggestions: string[] = [];
-
     // Common package name variations
     const variations = [
       packageName.toLowerCase(),

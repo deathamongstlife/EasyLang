@@ -15,8 +15,8 @@ import {
   isBoolean,
   isObject,
   isArray,
-} from './values';
-import { RuntimeError, TypeError } from '../utils/errors';
+} from '../../core/runtime/values';
+import { RuntimeError, TypeError } from '../../utils/errors';
 import {
   Guild,
   GuildScheduledEvent,

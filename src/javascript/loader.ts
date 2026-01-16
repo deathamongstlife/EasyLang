@@ -110,7 +110,7 @@ export class JavaScriptLoader {
   /**
    * Normalize package exports (handle ES modules, CommonJS, etc.)
    */
-  private normalizeExports(pkg: any, packageName: string): JsPackageExports {
+  private normalizeExports(pkg: any, _packageName: string): JsPackageExports {
     const exports: JsPackageExports = {
       named: {},
     };

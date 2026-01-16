@@ -265,7 +265,7 @@ export class TypeConverter {
 
       if (value.__type__ === 'function' || value.__type__ === 'method') {
         // Return a proxy function that calls back to Python
-        return (...args: any[]) => {
+        return (..._args: any[]) => {
           // This will be handled by the bridge
           throw new Error('Python function calls must go through bridge');
         };

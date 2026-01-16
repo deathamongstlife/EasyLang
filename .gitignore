@@ -53,3 +53,5 @@ temp/
 test-bot.ez
 test-bot-*.ez
 *-test.ez
+test-bot-advanced/
+test-bot-complete.ez

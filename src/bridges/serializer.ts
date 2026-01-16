@@ -3,9 +3,9 @@
  * Handles complex types, circular references, and large data
  */
 
-import { SerializedValue } from './types';
 import { TypeConverter } from './converter';
-import { BridgeError, BridgeErrorType } from './errors';
+import { BridgeError } from './errors';
+import { BridgeErrorType } from './types';
 
 /**
  * Serialization options

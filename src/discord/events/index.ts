@@ -16,8 +16,8 @@ import {
   MessageReaction,
   ThreadChannel,
 } from 'discord.js';
-import { RuntimeValue, makeString, makeBoolean, makeObject, makeNumber, ObjectValue, makeArray } from '../runtime/values';
-import { logger } from '../utils/logger';
+import { RuntimeValue, makeString, makeBoolean, makeObject, makeNumber, ObjectValue, makeArray } from '../../core/runtime/values';
+import { logger } from '../../utils/logger';
 
 /**
  * EventManager - Handles Discord event conversion and dispatching

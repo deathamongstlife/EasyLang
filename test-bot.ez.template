@@ -1,0 +1,341 @@
+// test-bot.ez.template
+//
+// COMPREHENSIVE DISCORD API FEATURE TEST BOT
+//
+// This is a TEMPLATE file. To use it:
+// 1. Copy to test-bot.ez: cp test-bot.ez.template test-bot.ez
+// 2. Add your bot token to .env file or set DISCORD_BOT_TOKEN environment variable
+// 3. Run: npm start run test-bot.ez
+//
+// WARNING: test-bot.ez is git-ignored. NEVER commit your bot token!
+//
+// This bot tests ALL Discord features as they're implemented.
+// Add tests for each new feature as it's developed.
+
+use discord
+
+// ========================================
+// CONFIGURATION
+// ========================================
+
+var token = env("DISCORD_BOT_TOKEN")
+if token == "" {
+    print("ERROR: DISCORD_BOT_TOKEN not set!")
+    print("Set it in .env file or environment variable")
+    exit(1)
+}
+
+print("=".repeat(60))
+print("EasyLang Comprehensive Discord Feature Test Bot")
+print("=".repeat(60))
+print("")
+
+// Initialize Discord client
+discord_init(token)
+
+// ========================================
+// CORE EVENTS (Implemented)
+// ========================================
+
+listen ready as client {
+    print("✓ Bot Ready!")
+    print("  Logged in as: " + client.user.tag)
+    print("  Bot ID: " + client.user.id)
+    print("  Guilds: " + client.guilds.cache.size)
+    print("")
+    print("Bot is now online. Waiting for events...")
+}
+
+listen messageCreate as message {
+    // Ignore bot messages
+    if message.author.bot {
+        return
+    }
+
+    var content = message.content
+
+    // Ping command
+    if content == "!ping" {
+        reply message, "Pong! 🏓"
+    }
+
+    // Echo command
+    if content.startsWith("!echo ") {
+        var text = content.substring(6)
+        send message.channel, text
+    }
+
+    // Embed test
+    if content == "!embed" {
+        var embed = discord_embed({
+            title: "Test Embed",
+            description: "This is a test embed with all features",
+            color: 0x0099ff,
+            fields: [
+                {name: "Field 1", value: "Value 1", inline: true},
+                {name: "Field 2", value: "Value 2", inline: true}
+            ],
+            footer: {text: "Footer text"},
+            timestamp: true
+        })
+        send message.channel, {embeds: [embed]}
+    }
+
+    // Button test
+    if content == "!button" {
+        var button = discord_button({
+            customId: "test_button",
+            label: "Click Me!",
+            style: "PRIMARY"
+        })
+        send message.channel, {
+            content: "Click the button below:",
+            components: [discord_action_row([button])]
+        }
+    }
+
+    // React test
+    if content == "!react" {
+        react message, "👍"
+        react message, "❤️"
+        react message, "🎉"
+    }
+}
+
+listen interactionCreate as interaction {
+    if interaction.isButton() {
+        if interaction.customId == "test_button" {
+            interaction.reply({
+                content: "Button clicked! ✓",
+                ephemeral: true
+            })
+        }
+    }
+}
+
+// ========================================
+// GUILD EVENTS (Implemented)
+// ========================================
+
+listen guildCreate as guild {
+    print("✓ Bot added to guild: " + guild.name)
+}
+
+listen guildDelete as guild {
+    print("✓ Bot removed from guild: " + guild.name)
+}
+
+listen guildMemberAdd as member {
+    print("✓ New member joined: " + member.user.tag + " in " + member.guild.name)
+}
+
+listen guildMemberRemove as member {
+    print("✓ Member left: " + member.user.tag + " from " + member.guild.name)
+}
+
+// ========================================
+// CHANNEL EVENTS (Implemented)
+// ========================================
+
+listen channelCreate as channel {
+    print("✓ Channel created: " + channel.name)
+}
+
+listen channelDelete as channel {
+    print("✓ Channel deleted: " + channel.name)
+}
+
+// ========================================
+// ROLE EVENTS (Implemented)
+// ========================================
+
+listen roleCreate as role {
+    print("✓ Role created: " + role.name)
+}
+
+listen roleDelete as role {
+    print("✓ Role deleted: " + role.name)
+}
+
+// ========================================
+// MISSING EVENTS (To Be Implemented)
+// ========================================
+
+// TODO: Add these as they're implemented in Phase 2
+
+// AutoMod Events (4)
+// listen autoModerationActionExecution as action { }
+// listen autoModerationRuleCreate as rule { }
+// listen autoModerationRuleUpdate as rule { }
+// listen autoModerationRuleDelete as rule { }
+
+// Ban Events (2)
+// listen guildBanAdd as ban { }
+// listen guildBanRemove as ban { }
+
+// Emoji Events (3)
+// listen emojiCreate as emoji { }
+// listen emojiUpdate as emoji { }
+// listen emojiDelete as emoji { }
+
+// Sticker Events (3)
+// listen stickerCreate as sticker { }
+// listen stickerUpdate as sticker { }
+// listen stickerDelete as sticker { }
+
+// Thread Events (6)
+// listen threadCreate as thread { }
+// listen threadUpdate as thread { }
+// listen threadDelete as thread { }
+// listen threadMembersUpdate as members { }
+// listen threadMemberUpdate as member { }
+
+// Scheduled Event Events (5)
+// listen guildScheduledEventCreate as event { }
+// listen guildScheduledEventUpdate as event { }
+// listen guildScheduledEventDelete as event { }
+// listen guildScheduledEventUserAdd as user { }
+// listen guildScheduledEventUserRemove as user { }
+
+// Voice Events (3)
+// listen voiceStateUpdate as state { }
+// listen voiceServerUpdate as server { }
+// listen voiceChannelEffectSend as effect { }
+
+// Message Reaction Events (5)
+// listen messageReactionAdd as reaction { }
+// listen messageReactionRemove as reaction { }
+// listen messageReactionRemoveAll as message { }
+// listen messageReactionRemoveEmoji as reaction { }
+
+// Poll Events (2)
+// listen messagePollVoteAdd as vote { }
+// listen messagePollVoteRemove as vote { }
+
+// Presence Events (1)
+// listen presenceUpdate as presence { }
+
+// Invite Events (2)
+// listen inviteCreate as invite { }
+// listen inviteDelete as invite { }
+
+// Integration Events (1)
+// listen guildIntegrationsUpdate as guild { }
+
+// Webhook Events (1)
+// listen webhooksUpdate as channel { }
+
+// Typing Events (1)
+// listen typingStart as typing { }
+
+// User Events (1)
+// listen userUpdate as user { }
+
+// Stage Events (3)
+// listen stageInstanceCreate as stage { }
+// listen stageInstanceUpdate as stage { }
+// listen stageInstanceDelete as stage { }
+
+// Audit Log Events (1)
+// listen guildAuditLogEntryCreate as entry { }
+
+// Application Command Events (1)
+// listen applicationCommandPermissionsUpdate as permissions { }
+
+// Soundboard Events (5)
+// listen soundboardSounds as sounds { }
+// listen guildSoundboardSoundCreate as sound { }
+// listen guildSoundboardSoundUpdate as sound { }
+// listen guildSoundboardSoundDelete as sound { }
+// listen guildSoundboardSoundsUpdate as sounds { }
+
+// Entitlement Events (3)
+// listen entitlementCreate as entitlement { }
+// listen entitlementUpdate as entitlement { }
+// listen entitlementDelete as entitlement { }
+
+// Subscription Events (3)
+// listen subscriptionCreate as subscription { }
+// listen subscriptionUpdate as subscription { }
+// listen subscriptionDelete as subscription { }
+
+// System Events (5)
+// listen guildAvailable as guild { }
+// listen guildUnavailable as guild { }
+// listen invalidated as data { }
+// listen error as error { }
+// listen warn as warning { }
+
+// ========================================
+// SLASH COMMANDS (To Be Enhanced)
+// ========================================
+
+// TODO: Add comprehensive slash command tests
+// - Autocomplete
+// - Context menus (user, message)
+// - Subcommands and groups
+// - All option types
+
+// ========================================
+// UI COMPONENTS (To Be Enhanced)
+// ========================================
+
+// TODO: Add tests for:
+// - All button styles
+// - All select menu types (string, user, role, channel, mentionable)
+// - Modals with text inputs
+// - Persistent views
+
+// ========================================
+// VOICE FEATURES (To Be Implemented)
+// ========================================
+
+// TODO: Add voice tests:
+// - Join voice channel
+// - Play audio
+// - Voice effects
+// - Audio streaming
+
+// ========================================
+// THREAD FEATURES (To Be Implemented)
+// ========================================
+
+// TODO: Add thread tests:
+// - Create thread
+// - Join/leave thread
+// - Archive/unarchive thread
+// - Forum posts
+// - Thread members
+
+// ========================================
+// MODERATION FEATURES (To Be Enhanced)
+// ========================================
+
+// TODO: Add moderation tests:
+// - Ban/unban with options
+// - Kick
+// - Timeout/remove timeout
+// - AutoMod rules
+
+// ========================================
+// ADVANCED FEATURES (To Be Implemented)
+// ========================================
+
+// TODO: Add tests for:
+// - Guild scheduled events
+// - Welcome screens
+// - Guild templates
+// - Stickers
+// - Polls
+// - Webhooks
+// - Stage channels
+// - Invites with options
+
+print("")
+print("=".repeat(60))
+print("Test bot configuration complete.")
+print("Starting Discord connection...")
+print("=".repeat(60))
+
+// Start the bot
+discord_start()

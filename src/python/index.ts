@@ -200,7 +200,7 @@ export class PythonBridge {
         );
       }
 
-      return response.instance_id;
+      return response.result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       throw new RuntimeError(

@@ -8,7 +8,7 @@ import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PackageType, PackageMetadata } from '../bridges/types';
-import { InstallationError, PackageNotFoundError } from '../bridges/errors';
+import { InstallationError } from '../bridges/errors';
 import { logger } from '../utils/logger';
 
 const execAsync = promisify(exec);
