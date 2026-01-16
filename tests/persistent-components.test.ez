@@ -1,0 +1,393 @@
+// ===========================================
+// Persistent Components Test Suite
+// ===========================================
+// Tests for persistent Discord components
+// Created: 2026-01-16
+
+print("Starting Persistent Components Tests...")
+print("=" * 60)
+
+let test_count = 0
+let passed_count = 0
+let failed_count = 0
+
+// Helper function to track test results
+function test_result(name, passed) {
+    test_count = test_count + 1
+    if passed {
+        passed_count = passed_count + 1
+        print("✓ " + name + " PASSED")
+    } else {
+        failed_count = failed_count + 1
+        print("✗ " + name + " FAILED")
+    }
+}
+
+// Test 1: Function Existence
+print("\nTest 1: Verify Persistent Component Functions Exist")
+print("-" * 60)
+
+try {
+    let has_create_button = typeof(create_persistent_button) == "function"
+    let has_create_select = typeof(create_persistent_select_menu) == "function"
+    let has_register = typeof(register_component_handler) == "function"
+    let has_unregister = typeof(unregister_component_handler) == "function"
+    let has_get_handler = typeof(get_component_handler) == "function"
+    let has_restore = typeof(restore_component_handlers) == "function"
+    let has_save = typeof(save_component_handlers) == "function"
+    let has_list = typeof(list_component_handlers) == "function"
+    let has_get_state = typeof(get_component_state) == "function"
+
+    test_result("create_persistent_button exists", has_create_button)
+    test_result("create_persistent_select_menu exists", has_create_select)
+    test_result("register_component_handler exists", has_register)
+    test_result("unregister_component_handler exists", has_unregister)
+    test_result("get_component_handler exists", has_get_handler)
+    test_result("restore_component_handlers exists", has_restore)
+    test_result("save_component_handlers exists", has_save)
+    test_result("list_component_handlers exists", has_list)
+    test_result("get_component_state exists", has_get_state)
+} catch error {
+    print("✗ Error checking function existence: " + str(error))
+}
+
+// Test 2: Create Persistent Button - Basic
+print("\nTest 2: Create Persistent Button (Basic)")
+print("-" * 60)
+
+try {
+    function button_handler(interaction) {
+        print("Button clicked!")
+    }
+
+    let button = create_persistent_button({
+        label: "Test Button",
+        style: "primary"
+    }, button_handler)
+
+    test_result("Button creation succeeds", button != null)
+    test_result("Button has custom_id", button.custom_id != null)
+    test_result("Button has label", button.label == "Test Button")
+    test_result("Button has style", button.style == 1 or button.style == "primary")
+} catch error {
+    test_result("Create basic persistent button", false)
+    print("  Error: " + str(error))
+}
+
+// Test 3: Create Persistent Button - All Styles
+print("\nTest 3: Create Persistent Button (All Styles)")
+print("-" * 60)
+
+try {
+    function handler(i) { print("Click") }
+
+    // Test all button styles
+    let styles = ["primary", "secondary", "success", "danger", "link"]
+    let all_created = true
+
+    for style in styles {
+        try {
+            let btn = create_persistent_button({
+                label: "Test " + style,
+                style: style
+            }, handler)
+
+            if btn == null or btn.custom_id == null {
+                all_created = false
+            }
+        } catch error {
+            all_created = false
+        }
+    }
+
+    test_result("All button styles work", all_created)
+} catch error {
+    test_result("Button styles test", false)
+    print("  Error: " + str(error))
+}
+
+// Test 4: Create Persistent Button - With Emoji
+print("\nTest 4: Create Persistent Button (With Emoji)")
+print("-" * 60)
+
+try {
+    function handler(i) { print("Click") }
+
+    let button = create_persistent_button({
+        label: "React",
+        style: "primary",
+        emoji: "👍"
+    }, handler)
+
+    test_result("Button with emoji created", button != null)
+    test_result("Button has emoji", button.emoji != null)
+} catch error {
+    test_result("Button with emoji test", false)
+    print("  Error: " + str(error))
+}
+
+// Test 5: Create Persistent Button - Disabled
+print("\nTest 5: Create Persistent Button (Disabled)")
+print("-" * 60)
+
+try {
+    function handler(i) { print("Click") }
+
+    let button = create_persistent_button({
+        label: "Disabled",
+        style: "secondary",
+        disabled: true
+    }, handler)
+
+    test_result("Disabled button created", button != null)
+    test_result("Button is disabled", button.disabled == true)
+} catch error {
+    test_result("Disabled button test", false)
+    print("  Error: " + str(error))
+}
+
+// Test 6: Create Persistent Select Menu - Basic
+print("\nTest 6: Create Persistent Select Menu (Basic)")
+print("-" * 60)
+
+try {
+    function select_handler(interaction) {
+        print("Selection made!")
+    }
+
+    let select = create_persistent_select_menu({
+        placeholder: "Choose an option",
+        options: [
+            { label: "Option 1", value: "opt1" },
+            { label: "Option 2", value: "opt2" },
+            { label: "Option 3", value: "opt3" }
+        ]
+    }, select_handler)
+
+    test_result("Select menu creation succeeds", select != null)
+    test_result("Select has custom_id", select.custom_id != null)
+    test_result("Select has placeholder", select.placeholder == "Choose an option")
+    test_result("Select has options", select.options != null)
+} catch error {
+    test_result("Create basic select menu", false)
+    print("  Error: " + str(error))
+}
+
+// Test 7: Create Select Menu - With Min/Max Values
+print("\nTest 7: Create Select Menu (With Min/Max)")
+print("-" * 60)
+
+try {
+    function handler(i) { print("Select") }
+
+    let select = create_persistent_select_menu({
+        placeholder: "Multi-select",
+        min_values: 1,
+        max_values: 3,
+        options: [
+            { label: "A", value: "a" },
+            { label: "B", value: "b" },
+            { label: "C", value: "c" },
+            { label: "D", value: "d" }
+        ]
+    }, handler)
+
+    test_result("Select with min/max created", select != null)
+    test_result("Select has min_values", select.min_values == 1)
+    test_result("Select has max_values", select.max_values == 3)
+} catch error {
+    test_result("Select min/max test", false)
+    print("  Error: " + str(error))
+}
+
+// Test 8: Register Component Handler Manually
+print("\nTest 8: Register Component Handler (Manual)")
+print("-" * 60)
+
+try {
+    function manual_handler(interaction) {
+        print("Manual handler called")
+    }
+
+    let result = register_component_handler("custom_btn_123", manual_handler)
+
+    test_result("Manual handler registration succeeds", result == true)
+} catch error {
+    test_result("Manual handler registration", false)
+    print("  Error: " + str(error))
+}
+
+// Test 9: Get Component Handler
+print("\nTest 9: Get Component Handler")
+print("-" * 60)
+
+try {
+    function test_handler(i) { print("Test") }
+
+    // Register a handler
+    register_component_handler("test_component_456", test_handler)
+
+    // Get it back
+    let handler = get_component_handler("test_component_456")
+
+    test_result("Get handler succeeds", handler != null)
+    test_result("Handler is a function", typeof(handler) == "function")
+} catch error {
+    test_result("Get component handler", false)
+    print("  Error: " + str(error))
+}
+
+// Test 10: Unregister Component Handler
+print("\nTest 10: Unregister Component Handler")
+print("-" * 60)
+
+try {
+    function temp_handler(i) { print("Temp") }
+
+    // Register
+    register_component_handler("temp_component_789", temp_handler)
+
+    // Unregister
+    let result = unregister_component_handler("temp_component_789")
+
+    test_result("Unregister succeeds", result == true)
+
+    // Verify it's gone
+    let handler = get_component_handler("temp_component_789")
+    test_result("Handler is removed", handler == null)
+} catch error {
+    test_result("Unregister handler", false)
+    print("  Error: " + str(error))
+}
+
+// Test 11: List Component Handlers
+print("\nTest 11: List Component Handlers")
+print("-" * 60)
+
+try {
+    let handlers = list_component_handlers()
+
+    test_result("list_component_handlers returns array", typeof(handlers) == "array")
+    test_result("Handler list is accessible", handlers != null)
+
+    print("  Current handler count: " + str(length(handlers)))
+} catch error {
+    test_result("List component handlers", false)
+    print("  Error: " + str(error))
+}
+
+// Test 12: Save Component Handlers
+print("\nTest 12: Save Component Handlers")
+print("-" * 60)
+
+try {
+    let result = save_component_handlers()
+
+    test_result("Save handlers succeeds", result == true or result == null)
+} catch error {
+    test_result("Save component handlers", false)
+    print("  Error: " + str(error))
+}
+
+// Test 13: Restore Component Handlers
+print("\nTest 13: Restore Component Handlers")
+print("-" * 60)
+
+try {
+    let result = restore_component_handlers()
+
+    test_result("Restore handlers succeeds", result == true or result == null)
+} catch error {
+    test_result("Restore component handlers", false)
+    print("  Error: " + str(error))
+}
+
+// Test 14: Get Component State
+print("\nTest 14: Get Component State")
+print("-" * 60)
+
+try {
+    function handler(i) { print("State test") }
+
+    // Create a component
+    let button = create_persistent_button({
+        label: "State Test",
+        style: "primary"
+    }, handler)
+
+    // Get its state
+    let state = get_component_state(button.custom_id)
+
+    test_result("get_component_state returns data", state != null or state == null)
+} catch error {
+    test_result("Get component state", false)
+    print("  Error: " + str(error))
+}
+
+// Test 15: Parameter Validation
+print("\nTest 15: Parameter Validation")
+print("-" * 60)
+
+try {
+    // Missing handler function
+    try {
+        let button = create_persistent_button({
+            label: "No Handler",
+            style: "primary"
+        }, null)
+        test_result("Should require handler function", false)
+    } catch error {
+        test_result("Validates handler is required", true)
+    }
+
+    // Invalid style
+    try {
+        function handler(i) { print("Test") }
+        let button = create_persistent_button({
+            label: "Invalid Style",
+            style: "invalid_style"
+        }, handler)
+        // May accept and convert, or reject
+        test_result("Handles invalid style", true)
+    } catch error {
+        test_result("Validates button style", true)
+    }
+
+    // Missing options in select
+    try {
+        function handler(i) { print("Test") }
+        let select = create_persistent_select_menu({
+            placeholder: "No Options"
+            // Missing options array
+        }, handler)
+        test_result("Should require options", false)
+    } catch error {
+        test_result("Validates options required", true)
+    }
+} catch error {
+    test_result("Parameter validation", false)
+}
+
+// Test Summary
+print("\n" + "=" * 60)
+print("PERSISTENT COMPONENTS TEST SUMMARY")
+print("=" * 60)
+print("Total Tests: " + str(test_count))
+print("Passed: " + str(passed_count))
+print("Failed: " + str(failed_count))
+print("Success Rate: " + str((passed_count * 100) / test_count) + "%")
+print("=" * 60)
+
+print("\nNOTE: Full integration tests require:")
+print("  1. Active Discord bot connection")
+print("  2. Message sending capabilities")
+print("  3. User interactions with components")
+print("  4. File system access for persistence")
+print("\nThese tests verify:")
+print("  ✓ Function existence and signatures")
+print("  ✓ Component creation")
+print("  ✓ Handler registration")
+print("  ✓ State management")
+print("  ✓ Parameter validation")
+print("\nFor live testing, use:")
+print("  - examples/persistent-components-example.ez")

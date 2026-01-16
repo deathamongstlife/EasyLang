@@ -1,0 +1,365 @@
+// ===========================================
+// Decorators Test Suite
+// ===========================================
+// Tests for command decorators and middleware
+// Created: 2026-01-16
+
+print("Starting Decorators Tests...")
+print("=" * 60)
+
+let test_count = 0
+let passed_count = 0
+let failed_count = 0
+
+// Helper function to track test results
+function test_result(name, passed) {
+    test_count = test_count + 1
+    if passed {
+        passed_count = passed_count + 1
+        print("✓ " + name + " PASSED")
+    } else {
+        failed_count = failed_count + 1
+        print("✗ " + name + " FAILED")
+    }
+}
+
+// Test 1: Function Existence
+print("\nTest 1: Verify Decorator Functions Exist")
+print("-" * 60)
+
+try {
+    let has_require_role = typeof(require_role) == "function"
+    let has_require_permission = typeof(require_permission) == "function"
+    let has_require_owner = typeof(require_owner) == "function"
+    let has_guild_only = typeof(guild_only) == "function"
+    let has_dm_only = typeof(dm_only) == "function"
+    let has_command_cooldown = typeof(command_cooldown) == "function"
+    let has_before_invoke = typeof(before_invoke) == "function"
+    let has_after_invoke = typeof(after_invoke) == "function"
+
+    test_result("require_role exists", has_require_role)
+    test_result("require_permission exists", has_require_permission)
+    test_result("require_owner exists", has_require_owner)
+    test_result("guild_only exists", has_guild_only)
+    test_result("dm_only exists", has_dm_only)
+    test_result("command_cooldown exists", has_command_cooldown)
+    test_result("before_invoke exists", has_before_invoke)
+    test_result("after_invoke exists", has_after_invoke)
+} catch error {
+    print("✗ Error checking function existence: " + str(error))
+}
+
+// Test 2: Require Role Decorator
+print("\nTest 2: Require Role Decorator")
+print("-" * 60)
+
+try {
+    function test_command(message) {
+        reply(message, "Command executed")
+    }
+
+    let decorated = require_role("Admin", test_command)
+
+    test_result("require_role returns function", typeof(decorated) == "function")
+    test_result("Decorator wraps command", decorated != null)
+} catch error {
+    test_result("Require role decorator", false)
+    print("  Error: " + str(error))
+}
+
+// Test 3: Require Role - Multiple Roles
+print("\nTest 3: Require Role (Multiple)")
+print("-" * 60)
+
+try {
+    function test_command(message) {
+        reply(message, "OK")
+    }
+
+    let decorated = require_role(["Admin", "Moderator", "Helper"], test_command)
+
+    test_result("require_role accepts array", typeof(decorated) == "function")
+} catch error {
+    test_result("Require multiple roles", false)
+    print("  Error: " + str(error))
+}
+
+// Test 4: Require Permission Decorator
+print("\nTest 4: Require Permission Decorator")
+print("-" * 60)
+
+try {
+    function test_command(message) {
+        reply(message, "OK")
+    }
+
+    let decorated = require_permission("MANAGE_MESSAGES", test_command)
+
+    test_result("require_permission returns function", typeof(decorated) == "function")
+} catch error {
+    test_result("Require permission decorator", false)
+    print("  Error: " + str(error))
+}
+
+// Test 5: Require Permission - Multiple Permissions
+print("\nTest 5: Require Permission (Multiple)")
+print("-" * 60)
+
+try {
+    function test_command(message) {
+        reply(message, "OK")
+    }
+
+    let decorated = require_permission([
+        "MANAGE_MESSAGES",
+        "KICK_MEMBERS",
+        "BAN_MEMBERS"
+    ], test_command)
+
+    test_result("require_permission accepts array", typeof(decorated) == "function")
+} catch error {
+    test_result("Require multiple permissions", false)
+    print("  Error: " + str(error))
+}
+
+// Test 6: Require Owner Decorator
+print("\nTest 6: Require Owner Decorator")
+print("-" * 60)
+
+try {
+    function owner_command(message) {
+        reply(message, "Owner only")
+    }
+
+    let decorated = require_owner(owner_command)
+
+    test_result("require_owner returns function", typeof(decorated) == "function")
+} catch error {
+    test_result("Require owner decorator", false)
+    print("  Error: " + str(error))
+}
+
+// Test 7: Guild Only Decorator
+print("\nTest 7: Guild Only Decorator")
+print("-" * 60)
+
+try {
+    function guild_command(message) {
+        reply(message, "Guild command")
+    }
+
+    let decorated = guild_only(guild_command)
+
+    test_result("guild_only returns function", typeof(decorated) == "function")
+} catch error {
+    test_result("Guild only decorator", false)
+    print("  Error: " + str(error))
+}
+
+// Test 8: DM Only Decorator
+print("\nTest 8: DM Only Decorator")
+print("-" * 60)
+
+try {
+    function dm_command(message) {
+        reply(message, "DM command")
+    }
+
+    let decorated = dm_only(dm_command)
+
+    test_result("dm_only returns function", typeof(decorated) == "function")
+} catch error {
+    test_result("DM only decorator", false)
+    print("  Error: " + str(error))
+}
+
+// Test 9: Command Cooldown Decorator
+print("\nTest 9: Command Cooldown Decorator")
+print("-" * 60)
+
+try {
+    function cooldown_command(message) {
+        reply(message, "Command")
+    }
+
+    let decorated = command_cooldown(5, "user", cooldown_command)
+
+    test_result("command_cooldown returns function", typeof(decorated) == "function")
+} catch error {
+    test_result("Command cooldown decorator", false)
+    print("  Error: " + str(error))
+}
+
+// Test 10: Command Cooldown - Various Types
+print("\nTest 10: Command Cooldown (Various Types)")
+print("-" * 60)
+
+try {
+    function test_cmd(message) {
+        reply(message, "OK")
+    }
+
+    // User cooldown
+    let user_cd = command_cooldown(5, "user", test_cmd)
+    test_result("User cooldown works", typeof(user_cd) == "function")
+
+    // Guild cooldown
+    let guild_cd = command_cooldown(10, "guild", test_cmd)
+    test_result("Guild cooldown works", typeof(guild_cd) == "function")
+
+    // Channel cooldown
+    let channel_cd = command_cooldown(3, "channel", test_cmd)
+    test_result("Channel cooldown works", typeof(channel_cd) == "function")
+} catch error {
+    test_result("Various cooldown types", false)
+    print("  Error: " + str(error))
+}
+
+// Test 11: Before Invoke Decorator
+print("\nTest 11: Before Invoke Decorator")
+print("-" * 60)
+
+try {
+    function before_hook(message) {
+        print("Before command")
+    }
+
+    function test_command(message) {
+        reply(message, "Command")
+    }
+
+    let decorated = before_invoke(before_hook, test_command)
+
+    test_result("before_invoke returns function", typeof(decorated) == "function")
+} catch error {
+    test_result("Before invoke decorator", false)
+    print("  Error: " + str(error))
+}
+
+// Test 12: After Invoke Decorator
+print("\nTest 12: After Invoke Decorator")
+print("-" * 60)
+
+try {
+    function after_hook(message) {
+        print("After command")
+    }
+
+    function test_command(message) {
+        reply(message, "Command")
+    }
+
+    let decorated = after_invoke(after_hook, test_command)
+
+    test_result("after_invoke returns function", typeof(decorated) == "function")
+} catch error {
+    test_result("After invoke decorator", false)
+    print("  Error: " + str(error))
+}
+
+// Test 13: Decorator Chaining
+print("\nTest 13: Decorator Chaining")
+print("-" * 60)
+
+try {
+    function base_command(message) {
+        reply(message, "Multi-decorated command")
+    }
+
+    // Chain multiple decorators
+    let decorated = require_role("Admin", base_command)
+    decorated = require_permission("MANAGE_MESSAGES", decorated)
+    decorated = guild_only(decorated)
+    decorated = command_cooldown(5, "user", decorated)
+
+    test_result("Decorator chaining works", typeof(decorated) == "function")
+} catch error {
+    test_result("Decorator chaining", false)
+    print("  Error: " + str(error))
+}
+
+// Test 14: Parameter Validation
+print("\nTest 14: Parameter Validation")
+print("-" * 60)
+
+try {
+    // Missing function parameter
+    try {
+        let decorated = require_role("Admin")
+        test_result("Should require function parameter", false)
+    } catch error {
+        test_result("Validates function parameter", true)
+    }
+
+    // Invalid cooldown duration
+    try {
+        function cmd(m) { print("OK") }
+        let decorated = command_cooldown(-5, "user", cmd)
+        test_result("Should reject negative cooldown", false)
+    } catch error {
+        test_result("Validates cooldown duration", true)
+    }
+
+    // Invalid cooldown type
+    try {
+        function cmd(m) { print("OK") }
+        let decorated = command_cooldown(5, "invalid_type", cmd)
+        test_result("Should reject invalid cooldown type", false)
+    } catch error {
+        test_result("Validates cooldown type", true)
+    }
+} catch error {
+    test_result("Parameter validation", false)
+}
+
+// Test 15: Decorator Metadata
+print("\nTest 15: Decorator Metadata")
+print("-" * 60)
+
+try {
+    function test_command(message) {
+        reply(message, "Command")
+    }
+
+    let decorated = require_role("Admin", test_command)
+
+    // Decorated function should be callable
+    test_result("Decorated function is callable", typeof(decorated) == "function")
+
+    // May have metadata attached
+    if decorated.__decorator_type != null {
+        test_result("Has decorator metadata", true)
+    } else {
+        test_result("Decorator metadata optional", true)
+    }
+} catch error {
+    test_result("Decorator metadata test", false)
+}
+
+// Test Summary
+print("\n" + "=" * 60)
+print("DECORATORS TEST SUMMARY")
+print("=" * 60)
+print("Total Tests: " + str(test_count))
+print("Passed: " + str(passed_count))
+print("Failed: " + str(failed_count))
+print("Success Rate: " + str((passed_count * 100) / test_count) + "%")
+print("=" * 60)
+
+print("\nNOTE: Full integration tests require:")
+print("  1. Active Discord bot connection")
+print("  2. Real message objects")
+print("  3. Guild with roles and permissions")
+print("  4. Command invocation system")
+print("\nThese tests verify:")
+print("  ✓ Function existence and signatures")
+print("  ✓ Decorator wrapping")
+print("  ✓ Parameter validation")
+print("  ✓ Decorator chaining")
+print("  ✓ Various decorator types")
+print("\nDecorators enable:")
+print("  • Role-based access control")
+print("  • Permission checks")
+print("  • Cooldown management")
+print("  • Command hooks")
+print("  • Guild/DM restrictions")

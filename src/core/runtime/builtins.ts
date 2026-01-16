@@ -50,6 +50,18 @@ import { stickerBuiltins } from '../../discord/extensions/stickers';
 import { threadBuiltins } from '../../discord/extensions/threads';
 import { comprehensiveApiBuiltins } from '../../discord/extensions/comprehensive-api';
 import { moderationRolesPermissionsBuiltins } from '../../discord/extensions/moderation-roles-permissions';
+import { collectorBuiltins } from '../../discord/extensions/discord-collectors';
+import { shardingBuiltins } from '../../discord/extensions/discord-sharding';
+import { moduleBuiltins } from '../../discord/extensions/discord-modules';
+import { persistentComponentBuiltins } from '../../discord/extensions/discord-persistent-components';
+import { cachingBuiltins } from '../../discord/extensions/discord-caching';
+import { permissionBuiltins } from '../../discord/extensions/discord-permissions';
+import { decoratorBuiltins } from '../../discord/extensions/discord-decorators';
+import { helpBuiltins } from '../../discord/extensions/discord-help';
+import { converterBuiltins } from '../../discord/extensions/discord-converters';
+import { restBuiltins } from '../../discord/extensions/discord-rest';
+import { validationBuiltins } from '../../discord/extensions/discord-validation';
+import { intentBuiltins } from '../../discord/extensions/discord-intents';
 import { registerAutocompleteHandler, respondAutocomplete } from '../../discord/commands/autocomplete';
 import { registerUserContextMenu, registerMessageContextMenu, createUserContextMenuCommand, createMessageContextMenuCommand } from '../../discord/commands/context-menus';
 import { createModalWithComponents, getModalFieldValue, createTextInput, createShortTextInput, createParagraphTextInput } from '../../discord/components/modals';
@@ -1674,6 +1686,21 @@ export function createGlobalEnvironment(
     env.define(name, func);
   });
 
+  // Register collector functions
+  Object.entries(collectorBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register sharding functions
+  Object.entries(shardingBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register module system functions
+  Object.entries(moduleBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
   // Register autocomplete functions
   env.define('register_autocomplete', registerAutocompleteHandler);
   env.define('respond_autocomplete', respondAutocomplete);
@@ -1690,6 +1717,51 @@ export function createGlobalEnvironment(
   env.define('create_text_input', createTextInput);
   env.define('create_short_text_input', createShortTextInput);
   env.define('create_paragraph_text_input', createParagraphTextInput);
+
+  // Register persistent component functions
+  Object.entries(persistentComponentBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register caching functions (Issue #16)
+  Object.entries(cachingBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register permission calculator functions (Issue #17)
+  Object.entries(permissionBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register command decorator functions (Issue #18)
+  Object.entries(decoratorBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register help system functions (Issue #19)
+  Object.entries(helpBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register type converter functions (Issue #20)
+  Object.entries(converterBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register REST-only mode functions (Issue #21)
+  Object.entries(restBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register validation functions (Issue #22)
+  Object.entries(validationBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register intent configuration functions (Issue #23)
+  Object.entries(intentBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
 
   return env;
 }

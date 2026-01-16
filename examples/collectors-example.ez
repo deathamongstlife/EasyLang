@@ -1,0 +1,122 @@
+# Discord Collectors Example
+# Demonstrates message, reaction, and interaction collectors
+
+# Example 1: Message Collector
+# Collect messages in a channel for 30 seconds
+function create_message_collector_example(channel_id) {
+    # Create a message collector with options
+    let collector = create_message_collector(channel_id, {
+        time: 30000,      # Collect for 30 seconds
+        max: 10,          # Stop after 10 messages
+        idle: 5000        # Stop if idle for 5 seconds
+    })
+
+    # Register collect handler
+    on_collect(collector, function(message) {
+        print("Collected message: " + message.content)
+        print("From: " + message.author.username)
+    })
+
+    # Register end handler
+    on_collector_end(collector, function(collected, reason) {
+        print("Collector ended!")
+        print("Reason: " + reason)
+        print("Total collected: " + length(collected))
+    })
+
+    return collector
+}
+
+# Example 2: Reaction Collector
+# Collect reactions on a message
+function create_reaction_collector_example(channel_id, message_id) {
+    # Create a reaction collector
+    let collector = create_reaction_collector(message_id, {
+        channel_id: channel_id,
+        time: 60000,      # Collect for 60 seconds
+        max: 5            # Stop after 5 reactions
+    })
+
+    # Register collect handler
+    on_collect(collector, function(reaction) {
+        print("Collected reaction: " + reaction.emoji)
+        print("From: " + reaction.user.username)
+        print("Count: " + str(reaction.count))
+    })
+
+    # Register end handler
+    on_collector_end(collector, function(collected, reason) {
+        print("Reaction collector ended!")
+        print("Reason: " + reason)
+    })
+
+    return collector
+}
+
+# Example 3: Interaction Collector
+# Collect button/select menu interactions
+function create_interaction_collector_example(channel_id, message_id) {
+    # Create an interaction collector for buttons
+    let collector = create_interaction_collector(message_id, {
+        channel_id: channel_id,
+        time: 120000,     # Collect for 2 minutes
+        max: 20,          # Stop after 20 interactions
+        componentType: 2  # Button component type
+    })
+
+    # Register collect handler
+    on_collect(collector, function(interaction) {
+        print("Collected interaction!")
+        print("Type: " + interaction.component_type)
+        print("User: " + interaction.user.username)
+
+        if interaction.customId {
+            print("Custom ID: " + interaction.customId)
+        }
+    })
+
+    # Register end handler
+    on_collector_end(collector, function(collected, reason) {
+        print("Interaction collector ended!")
+        print("Reason: " + reason)
+        print("Total interactions: " + length(collected))
+    })
+
+    return collector
+}
+
+# Example 4: Manual Collector Control
+function collector_with_manual_stop(channel_id) {
+    let collector = create_message_collector(channel_id, {
+        time: 300000  # 5 minutes max
+    })
+
+    let message_count = 0
+
+    on_collect(collector, function(message) {
+        message_count = message_count + 1
+        print("Message " + str(message_count) + ": " + message.content)
+
+        # Stop collector if user says "stop"
+        if message.content == "stop" {
+            print("Stopping collector manually...")
+            stop_collector(collector)
+        }
+    })
+
+    on_collector_end(collector, function(collected, reason) {
+        print("Collector stopped!")
+        print("Final count: " + str(message_count))
+    })
+
+    return collector
+}
+
+# Example Usage:
+# let channel_id = "1234567890"
+# let message_id = "9876543210"
+#
+# create_message_collector_example(channel_id)
+# create_reaction_collector_example(channel_id, message_id)
+# create_interaction_collector_example(channel_id, message_id)
+# collector_with_manual_stop(channel_id)

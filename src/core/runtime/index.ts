@@ -67,6 +67,8 @@ import { PythonBridge } from '../../python';
 import { PythonProxy } from '../../python/proxy';
 import { Lexer } from '../lexer';
 import { Parser } from '../parser';
+import { ModuleManager } from '../modules';
+import { initializeModuleSystem } from '../../discord/extensions/discord-modules';
 
 export class Runtime {
   private program: Program;
@@ -77,6 +79,7 @@ export class Runtime {
   private pythonProxies: Map<string, PythonProxy> = new Map();
   private importedFiles: Set<string> = new Set();
   private currentFilePath: string = '';
+  public moduleManager: ModuleManager;
 
   constructor(program: Program, filePath: string = '') {
     this.program = program;
@@ -85,6 +88,10 @@ export class Runtime {
     this.eventManager = new EventManager();
     this.pythonBridge = new PythonBridge();
     this.globalEnv = createGlobalEnvironment(this.discordManager, this.pythonBridge);
+    this.moduleManager = new ModuleManager(this.discordManager, this.globalEnv);
+
+    // Initialize module system with manager and runtime reference
+    initializeModuleSystem(this.moduleManager, this);
   }
 
   /**
@@ -125,9 +132,9 @@ export class Runtime {
   }
 
   /**
-   * Evaluate a statement
+   * Evaluate a statement (made public for module system)
    */
-  private async evaluateStatement(node: Statement, env: Environment): Promise<RuntimeValue> {
+  async evaluateStatement(node: Statement, env: Environment): Promise<RuntimeValue> {
     switch (node.type) {
       case 'VariableDeclaration':
         return this.evaluateVariableDeclaration(node as VariableDeclaration, env);

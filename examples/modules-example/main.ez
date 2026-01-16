@@ -1,0 +1,91 @@
+# Main bot file demonstrating module system
+
+# Get bot token from environment or command line
+token = get_argument("TOKEN")
+
+if token == null {
+    print("Error: Please provide bot token with TOKEN=your_token")
+    return
+}
+
+print("Starting bot with module system...")
+
+# Load math utilities module
+math_module = load_module("examples/modules-example/math_utils.ez")
+print("Math module loaded")
+
+# Test math module functions
+factorial_5 = math_module.factorial(5)
+print("Factorial of 5: " + str(factorial_5))
+
+is_17_prime = math_module.is_prime(17)
+print("Is 17 prime? " + str(is_17_prime))
+
+fib_10 = math_module.fibonacci(10)
+print("Fibonacci(10): " + str(fib_10))
+
+numbers = [1, 2, 3, 4, 5]
+total = math_module.sum_array(numbers)
+print("Sum of [1,2,3,4,5]: " + str(total))
+
+# Load commands module
+commands = load_module("examples/modules-example/commands_module.ez")
+print("Commands module loaded")
+
+# Set up command handler using module functions
+listen("messageCreate", message) {
+    # Ignore bot messages
+    author = get_message_author(message)
+    is_bot = get_user_bot(author)
+    if is_bot {
+        return
+    }
+
+    content = get_message_content(message)
+
+    # Check for commands
+    if starts_with(content, "!dice") {
+        commands.handle_dice(message)
+    }
+
+    if starts_with(content, "!flip") {
+        commands.handle_flip(message)
+    }
+
+    if starts_with(content, "!greet") {
+        commands.handle_greet(message)
+    }
+
+    if starts_with(content, "!serverinfo") {
+        commands.handle_serverinfo(message)
+    }
+
+    # Module management commands (admin only)
+    if starts_with(content, "!reload") {
+        is_admin = commands.is_admin(message)
+        if is_admin {
+            reply(message, "🔄 Reloading commands module...")
+            reload_module("CommandsModule")
+            reply(message, "✅ Commands module reloaded!")
+        } else {
+            reply(message, "❌ Admin permission required")
+        }
+    }
+
+    if starts_with(content, "!modules") {
+        modules_list = list_modules()
+        msg = "📦 **Loaded Modules:**\n"
+
+        for mod in modules_list {
+            name = mod.name
+            reload_count = mod.reload_count
+            msg = msg + "• " + name + " (reloaded " + reload_count + " times)\n"
+        }
+
+        reply(message, msg)
+    }
+}
+
+# Start the bot
+print("Bot starting with hot-reloadable modules!")
+bot_start(token)

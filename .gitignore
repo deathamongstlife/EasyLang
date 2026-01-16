@@ -55,3 +55,6 @@ test-bot-*.ez
 *-test.ez
 test-bot-advanced/
 test-bot-complete.ez
+
+# Persistent component storage (runtime data)
+src/discord/persistent-storage/components.json

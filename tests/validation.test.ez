@@ -1,0 +1,405 @@
+// ===========================================
+// Builder Validation Test Suite
+// ===========================================
+// Tests for Discord builder validation
+// Created: 2026-01-16
+
+print("Starting Builder Validation Tests...")
+print("=" * 60)
+
+let test_count = 0
+let passed_count = 0
+let failed_count = 0
+
+// Helper function to track test results
+function test_result(name, passed) {
+    test_count = test_count + 1
+    if passed {
+        passed_count = passed_count + 1
+        print("✓ " + name + " PASSED")
+    } else {
+        failed_count = failed_count + 1
+        print("✗ " + name + " FAILED")
+    }
+}
+
+// Test 1: Function Existence
+print("\nTest 1: Verify Validation Functions Exist")
+print("-" * 60)
+
+try {
+    let has_validate_embed = typeof(validate_embed) == "function"
+    let has_validate_button = typeof(validate_button) == "function"
+    let has_validate_select = typeof(validate_select_menu) == "function"
+    let has_validate_modal = typeof(validate_modal) == "function"
+    let has_validate_message = typeof(validate_message_options) == "function"
+
+    test_result("validate_embed exists", has_validate_embed)
+    test_result("validate_button exists", has_validate_button)
+    test_result("validate_select_menu exists", has_validate_select)
+    test_result("validate_modal exists", has_validate_modal)
+    test_result("validate_message_options exists", has_validate_message)
+} catch error {
+    print("✗ Error checking function existence: " + str(error))
+}
+
+// Test 2: Validate Embed - Valid Basic Embed
+print("\nTest 2: Validate Embed (Valid Basic)")
+print("-" * 60)
+
+try {
+    let embed = {
+        title: "Test Embed",
+        description: "This is a test embed",
+        color: 0xFF0000
+    }
+
+    let result = validate_embed(embed)
+
+    test_result("Valid basic embed passes", result == true or result == null)
+} catch error {
+    test_result("Validate basic embed", false)
+    print("  Error: " + str(error))
+}
+
+// Test 3: Validate Embed - With Fields
+print("\nTest 3: Validate Embed (With Fields)")
+print("-" * 60)
+
+try {
+    let embed = {
+        title: "Embed with Fields",
+        fields: [
+            { name: "Field 1", value: "Value 1", inline: true },
+            { name: "Field 2", value: "Value 2", inline: true },
+            { name: "Field 3", value: "Value 3", inline: false }
+        ]
+    }
+
+    let result = validate_embed(embed)
+
+    test_result("Embed with fields passes", result == true or result == null)
+} catch error {
+    test_result("Validate embed with fields", false)
+    print("  Error: " + str(error))
+}
+
+// Test 4: Validate Embed - Title Too Long
+print("\nTest 4: Validate Embed (Title Too Long)")
+print("-" * 60)
+
+try {
+    let long_title = ""
+    for i in range(300) {
+        long_title = long_title + "A"
+    }
+
+    let embed = {
+        title: long_title,
+        description: "Test"
+    }
+
+    try {
+        let result = validate_embed(embed)
+        test_result("Should reject title > 256 chars", false)
+    } catch error {
+        test_result("Validates title length limit", true)
+    }
+} catch error {
+    test_result("Title length validation", false)
+}
+
+// Test 5: Validate Embed - Description Too Long
+print("\nTest 5: Validate Embed (Description Too Long)")
+print("-" * 60)
+
+try {
+    let long_desc = ""
+    for i in range(5000) {
+        long_desc = long_desc + "A"
+    }
+
+    let embed = {
+        title: "Test",
+        description: long_desc
+    }
+
+    try {
+        let result = validate_embed(embed)
+        test_result("Should reject description > 4096 chars", false)
+    } catch error {
+        test_result("Validates description length limit", true)
+    }
+} catch error {
+    test_result("Description length validation", false)
+}
+
+// Test 6: Validate Embed - Too Many Fields
+print("\nTest 6: Validate Embed (Too Many Fields)")
+print("-" * 60)
+
+try {
+    let fields = []
+    for i in range(30) {  // Max is 25
+        fields = fields + [{ name: "Field " + str(i), value: "Value " + str(i) }]
+    }
+
+    let embed = {
+        title: "Test",
+        fields: fields
+    }
+
+    try {
+        let result = validate_embed(embed)
+        test_result("Should reject > 25 fields", false)
+    } catch error {
+        test_result("Validates field count limit", true)
+    }
+} catch error {
+    test_result("Field count validation", false)
+}
+
+// Test 7: Validate Button - Valid Button
+print("\nTest 7: Validate Button (Valid)")
+print("-" * 60)
+
+try {
+    let button = {
+        type: 2,
+        style: 1,
+        label: "Click Me",
+        custom_id: "test_button"
+    }
+
+    let result = validate_button(button)
+
+    test_result("Valid button passes", result == true or result == null)
+} catch error {
+    test_result("Validate basic button", false)
+    print("  Error: " + str(error))
+}
+
+// Test 8: Validate Button - Missing Required Fields
+print("\nTest 8: Validate Button (Missing Fields)")
+print("-" * 60)
+
+try {
+    // Missing custom_id for non-link button
+    let button = {
+        type: 2,
+        style: 1,
+        label: "Click Me"
+        // Missing custom_id
+    }
+
+    try {
+        let result = validate_button(button)
+        test_result("Should require custom_id", false)
+    } catch error {
+        test_result("Validates required custom_id", true)
+    }
+} catch error {
+    test_result("Button required fields validation", false)
+}
+
+// Test 9: Validate Button - Label Too Long
+print("\nTest 9: Validate Button (Label Too Long)")
+print("-" * 60)
+
+try {
+    let long_label = ""
+    for i in range(100) {
+        long_label = long_label + "A"
+    }
+
+    let button = {
+        type: 2,
+        style: 1,
+        label: long_label,
+        custom_id: "test"
+    }
+
+    try {
+        let result = validate_button(button)
+        test_result("Should reject label > 80 chars", false)
+    } catch error {
+        test_result("Validates button label length", true)
+    }
+} catch error {
+    test_result("Button label length validation", false)
+}
+
+// Test 10: Validate Select Menu - Valid Menu
+print("\nTest 10: Validate Select Menu (Valid)")
+print("-" * 60)
+
+try {
+    let menu = {
+        type: 3,
+        custom_id: "test_select",
+        placeholder: "Choose an option",
+        options: [
+            { label: "Option 1", value: "opt1" },
+            { label: "Option 2", value: "opt2" },
+            { label: "Option 3", value: "opt3" }
+        ]
+    }
+
+    let result = validate_select_menu(menu)
+
+    test_result("Valid select menu passes", result == true or result == null)
+} catch error {
+    test_result("Validate basic select menu", false)
+    print("  Error: " + str(error))
+}
+
+// Test 11: Validate Select Menu - No Options
+print("\nTest 11: Validate Select Menu (No Options)")
+print("-" * 60)
+
+try {
+    let menu = {
+        type: 3,
+        custom_id: "test_select",
+        placeholder: "Choose",
+        options: []
+    }
+
+    try {
+        let result = validate_select_menu(menu)
+        test_result("Should require at least one option", false)
+    } catch error {
+        test_result("Validates options required", true)
+    }
+} catch error {
+    test_result("Select menu options validation", false)
+}
+
+// Test 12: Validate Select Menu - Too Many Options
+print("\nTest 12: Validate Select Menu (Too Many Options)")
+print("-" * 60)
+
+try {
+    let options = []
+    for i in range(30) {  // Max is 25
+        options = options + [{ label: "Option " + str(i), value: "opt" + str(i) }]
+    }
+
+    let menu = {
+        type: 3,
+        custom_id: "test_select",
+        options: options
+    }
+
+    try {
+        let result = validate_select_menu(menu)
+        test_result("Should reject > 25 options", false)
+    } catch error {
+        test_result("Validates option count limit", true)
+    }
+} catch error {
+    test_result("Select menu option count validation", false)
+}
+
+// Test 13: Validate Modal - Valid Modal
+print("\nTest 13: Validate Modal (Valid)")
+print("-" * 60)
+
+try {
+    let modal = {
+        title: "Test Modal",
+        custom_id: "test_modal",
+        components: [
+            {
+                type: 1,
+                components: [{
+                    type: 4,
+                    custom_id: "input1",
+                    label: "Name",
+                    style: 1
+                }]
+            }
+        ]
+    }
+
+    let result = validate_modal(modal)
+
+    test_result("Valid modal passes", result == true or result == null)
+} catch error {
+    test_result("Validate basic modal", false)
+    print("  Error: " + str(error))
+}
+
+// Test 14: Validate Message Options - Valid Message
+print("\nTest 14: Validate Message Options (Valid)")
+print("-" * 60)
+
+try {
+    let options = {
+        content: "Test message",
+        embeds: [{
+            title: "Test",
+            description: "Description"
+        }]
+    }
+
+    let result = validate_message_options(options)
+
+    test_result("Valid message options pass", result == true or result == null)
+} catch error {
+    test_result("Validate message options", false)
+    print("  Error: " + str(error))
+}
+
+// Test 15: Validate Message Options - Content Too Long
+print("\nTest 15: Validate Message Options (Content Too Long)")
+print("-" * 60)
+
+try {
+    let long_content = ""
+    for i in range(3000) {
+        long_content = long_content + "A"
+    }
+
+    let options = {
+        content: long_content
+    }
+
+    try {
+        let result = validate_message_options(options)
+        test_result("Should reject content > 2000 chars", false)
+    } catch error {
+        test_result("Validates content length limit", true)
+    }
+} catch error {
+    test_result("Message content length validation", false)
+}
+
+// Test Summary
+print("\n" + "=" * 60)
+print("BUILDER VALIDATION TEST SUMMARY")
+print("=" * 60)
+print("Total Tests: " + str(test_count))
+print("Passed: " + str(passed_count))
+print("Failed: " + str(failed_count))
+print("Success Rate: " + str((passed_count * 100) / test_count) + "%")
+print("=" * 60)
+
+print("\nNOTE: These tests verify:")
+print("  ✓ Function existence")
+print("  ✓ Valid structure acceptance")
+print("  ✓ Length limit enforcement")
+print("  ✓ Required field validation")
+print("  ✓ Count limit enforcement")
+print("\nValidation prevents:")
+print("  • Discord API errors")
+print("  • Invalid payloads")
+print("  • Rate limit penalties")
+print("  • Runtime failures")
+print("\nDiscord Limits Validated:")
+print("  • Embed title: 256 chars")
+print("  • Embed description: 4096 chars")
+print("  • Embed fields: 25 max")
+print("  • Button label: 80 chars")
+print("  • Select options: 25 max")
+print("  • Message content: 2000 chars")

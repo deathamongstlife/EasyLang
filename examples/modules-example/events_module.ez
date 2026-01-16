@@ -1,0 +1,44 @@
+# @module EventsModule
+
+# Example module showing event handlers
+
+# Exported event handler: Welcome new members
+export_on_member_join(member) {
+    guild = get_member_guild(member)
+    user = get_member_user(member)
+    username = get_user_username(user)
+
+    # Get system channel
+    system_channel = get_guild_system_channel(guild)
+
+    if system_channel != null {
+        welcome_msg = "👋 Welcome " + username + " to the server!"
+        send_channel_message(system_channel, welcome_msg)
+    }
+}
+
+# Exported event handler: Log member leave
+export_on_member_leave(member) {
+    guild = get_member_guild(member)
+    user = get_member_user(member)
+    username = get_user_username(user)
+
+    print("Member left: " + username + " from " + get_guild_name(guild))
+}
+
+# Exported event handler: Message deleted
+export_on_message_delete(message) {
+    content = get_message_content(message)
+    author = get_message_author(message)
+    username = get_user_username(author)
+
+    print("Message deleted by " + username + ": " + content)
+}
+
+# Exported event handler: Role created
+export_on_role_create(role) {
+    name = get_role_name(role)
+    print("New role created: " + name)
+}
+
+print("EventsModule loaded - Event handlers ready")

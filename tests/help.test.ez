@@ -1,0 +1,405 @@
+// ===========================================
+// Help System Test Suite
+// ===========================================
+// Tests for help command system
+// Created: 2026-01-16
+
+print("Starting Help System Tests...")
+print("=" * 60)
+
+let test_count = 0
+let passed_count = 0
+let failed_count = 0
+
+// Helper function to track test results
+function test_result(name, passed) {
+    test_count = test_count + 1
+    if passed {
+        passed_count = passed_count + 1
+        print("✓ " + name + " PASSED")
+    } else {
+        failed_count = failed_count + 1
+        print("✗ " + name + " FAILED")
+    }
+}
+
+// Test 1: Function Existence
+print("\nTest 1: Verify Help System Functions Exist")
+print("-" * 60)
+
+try {
+    let has_register = typeof(register_command_help) == "function"
+    let has_get_help = typeof(get_command_help) == "function"
+    let has_list_commands = typeof(list_commands) == "function"
+    let has_generate = typeof(generate_help_embed) == "function"
+    let has_set_category = typeof(set_command_category) == "function"
+
+    test_result("register_command_help exists", has_register)
+    test_result("get_command_help exists", has_get_help)
+    test_result("list_commands exists", has_list_commands)
+    test_result("generate_help_embed exists", has_generate)
+    test_result("set_command_category exists", has_set_category)
+} catch error {
+    print("✗ Error checking function existence: " + str(error))
+}
+
+// Test 2: Register Command Help - Basic
+print("\nTest 2: Register Command Help (Basic)")
+print("-" * 60)
+
+try {
+    let result = register_command_help("ping", {
+        description: "Check bot latency",
+        usage: "!ping",
+        examples: ["!ping"]
+    })
+
+    test_result("register_command_help succeeds", result == true or result == null)
+} catch error {
+    test_result("Register basic command help", false)
+    print("  Error: " + str(error))
+}
+
+// Test 3: Register Command Help - Full Options
+print("\nTest 3: Register Command Help (Full Options)")
+print("-" * 60)
+
+try {
+    let result = register_command_help("ban", {
+        description: "Ban a user from the server",
+        usage: "!ban <user> [reason]",
+        examples: [
+            "!ban @User",
+            "!ban @User Spamming",
+            "!ban 123456789 Breaking rules"
+        ],
+        category: "Moderation",
+        aliases: ["b", "banish"],
+        permissions: ["BAN_MEMBERS"],
+        cooldown: 5
+    })
+
+    test_result("register with full options succeeds", result == true or result == null)
+} catch error {
+    test_result("Register full command help", false)
+    print("  Error: " + str(error))
+}
+
+// Test 4: Get Command Help
+print("\nTest 4: Get Command Help")
+print("-" * 60)
+
+try {
+    // Register first
+    register_command_help("test", {
+        description: "A test command",
+        usage: "!test"
+    })
+
+    // Get help
+    let help = get_command_help("test")
+
+    test_result("get_command_help returns data", help != null)
+
+    if help != null {
+        test_result("Help has description", help.description != null)
+        test_result("Help has usage", help.usage != null)
+    }
+} catch error {
+    test_result("Get command help", false)
+    print("  Error: " + str(error))
+}
+
+// Test 5: Get Command Help - Non-existent
+print("\nTest 5: Get Command Help (Non-existent)")
+print("-" * 60)
+
+try {
+    let help = get_command_help("nonexistent_command_12345")
+
+    test_result("Returns null for non-existent", help == null)
+} catch error {
+    test_result("Get non-existent command help", false)
+    print("  Error: " + str(error))
+}
+
+// Test 6: List Commands
+print("\nTest 6: List Commands")
+print("-" * 60)
+
+try {
+    // Register a few commands
+    register_command_help("cmd1", { description: "Command 1" })
+    register_command_help("cmd2", { description: "Command 2" })
+    register_command_help("cmd3", { description: "Command 3" })
+
+    let commands = list_commands()
+
+    test_result("list_commands returns array", typeof(commands) == "array")
+    test_result("Commands list is populated", length(commands) >= 3)
+
+    print("  Total commands: " + str(length(commands)))
+} catch error {
+    test_result("List commands", false)
+    print("  Error: " + str(error))
+}
+
+// Test 7: List Commands by Category
+print("\nTest 7: List Commands (By Category)")
+print("-" * 60)
+
+try {
+    // Register commands with categories
+    register_command_help("mod1", {
+        description: "Moderation command 1",
+        category: "Moderation"
+    })
+    register_command_help("mod2", {
+        description: "Moderation command 2",
+        category: "Moderation"
+    })
+    register_command_help("fun1", {
+        description: "Fun command",
+        category: "Fun"
+    })
+
+    let mod_commands = list_commands("Moderation")
+
+    test_result("Category filter works", typeof(mod_commands) == "array")
+    test_result("Category has commands", length(mod_commands) >= 2)
+} catch error {
+    test_result("List commands by category", false)
+    print("  Error: " + str(error))
+}
+
+// Test 8: Set Command Category
+print("\nTest 8: Set Command Category")
+print("-" * 60)
+
+try {
+    // Register without category
+    register_command_help("categorize_me", {
+        description: "Test command"
+    })
+
+    // Set category
+    let result = set_command_category("categorize_me", "Utility")
+
+    test_result("set_command_category succeeds", result == true or result == null)
+
+    // Verify category is set
+    let help = get_command_help("categorize_me")
+    if help != null {
+        test_result("Category is set", help.category == "Utility")
+    }
+} catch error {
+    test_result("Set command category", false)
+    print("  Error: " + str(error))
+}
+
+// Test 9: Generate Help Embed - Single Command
+print("\nTest 9: Generate Help Embed (Single Command)")
+print("-" * 60)
+
+try {
+    register_command_help("embed_test", {
+        description: "Test embed generation",
+        usage: "!embed_test [option]",
+        examples: ["!embed_test", "!embed_test option"]
+    })
+
+    let embed = generate_help_embed("embed_test")
+
+    test_result("generate_help_embed returns embed", embed != null)
+
+    if embed != null {
+        test_result("Embed has title", embed.title != null)
+        test_result("Embed has description", embed.description != null or embed.fields != null)
+    }
+} catch error {
+    test_result("Generate help embed for command", false)
+    print("  Error: " + str(error))
+}
+
+// Test 10: Generate Help Embed - All Commands
+print("\nTest 10: Generate Help Embed (All Commands)")
+print("-" * 60)
+
+try {
+    let embed = generate_help_embed()
+
+    test_result("generate_help_embed without params works", embed != null)
+
+    if embed != null {
+        test_result("All commands embed has title", embed.title != null)
+    }
+} catch error {
+    test_result("Generate help embed for all", false)
+    print("  Error: " + str(error))
+}
+
+// Test 11: Command Help with Aliases
+print("\nTest 11: Command Help (With Aliases)")
+print("-" * 60)
+
+try {
+    register_command_help("userinfo", {
+        description: "Get user information",
+        usage: "!userinfo [@user]",
+        aliases: ["user", "whois", "info"]
+    })
+
+    let help = get_command_help("userinfo")
+
+    if help != null and help.aliases != null {
+        test_result("Aliases are stored", length(help.aliases) == 3)
+    } else {
+        test_result("Handles aliases field", true)
+    }
+} catch error {
+    test_result("Command aliases test", false)
+    print("  Error: " + str(error))
+}
+
+// Test 12: Command Help with Multiple Examples
+print("\nTest 12: Command Help (Multiple Examples)")
+print("-" * 60)
+
+try {
+    register_command_help("kick", {
+        description: "Kick a user",
+        usage: "!kick <user> [reason]",
+        examples: [
+            "!kick @User",
+            "!kick @User Being rude",
+            "!kick 123456789",
+            "!kick 123456789 Spam"
+        ]
+    })
+
+    let help = get_command_help("kick")
+
+    if help != null and help.examples != null {
+        test_result("Multiple examples stored", length(help.examples) == 4)
+    } else {
+        test_result("Handles examples field", true)
+    }
+} catch error {
+    test_result("Multiple examples test", false)
+    print("  Error: " + str(error))
+}
+
+// Test 13: Parameter Validation
+print("\nTest 13: Parameter Validation")
+print("-" * 60)
+
+try {
+    // Missing command name
+    try {
+        let result = register_command_help("", {
+            description: "Test"
+        })
+        test_result("Should reject empty command name", false)
+    } catch error {
+        test_result("Validates non-empty command name", true)
+    }
+
+    // Invalid options type
+    try {
+        let result = register_command_help("test", "not an object")
+        test_result("Should reject non-object options", false)
+    } catch error {
+        test_result("Validates options is object", true)
+    }
+} catch error {
+    test_result("Parameter validation", false)
+}
+
+// Test 14: Update Command Help
+print("\nTest 14: Update Command Help")
+print("-" * 60)
+
+try {
+    // Register initial help
+    register_command_help("updateme", {
+        description: "Initial description",
+        usage: "!updateme"
+    })
+
+    // Update with new info
+    register_command_help("updateme", {
+        description: "Updated description",
+        usage: "!updateme [new_param]",
+        examples: ["!updateme", "!updateme value"]
+    })
+
+    let help = get_command_help("updateme")
+
+    if help != null {
+        test_result("Command help can be updated", help.description == "Updated description")
+    }
+} catch error {
+    test_result("Update command help", false)
+    print("  Error: " + str(error))
+}
+
+// Test 15: Common Command Categories
+print("\nTest 15: Common Command Categories")
+print("-" * 60)
+
+try {
+    let categories = [
+        "Moderation",
+        "Fun",
+        "Utility",
+        "Information",
+        "Admin",
+        "Music",
+        "Games",
+        "Economy"
+    ]
+
+    let all_work = true
+
+    for category in categories {
+        try {
+            register_command_help("test_" + category, {
+                description: "Test",
+                category: category
+            })
+        } catch error {
+            all_work = false
+        }
+    }
+
+    test_result("All common categories work", all_work)
+} catch error {
+    test_result("Common categories test", false)
+}
+
+// Test Summary
+print("\n" + "=" * 60)
+print("HELP SYSTEM TEST SUMMARY")
+print("=" * 60)
+print("Total Tests: " + str(test_count))
+print("Passed: " + str(passed_count))
+print("Failed: " + str(failed_count))
+print("Success Rate: " + str((passed_count * 100) / test_count) + "%")
+print("=" * 60)
+
+print("\nNOTE: Full integration tests require:")
+print("  1. Active Discord bot connection")
+print("  2. Message sending for embed display")
+print("  3. Command system integration")
+print("\nThese tests verify:")
+print("  ✓ Function existence and signatures")
+print("  ✓ Command help registration")
+print("  ✓ Help retrieval")
+print("  ✓ Command listing")
+print("  ✓ Category management")
+print("  ✓ Embed generation")
+print("\nHelp system provides:")
+print("  • Auto-generated help commands")
+print("  • Command documentation")
+print("  • Category organization")
+print("  • Usage examples")

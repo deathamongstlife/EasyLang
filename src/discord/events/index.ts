@@ -18,6 +18,7 @@ import {
 } from 'discord.js';
 import { RuntimeValue, makeString, makeBoolean, makeObject, makeNumber, ObjectValue, makeArray } from '../../core/runtime/values';
 import { logger } from '../../utils/logger';
+import { routeComponentInteraction } from '../extensions/discord-persistent-components';
 
 /**
  * EventManager - Handles Discord event conversion and dispatching
@@ -69,6 +70,22 @@ export class EventManager {
     ...args: any[]
   ): Promise<void> {
     try {
+      // Special handling for interactionCreate to route persistent components
+      if (eventName === 'interactionCreate' && args.length > 0) {
+        const interaction = args[0];
+
+        // Try to route to persistent component handler first
+        if (interaction.isButton() || interaction.isStringSelectMenu()) {
+          const handled = await routeComponentInteraction(interaction);
+
+          // If handled by persistent component system, still dispatch to custom handlers
+          // but don't fail if there are none
+          if (handled && handlers.length === 0) {
+            return;
+          }
+        }
+      }
+
       // Convert Discord.js event arguments to RuntimeValues
       const runtimeArgs = this.convertEventArgs(eventName, args);
 

@@ -1,0 +1,287 @@
+# EasyLang Advanced Features Demo (Issues #16-23)
+# Demonstrates all 8 new extension features
+
+# Get token from command line
+let token = get_argument("TOKEN", "")
+
+if token == "" {
+    print("Usage: ezlang advanced_features_demo.ezlang TOKEN=your_bot_token")
+    return
+}
+
+# ==================== ISSUE #23: Gateway Intents Configuration ====================
+print("Configuring gateway intents...")
+
+# Configure intents for the bot
+let intents = ["GUILDS", "GUILD_MESSAGES", "GUILD_MEMBERS", "MESSAGE_CONTENT"]
+let intent_result = configure_intents(intents)
+print("Intents configured:", intent_result.intent_count)
+
+# Check if we have privileged intents
+let has_privileged = has_intent("MESSAGE_CONTENT")
+print("Has MESSAGE_CONTENT intent:", has_privileged.enabled)
+
+# List all available intents
+let all_intents = list_all_intents()
+print("Total available intents:", length(all_intents))
+
+# ==================== ISSUE #21: REST-Only Mode ====================
+print("\nDemonstrating REST-only mode...")
+
+# Create REST client (alternative to full bot connection)
+# let rest_client = create_rest_client(token)
+# let app_id = get_rest_application_id()
+# print("REST client created with app ID:", app_id)
+
+# Make a REST API call (example - commented out to avoid actual API calls)
+# let user_data = rest_get("/users/@me")
+# print("REST GET successful:", user_data.status)
+
+# ==================== START BOT ====================
+print("\nStarting bot...")
+bot_start(token)
+
+# ==================== ISSUE #19: Help Command System ====================
+print("Registering help system...")
+
+# Set help configuration
+set_help_prefix("!")
+set_help_color(0x5865F2)
+set_help_title("EasyLang Bot Commands")
+set_help_footer("Use !help <command> for detailed info")
+
+# Register commands with help metadata
+register_command("ping", "Check if bot is responsive", "Utility", "ping")
+register_command("cache", "View cache statistics", "Admin", "cache")
+register_command("perms", "Check permissions", "Utility", "perms <member>", ["permissions"], ["!perms @User"])
+register_command("validate", "Validate an embed", "Developer", "validate")
+
+# List all categories
+let categories = list_categories()
+print("Registered categories:", length(categories))
+
+# ==================== ISSUE #18: Command Decorators ====================
+print("Setting up command decorators...")
+
+# Create decorator checks
+let admin_check = require_permission("ADMINISTRATOR")
+let guild_check = guild_only()
+let owner_check = owner_only()
+
+# Apply checks to commands
+apply_checks("cache", admin_check)
+apply_checks("cache", guild_check)
+
+print("Command checks configured")
+
+# ==================== ISSUE #20: Type Converter System ====================
+print("Type converter system ready...")
+
+# Example: convert_to_member("@User", "guild_id")
+# Example: convert_to_channel("#general", "guild_id")
+# Example: convert_to_role("@Admin", "guild_id")
+
+# List available converters
+let converters = list_converters()
+print("Converters available:", converters)
+
+# ==================== ISSUE #16: Advanced Caching Configuration ====================
+print("Configuring cache...")
+
+# Set cache limits
+let cache_options = {
+    messages: 100,
+    users: 500,
+    members: 1000,
+    guilds: 10
+}
+configure_cache(cache_options)
+
+# Set automatic cache sweeping (every 5 minutes, items older than 10 minutes)
+set_cache_sweep(300, 600)
+
+# Get initial cache stats
+let stats = get_cache_stats()
+print("Initial cache - Guilds:", stats.guilds, "Users:", stats.users)
+
+# ==================== ISSUE #17: Permission Calculator ====================
+print("Permission calculator ready...")
+
+# Example usage (would need actual channel_id and member_id):
+# let perms = get_channel_permissions("channel_id", "member_id")
+# let has_manage = has_permissions("member_id", ["MANAGE_MESSAGES", "SEND_MESSAGES"])
+
+# Create permission bitfield
+let admin_perms = create_permission_bitfield(["ADMINISTRATOR"])
+print("Admin permission bitfield created:", admin_perms.bitfield)
+
+# ==================== ISSUE #22: Builder Validation ====================
+print("Validation system ready...")
+
+# Example: Validate an embed
+# let test_embed = create_embed()
+# let validation = validate_embed(test_embed)
+# if validation.valid == false {
+#     print("Embed validation errors:", validation.errors)
+# }
+
+# ==================== EVENT HANDLERS ====================
+
+# Handle message commands
+on_message(async (message) => {
+    if message.author.bot {
+        return
+    }
+
+    let content = message.content
+
+    if starts_with(content, "!") == false {
+        return
+    }
+
+    let parts = split(substr(content, 1, length(content)), " ")
+    let command = parts[0]
+
+    # ==================== HELP COMMAND ====================
+    if command == "help" {
+        if length(parts) > 1 {
+            # Get specific command help
+            let cmd_name = parts[1]
+            let cmd_help = get_command_help(cmd_name)
+            send_message(message.channel_id, cmd_help)
+        } else {
+            # Generate full help
+            let help_embed = generate_help()
+            send_message(message.channel_id, help_embed)
+        }
+        return
+    }
+
+    # ==================== CACHE STATS COMMAND ====================
+    if command == "cache" {
+        # Check permissions using decorators
+        let context = {
+            user_id: message.author.id,
+            guild_id: message.guild_id,
+            channel_id: message.channel_id
+        }
+
+        let check_result = run_checks("cache", context)
+
+        if check_result.passed == false {
+            send_message(message.channel_id, "Error: " + check_result.reason)
+            return
+        }
+
+        # Get and display cache stats
+        let cache_stats = get_cache_stats()
+
+        let response = "**Cache Statistics**\n"
+        response = response + "Guilds: " + str(cache_stats.guilds) + "\n"
+        response = response + "Users: " + str(cache_stats.users) + "\n"
+        response = response + "Channels: " + str(cache_stats.channels) + "\n"
+        response = response + "Messages: " + str(cache_stats.messages) + "\n"
+        response = response + "Members: " + str(cache_stats.members) + "\n"
+        response = response + "Memory (Heap): " + str(cache_stats.memory.heap_used_mb) + " MB"
+
+        send_message(message.channel_id, response)
+        return
+    }
+
+    # ==================== PERMISSIONS COMMAND ====================
+    if command == "perms" {
+        if length(parts) < 2 {
+            send_message(message.channel_id, "Usage: !perms <@user>")
+            return
+        }
+
+        let member_mention = parts[1]
+
+        # Use type converter to convert mention to member
+        let context = { guild_id: message.guild_id }
+        let member = auto_convert(member_mention, "member", context)
+
+        # Get permissions
+        let perms = get_channel_permissions(message.channel_id, member.user_id)
+
+        let response = "**Permissions for " + member.username + "**\n"
+        response = response + "Has Administrator: " + str(perms.has_administrator) + "\n"
+        response = response + "Total permissions: " + str(length(perms.permissions))
+
+        send_message(message.channel_id, response)
+        return
+    }
+
+    # ==================== VALIDATE COMMAND ====================
+    if command == "validate" {
+        # Create a test embed
+        let test_embed = create_embed()
+        set_embed_title(test_embed, "Test Embed")
+        set_embed_description(test_embed, "This is a test embed for validation")
+        add_embed_field(test_embed, "Field 1", "Value 1", true)
+
+        # Validate the embed
+        let validation = validate_embed(test_embed)
+
+        let response = "**Validation Results**\n"
+        response = response + "Valid: " + str(validation.valid) + "\n"
+        response = response + "Errors: " + str(validation.error_count) + "\n"
+        response = response + "Warnings: " + str(validation.warning_count)
+
+        if validation.error_count > 0 {
+            response = response + "\n\n**Errors:**\n"
+            for error in validation.errors {
+                response = response + "- " + error + "\n"
+            }
+        }
+
+        send_message(message.channel_id, response)
+        return
+    }
+
+    # ==================== PING COMMAND ====================
+    if command == "ping" {
+        send_message(message.channel_id, "Pong! Bot is online.")
+        return
+    }
+
+    # ==================== INTENTS COMMAND ====================
+    if command == "intents" {
+        let current_intents = get_intents()
+
+        let response = "**Current Gateway Intents**\n"
+        response = response + "Total intents: " + str(current_intents.count) + "\n"
+        response = response + "Has privileged: " + str(current_intents.has_privileged) + "\n"
+        response = response + "\nConfigured intents:\n"
+
+        for intent in current_intents.intents {
+            response = response + "- " + intent + "\n"
+        }
+
+        send_message(message.channel_id, response)
+        return
+    }
+})
+
+print("\n==============================================")
+print("Advanced Features Demo Bot is running!")
+print("All 8 features (Issues #16-23) are active")
+print("==============================================")
+print("")
+print("Available commands:")
+print("  !help - Show all commands")
+print("  !cache - View cache statistics (admin only)")
+print("  !perms @user - Check user permissions")
+print("  !validate - Validate a test embed")
+print("  !ping - Check bot status")
+print("  !intents - Show configured intents")
+print("")
+print("Features demonstrated:")
+print("  #16 - Advanced Caching")
+print("  #17 - Permission Calculator")
+print("  #18 - Command Decorators")
+print("  #19 - Help System")
+print("  #20 - Type Converters")
+print("  #21 - REST-Only Mode")
+print("  #22 - Builder Validation")
+print("  #23 - Gateway Intents")

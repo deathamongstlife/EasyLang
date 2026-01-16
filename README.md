@@ -33,7 +33,7 @@ EasyLang is a domain-specific programming language that makes creating Discord b
 - **Arrays & Objects**: Built-in collection types
 - **Error Handling**: Comprehensive error system with helpful messages
 
-### Discord Features (148+ Functions)
+### Discord Features (200+ Functions)
 - **Messaging**: Send, edit, delete, bulk delete, fetch messages
 - **Embeds**: Rich embed builder with all Discord features
 - **Components**: Buttons, select menus, modals, text inputs
@@ -55,6 +55,20 @@ EasyLang is a domain-specific programming language that makes creating Discord b
 - **Stickers & Emoji**: Custom emoji and sticker management
 - **Presence & Activities**: Bot status and rich presence
 - **Invites**: Create, fetch, and manage invites
+
+### 🆕 Advanced Features (New!)
+- **Collectors**: Message, reaction, and interaction collectors with filters and timeouts
+- **Sharding**: Scale bots beyond 2,500 servers with automatic shard management
+- **Module System**: Hot-reloadable modules for organized, maintainable code
+- **Persistent Components**: Buttons and menus that survive bot restarts
+- **Advanced Caching**: Fine-grained cache control and memory optimization
+- **Permission Calculator**: Channel-specific permission checking with overwrites
+- **Command Decorators**: Reusable permission checks and validation
+- **Help System**: Automatic help command generation
+- **Type Converters**: Automatic Discord object conversion from mentions/IDs
+- **REST-Only Mode**: Make API calls without WebSocket connection
+- **Builder Validation**: Automatic validation for embeds and components
+- **Intent Configuration**: User-controllable gateway intents
 
 ### Bridge System
 - **Python Integration**: Use any Python package (requests, numpy, pandas, etc.)
@@ -263,6 +277,55 @@ listen "eventName" (parameter) {
 - `message.guildId` - Server/Guild ID
 
 For complete Discord integration documentation, see [DISCORD.md](DISCORD.md).
+
+### Advanced Features
+
+**Collectors** - Wait for user responses with timeout and filtering:
+```ezlang
+// Create a message collector
+collector = create_message_collector(channel_id, {
+    time: 30000,  // 30 seconds
+    max: 5        // Stop after 5 messages
+})
+
+// Handle collected messages
+on_collect(collector, func(message) {
+    print("Got: " + message.content)
+})
+```
+
+**Sharding** - Scale beyond 2,500 servers:
+```ezlang
+manager = create_shard_manager("bot.ez", {
+    token: bot_token,
+    total_shards: "auto"
+})
+spawn_shards()
+```
+
+**Module System** - Organize code with hot-reloading:
+```ezlang
+// Load a module
+commands = load_module("modules/commands.ez")
+
+// Call exported functions
+commands.handle_ping(message)
+
+// Reload without restart
+reload_module("commands")
+```
+
+**Persistent Components** - Buttons that survive restarts:
+```ezlang
+button = create_persistent_button({
+    label: "Click Me",
+    style: "primary"
+}, func(interaction) {
+    reply(interaction, "Button clicked!")
+})
+```
+
+See documentation in `docs/` for complete API reference.
 
 ## Examples
 

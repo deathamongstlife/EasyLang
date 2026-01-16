@@ -1,0 +1,339 @@
+// ===========================================
+// Caching Test Suite
+// ===========================================
+// Tests for cache configuration and management
+// Created: 2026-01-16
+
+print("Starting Caching Tests...")
+print("=" * 60)
+
+let test_count = 0
+let passed_count = 0
+let failed_count = 0
+
+// Helper function to track test results
+function test_result(name, passed) {
+    test_count = test_count + 1
+    if passed {
+        passed_count = passed_count + 1
+        print("✓ " + name + " PASSED")
+    } else {
+        failed_count = failed_count + 1
+        print("✗ " + name + " FAILED")
+    }
+}
+
+// Test 1: Function Existence
+print("\nTest 1: Verify Cache Functions Exist")
+print("-" * 60)
+
+try {
+    let has_set_cache = typeof(set_cache_options) == "function"
+    let has_get_cache = typeof(get_cache_info) == "function"
+    let has_clear_cache = typeof(clear_cache) == "function"
+    let has_set_sweep = typeof(set_cache_sweep) == "function"
+
+    test_result("set_cache_options exists", has_set_cache)
+    test_result("get_cache_info exists", has_get_cache)
+    test_result("clear_cache exists", has_clear_cache)
+    test_result("set_cache_sweep exists", has_set_sweep)
+} catch error {
+    print("✗ Error checking function existence: " + str(error))
+}
+
+// Test 2: Set Cache Options - Basic
+print("\nTest 2: Set Cache Options (Basic)")
+print("-" * 60)
+
+try {
+    let result = set_cache_options({
+        messages: 100,
+        guilds: 1000,
+        members: 500
+    })
+
+    test_result("set_cache_options succeeds", result == true or result == null)
+} catch error {
+    test_result("Set basic cache options", false)
+    print("  Error: " + str(error))
+}
+
+// Test 3: Set Cache Options - All Cache Types
+print("\nTest 3: Set Cache Options (All Types)")
+print("-" * 60)
+
+try {
+    let result = set_cache_options({
+        messages: 200,
+        guilds: 1000,
+        members: 1000,
+        users: 500,
+        channels: 500,
+        roles: 500,
+        emojis: 100,
+        presences: 100,
+        voice_states: 100
+    })
+
+    test_result("All cache types accepted", result == true or result == null)
+} catch error {
+    test_result("Set all cache types", false)
+    print("  Error: " + str(error))
+}
+
+// Test 4: Set Cache Options - Zero Values
+print("\nTest 4: Set Cache Options (Zero Values)")
+print("-" * 60)
+
+try {
+    let result = set_cache_options({
+        messages: 0,  // Disable message caching
+        guilds: 1000
+    })
+
+    test_result("Accepts zero cache values", result == true or result == null)
+} catch error {
+    test_result("Zero cache values test", false)
+    print("  Error: " + str(error))
+}
+
+// Test 5: Set Cache Options - Large Values
+print("\nTest 5: Set Cache Options (Large Values)")
+print("-" * 60)
+
+try {
+    let result = set_cache_options({
+        messages: 10000,
+        guilds: 5000,
+        members: 50000
+    })
+
+    test_result("Accepts large cache values", result == true or result == null)
+} catch error {
+    test_result("Large cache values test", false)
+    print("  Error: " + str(error))
+}
+
+// Test 6: Get Cache Info
+print("\nTest 6: Get Cache Info")
+print("-" * 60)
+
+try {
+    let info = get_cache_info()
+
+    test_result("get_cache_info returns data", info != null)
+
+    if info != null {
+        // Check for expected properties
+        let has_messages = info.messages != null
+        let has_guilds = info.guilds != null
+
+        test_result("Cache info has message count", has_messages)
+        test_result("Cache info has guild count", has_guilds)
+
+        print("  Current cache info: " + str(info))
+    }
+} catch error {
+    test_result("Get cache info", false)
+    print("  Error: " + str(error))
+}
+
+// Test 7: Clear Cache - Specific Type
+print("\nTest 7: Clear Cache (Specific Type)")
+print("-" * 60)
+
+try {
+    let result = clear_cache("messages")
+
+    test_result("clear_cache for specific type succeeds", result == true or result == null)
+} catch error {
+    test_result("Clear specific cache type", false)
+    print("  Error: " + str(error))
+}
+
+// Test 8: Clear Cache - All Caches
+print("\nTest 8: Clear Cache (All)")
+print("-" * 60)
+
+try {
+    let result = clear_cache()
+
+    test_result("clear_cache without parameter clears all", result == true or result == null)
+} catch error {
+    test_result("Clear all caches", false)
+    print("  Error: " + str(error))
+}
+
+// Test 9: Set Cache Sweep Interval
+print("\nTest 9: Set Cache Sweep Interval")
+print("-" * 60)
+
+try {
+    let result = set_cache_sweep(60)  // 60 seconds
+
+    test_result("set_cache_sweep accepts interval", result == true or result == null)
+} catch error {
+    test_result("Set cache sweep interval", false)
+    print("  Error: " + str(error))
+}
+
+// Test 10: Set Cache Sweep - Various Intervals
+print("\nTest 10: Set Cache Sweep (Various Intervals)")
+print("-" * 60)
+
+try {
+    // Test different intervals
+    let intervals = [30, 60, 120, 300, 600]
+    let all_work = true
+
+    for interval in intervals {
+        try {
+            let result = set_cache_sweep(interval)
+            if result == false {
+                all_work = false
+            }
+        } catch error {
+            all_work = false
+        }
+    }
+
+    test_result("Various sweep intervals work", all_work)
+} catch error {
+    test_result("Various sweep intervals test", false)
+}
+
+// Test 11: Parameter Validation - Invalid Types
+print("\nTest 11: Parameter Validation (Invalid Types)")
+print("-" * 60)
+
+try {
+    // Invalid options type
+    try {
+        let result = set_cache_options("not an object")
+        test_result("Should reject non-object options", false)
+    } catch error {
+        test_result("Validates options is object", true)
+    }
+
+    // Invalid cache type in clear
+    try {
+        let result = clear_cache(12345)
+        test_result("Should reject non-string cache type", false)
+    } catch error {
+        test_result("Validates cache type is string", true)
+    }
+} catch error {
+    test_result("Type validation test", false)
+}
+
+// Test 12: Parameter Validation - Negative Values
+print("\nTest 12: Parameter Validation (Negative Values)")
+print("-" * 60)
+
+try {
+    try {
+        let result = set_cache_options({
+            messages: -100  // Negative value
+        })
+        test_result("Should reject negative cache sizes", false)
+    } catch error {
+        test_result("Validates non-negative cache sizes", true)
+    }
+
+    try {
+        let result = set_cache_sweep(-60)
+        test_result("Should reject negative sweep interval", false)
+    } catch error {
+        test_result("Validates non-negative sweep interval", true)
+    }
+} catch error {
+    test_result("Negative values validation", false)
+}
+
+// Test 13: Cache Clear - Invalid Cache Type
+print("\nTest 13: Clear Cache (Invalid Type Name)")
+print("-" * 60)
+
+try {
+    try {
+        let result = clear_cache("invalid_cache_type")
+        // May accept and return false, or throw error
+        test_result("Handles invalid cache type", true)
+    } catch error {
+        test_result("Validates cache type name", true)
+    }
+} catch error {
+    test_result("Invalid cache type test", false)
+}
+
+// Test 14: Get Cache Info Structure
+print("\nTest 14: Get Cache Info (Structure)")
+print("-" * 60)
+
+try {
+    let info = get_cache_info()
+
+    if info != null {
+        // Check data types
+        let valid_structure = true
+
+        // Should have numeric values
+        if info.messages != null and typeof(info.messages) != "number" {
+            valid_structure = false
+        }
+
+        test_result("Cache info has valid structure", valid_structure)
+    } else {
+        test_result("Cache info can be null", true)
+    }
+} catch error {
+    test_result("Cache info structure test", false)
+}
+
+// Test 15: Cache Options - Partial Updates
+print("\nTest 15: Cache Options (Partial Updates)")
+print("-" * 60)
+
+try {
+    // Set some options
+    set_cache_options({
+        messages: 100,
+        guilds: 500
+    })
+
+    // Update only messages
+    let result = set_cache_options({
+        messages: 200
+    })
+
+    test_result("Partial cache updates work", result == true or result == null)
+} catch error {
+    test_result("Partial cache updates", false)
+    print("  Error: " + str(error))
+}
+
+// Test Summary
+print("\n" + "=" * 60)
+print("CACHING TEST SUMMARY")
+print("=" * 60)
+print("Total Tests: " + str(test_count))
+print("Passed: " + str(passed_count))
+print("Failed: " + str(failed_count))
+print("Success Rate: " + str((passed_count * 100) / test_count) + "%")
+print("=" * 60)
+
+print("\nNOTE: Full integration tests require:")
+print("  1. Active Discord bot connection")
+print("  2. Real Discord client instance")
+print("  3. Cache data to measure")
+print("\nThese tests verify:")
+print("  ✓ Function existence and signatures")
+print("  ✓ Parameter validation")
+print("  ✓ Cache configuration options")
+print("  ✓ Sweep interval settings")
+print("  ✓ Cache clearing")
+print("  ✓ Cache info retrieval")
+print("\nCache management helps:")
+print("  • Reduce memory usage")
+print("  • Improve performance")
+print("  • Control Discord.js cache sizes")

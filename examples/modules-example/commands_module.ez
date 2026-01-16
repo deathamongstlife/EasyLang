@@ -1,0 +1,47 @@
+# @module CommandsModule
+
+# Example Discord command module that can be hot-reloaded
+
+# Exported command: Dice roll
+export_handle_dice(message) {
+    roll = random(1, 6)
+    reply(message, "🎲 You rolled: " + str(roll))
+}
+
+# Exported command: Coin flip
+export_handle_flip(message) {
+    result = random(0, 1)
+    coin = "Heads"
+    if result == 1 {
+        coin = "Tails"
+    }
+    reply(message, "🪙 Coin flip: " + coin)
+}
+
+# Exported command: Greet user
+export_handle_greet(message) {
+    author = get_message_author(message)
+    username = get_user_username(author)
+    reply(message, "Hello " + username + "! 👋")
+}
+
+# Exported command: Server info
+export_handle_serverinfo(message) {
+    guild = get_message_guild(message)
+    name = get_guild_name(guild)
+    member_count = get_guild_member_count(guild)
+
+    info = "📊 **Server Info**\n"
+    info = info + "Name: " + name + "\n"
+    info = info + "Members: " + str(member_count)
+
+    reply(message, info)
+}
+
+# Exported utility: Check if user is admin
+export_is_admin(message) {
+    member = get_message_member(message)
+    return member_has_permission(member, "Administrator")
+}
+
+print("CommandsModule loaded - Commands ready!")

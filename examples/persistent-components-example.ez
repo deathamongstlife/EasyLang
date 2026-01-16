@@ -1,0 +1,272 @@
+// Persistent Components Example for EasyLang
+// Demonstrates buttons and select menus that survive bot restarts
+
+// Get Discord token from environment
+const token = get_argument("TOKEN", "")
+
+if token == "" {
+    print("Error: Please provide Discord token: TOKEN=your_token_here")
+    return
+}
+
+// Define persistent button handlers
+// IMPORTANT: Handlers must be named functions (not anonymous) to persist
+
+function handle_persistent_click(interaction) {
+    print("Persistent button clicked!")
+    print("User ID: " + interaction.user_id)
+    print("Custom ID: " + interaction.custom_id)
+
+    // Check if state was attached
+    if interaction.state {
+        print("State attached:")
+        print("  Message: " + interaction.state.message)
+        print("  Counter: " + str(interaction.state.counter))
+    }
+
+    // Reply to interaction
+    const raw = interaction.__raw.__rawValue
+    raw.reply({
+        content: "You clicked the persistent button! This works even after bot restarts!",
+        ephemeral: true
+    })
+}
+
+function handle_color_selection(interaction) {
+    print("Color selected!")
+    print("Selected values: " + str(interaction.values))
+
+    const raw = interaction.__raw.__rawValue
+    const selected = interaction.values.elements[0].value
+
+    raw.reply({
+        content: "You selected color: " + selected + "! This persists across restarts!",
+        ephemeral: true
+    })
+}
+
+function handle_role_selection(interaction) {
+    print("Role selection menu used")
+
+    const raw = interaction.__raw.__rawValue
+    const count = length(interaction.values.elements)
+
+    raw.reply({
+        content: "You selected " + str(count) + " role(s). Persistent components working!",
+        ephemeral: true
+    })
+}
+
+// Register command handler
+on_message_create(function(message) {
+    // Ignore bot messages
+    if message.author.bot {
+        return
+    }
+
+    const content = message.content
+    const raw = message.__raw.__rawValue
+
+    // !persistent - Create persistent button demo
+    if content == "!persistent" {
+        // Create persistent button with state
+        const button = create_persistent_button({
+            label: "Click Me (Persistent)",
+            style: "primary",
+            emoji: "✨",
+            state: {
+                message: "Hello from state!",
+                counter: 42
+            }
+        }, handle_persistent_click)
+
+        // Create action row
+        const buttonRaw = button.__raw.__rawValue
+        const row = {
+            type: 1,
+            components: [buttonRaw]
+        }
+
+        raw.reply({
+            content: "**Persistent Button Demo**\n\nThis button will work even if the bot restarts!\nThe handler and state are stored persistently.",
+            components: [row]
+        })
+    }
+
+    // !persistent-menu - Create persistent select menu
+    if content == "!persistent-menu" {
+        // Create persistent select menu
+        const menu = create_persistent_select_menu({
+            placeholder: "Choose your favorite color",
+            min_values: 1,
+            max_values: 1,
+            options: [
+                {
+                    label: "Red",
+                    value: "red",
+                    description: "The color of passion",
+                    emoji: "🔴"
+                },
+                {
+                    label: "Blue",
+                    value: "blue",
+                    description: "The color of calm",
+                    emoji: "🔵"
+                },
+                {
+                    label: "Green",
+                    value: "green",
+                    description: "The color of nature",
+                    emoji: "🟢"
+                }
+            ],
+            state: {
+                context: "color_picker",
+                version: 1
+            }
+        }, handle_color_selection)
+
+        const menuRaw = menu.__raw.__rawValue
+        const row = {
+            type: 1,
+            components: [menuRaw]
+        }
+
+        raw.reply({
+            content: "**Persistent Select Menu Demo**\n\nChoose a color! This menu persists across bot restarts.",
+            components: [row]
+        })
+    }
+
+    // !persistent-multi - Create multi-select persistent menu
+    if content == "!persistent-multi" {
+        const menu = create_persistent_select_menu({
+            placeholder: "Select your roles (1-3)",
+            min_values: 1,
+            max_values: 3,
+            options: [
+                { label: "Developer", value: "dev", emoji: "💻" },
+                { label: "Designer", value: "design", emoji: "🎨" },
+                { label: "Manager", value: "manager", emoji: "📊" },
+                { label: "Tester", value: "tester", emoji: "🧪" },
+                { label: "Writer", value: "writer", emoji: "✍️" }
+            ]
+        }, handle_role_selection)
+
+        const menuRaw = menu.__raw.__rawValue
+        const row = {
+            type: 1,
+            components: [menuRaw]
+        }
+
+        raw.reply({
+            content: "**Multi-Select Persistent Menu**\n\nSelect 1-3 roles. Works after restarts!",
+            components: [row]
+        })
+    }
+
+    // !persistent-combined - Show buttons + menu together
+    if content == "!persistent-combined" {
+        // Create button
+        const button1 = create_persistent_button({
+            label: "Primary",
+            style: "primary"
+        }, handle_persistent_click)
+
+        const button2 = create_persistent_button({
+            label: "Success",
+            style: "success",
+            emoji: "✅"
+        }, handle_persistent_click)
+
+        const button3 = create_persistent_button({
+            label: "Danger",
+            style: "danger",
+            emoji: "❌"
+        }, handle_persistent_click)
+
+        // Create menu
+        const menu = create_persistent_select_menu({
+            placeholder: "Choose an option",
+            options: [
+                { label: "Option A", value: "a", emoji: "🅰️" },
+                { label: "Option B", value: "b", emoji: "🅱️" },
+                { label: "Option C", value: "c", emoji: "🔤" }
+            ]
+        }, handle_color_selection)
+
+        const row1 = {
+            type: 1,
+            components: [
+                button1.__raw.__rawValue,
+                button2.__raw.__rawValue,
+                button3.__raw.__rawValue
+            ]
+        }
+
+        const row2 = {
+            type: 1,
+            components: [menu.__raw.__rawValue]
+        }
+
+        raw.reply({
+            content: "**Combined Persistent Components**\n\nAll these components persist across bot restarts!",
+            components: [row1, row2]
+        })
+    }
+
+    // !persistent-stats - Show component statistics
+    if content == "!persistent-stats" {
+        const handlers = list_component_handlers()
+        const count = length(handlers.elements)
+
+        let list = ""
+        let i = 0
+        while i < count {
+            const customId = handlers.elements[i].value
+            list = list + "\n• " + customId
+            i = i + 1
+        }
+
+        raw.reply({
+            content: "**Persistent Component Statistics**\n\n" +
+                     "Total registered handlers: " + str(count) + list
+        })
+    }
+
+    // !persistent-help - Show help
+    if content == "!persistent-help" || content == "!help" {
+        raw.reply({
+            content: "**Persistent Components Commands**\n\n" +
+                     "`!persistent` - Demo persistent button with state\n" +
+                     "`!persistent-menu` - Demo persistent select menu\n" +
+                     "`!persistent-multi` - Demo multi-select menu\n" +
+                     "`!persistent-combined` - Demo buttons + menu\n" +
+                     "`!persistent-stats` - Show registered handlers\n" +
+                     "`!persistent-help` - Show this help\n\n" +
+                     "**Key Features:**\n" +
+                     "✅ Components work after bot restarts\n" +
+                     "✅ Handlers stored persistently\n" +
+                     "✅ State can be attached to components\n" +
+                     "✅ Auto-cleanup after 15 minutes\n" +
+                     "✅ Supports buttons and select menus"
+        })
+    }
+})
+
+// Restore component handlers on startup
+print("Restoring persistent component handlers...")
+const restored = restore_component_handlers()
+print("Restored " + str(restored) + " component handler(s)")
+
+// Auto-save handlers every 60 seconds
+function auto_save() {
+    save_component_handlers()
+    print("Auto-saved component handlers")
+}
+
+// Note: You would need a task/timer system to call auto_save periodically
+// For now, handlers are saved when created/updated
+
+print("Starting bot with persistent components support...")
+bot_start(token)

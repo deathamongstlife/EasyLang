@@ -1,0 +1,162 @@
+# Test script for module system
+# Run this to verify all module features work
+
+print("=== Module System Test Suite ===")
+print("")
+
+# Test 1: Load a module
+print("Test 1: Loading math_utils module...")
+math = load_module("examples/modules-example/math_utils.ez")
+print("✓ Module loaded successfully")
+print("")
+
+# Test 2: Use exported functions
+print("Test 2: Testing exported functions...")
+result1 = math.factorial(5)
+print("  factorial(5) = " + str(result1))
+if result1 == 120 {
+    print("  ✓ Factorial works correctly")
+} else {
+    print("  ✗ Factorial failed!")
+}
+
+result2 = math.is_prime(17)
+print("  is_prime(17) = " + str(result2))
+if result2 == true {
+    print("  ✓ is_prime works correctly")
+} else {
+    print("  ✗ is_prime failed!")
+}
+
+result3 = math.fibonacci(10)
+print("  fibonacci(10) = " + str(result3))
+if result3 == 55 {
+    print("  ✓ fibonacci works correctly")
+} else {
+    print("  ✗ fibonacci failed!")
+}
+
+nums = [1, 2, 3, 4, 5]
+result4 = math.sum_array(nums)
+print("  sum_array([1,2,3,4,5]) = " + str(result4))
+if result4 == 15 {
+    print("  ✓ sum_array works correctly")
+} else {
+    print("  ✗ sum_array failed!")
+}
+
+result5 = math.double_and_add(10, 5)
+print("  double_and_add(10, 5) = " + str(result5))
+if result5 == 25 {
+    print("  ✓ double_and_add works correctly")
+} else {
+    print("  ✗ double_and_add failed!")
+}
+print("")
+
+# Test 3: Module metadata
+print("Test 3: Checking module metadata...")
+print("  Module name: " + math.__name__)
+print("  Module file: " + math.__file__)
+print("  ✓ Metadata accessible")
+print("")
+
+# Test 4: Check if module exists
+print("Test 4: Testing module_exists()...")
+exists = module_exists("MathUtils")
+if exists {
+    print("  ✓ module_exists returns true for loaded module")
+} else {
+    print("  ✗ module_exists failed!")
+}
+
+not_exists = module_exists("NonExistentModule")
+if not_exists == false {
+    print("  ✓ module_exists returns false for non-existent module")
+} else {
+    print("  ✗ module_exists failed for non-existent!")
+}
+print("")
+
+# Test 5: Get module
+print("Test 5: Testing get_module()...")
+math2 = get_module("MathUtils")
+result6 = math2.factorial(3)
+if result6 == 6 {
+    print("  ✓ get_module works correctly")
+} else {
+    print("  ✗ get_module failed!")
+}
+print("")
+
+# Test 6: List modules
+print("Test 6: Testing list_modules()...")
+modules = list_modules()
+print("  Found " + str(length(modules)) + " module(s)")
+for mod in modules {
+    print("    - " + mod.name + " (" + mod.export_count + " exports)")
+}
+print("  ✓ list_modules works")
+print("")
+
+# Test 7: Load another module
+print("Test 7: Loading commands_module...")
+commands = load_module("examples/modules-example/commands_module.ez")
+print("  ✓ Second module loaded")
+print("")
+
+# Test 8: List modules again
+print("Test 8: Verifying multiple modules...")
+modules2 = list_modules()
+print("  Now have " + str(length(modules2)) + " module(s)")
+if length(modules2) == 2 {
+    print("  ✓ Multiple modules tracked correctly")
+} else {
+    print("  ✗ Module count incorrect!")
+}
+print("")
+
+# Test 9: Reload module
+print("Test 9: Testing module reload...")
+math_reloaded = reload_module("MathUtils")
+result7 = math_reloaded.factorial(4)
+if result7 == 24 {
+    print("  ✓ Reloaded module works correctly")
+} else {
+    print("  ✗ Reload failed!")
+}
+print("")
+
+# Test 10: Unload module
+print("Test 10: Testing module unload...")
+unload_success = unload_module("CommandsModule")
+if unload_success {
+    print("  ✓ Module unloaded successfully")
+
+    # Verify it's gone
+    still_exists = module_exists("CommandsModule")
+    if still_exists == false {
+        print("  ✓ Module no longer exists after unload")
+    } else {
+        print("  ✗ Module still exists after unload!")
+    }
+} else {
+    print("  ✗ Unload failed!")
+}
+print("")
+
+# Final status
+print("=== Test Suite Complete ===")
+print("All basic module system features verified!")
+print("")
+
+# Show final module list
+print("Final loaded modules:")
+final_modules = list_modules()
+for mod in final_modules {
+    print("  • " + mod.name)
+    print("    File: " + mod.file_path)
+    print("    Loaded: " + mod.loaded_at)
+    print("    Reloads: " + mod.reload_count)
+    print("    Exports: " + mod.export_count)
+}

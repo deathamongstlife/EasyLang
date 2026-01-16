@@ -1,0 +1,316 @@
+// ===========================================
+// Discord Sharding Example
+// ===========================================
+// This example demonstrates how to use Discord sharding
+// for bots serving 2,500+ servers
+
+// ===========================================
+// EXAMPLE 1: Creating and Spawning Shards
+// ===========================================
+
+func example_basic_sharding() {
+  print("=== Basic Sharding Example ===")
+
+  // Create shard manager with auto shard count
+  let manager = create_shard_manager("bot.js", {
+    token: "YOUR_BOT_TOKEN",
+    total_shards: "auto",  // Discord will calculate optimal shard count
+    respawn: true          // Auto-respawn crashed shards
+  })
+
+  print("Shard manager created:")
+  print(manager)
+
+  // Spawn all shards
+  let shards = spawn_shards()
+  print("Spawned " + str(length(shards)) + " shard(s)")
+
+  // Wait for shards to be ready
+  wait(5)
+
+  // Get stats for all shards
+  let stats = get_shard_stats()
+  print("Shard statistics:")
+  for i in range(length(stats)) {
+    let shard_stat = stats[i]
+    print("Shard " + str(shard_stat.shard_id) + ":")
+    print("  Guilds: " + str(shard_stat.guild_count))
+    print("  Users: " + str(shard_stat.user_count))
+    print("  Ping: " + str(shard_stat.ping) + "ms")
+    print("  Memory: " + str(shard_stat.memory_mb) + "MB")
+    print("  Ready: " + str(shard_stat.ready))
+  }
+}
+
+// ===========================================
+// EXAMPLE 2: Custom Shard Count
+// ===========================================
+
+func example_custom_shard_count() {
+  print("=== Custom Shard Count Example ===")
+
+  // Create shard manager with specific shard count
+  let manager = create_shard_manager("bot.js", {
+    token: "YOUR_BOT_TOKEN",
+    total_shards: 4,  // Spawn exactly 4 shards
+    respawn: true
+  })
+
+  print("Shard manager created with 4 shards")
+
+  // Spawn all shards
+  let shards = spawn_shards()
+  print("Spawned " + str(length(shards)) + " shard(s)")
+}
+
+// ===========================================
+// EXAMPLE 3: Specific Shard List
+// ===========================================
+
+func example_shard_list() {
+  print("=== Shard List Example ===")
+
+  // Only spawn shards 0, 1, and 2 (useful for distributed hosting)
+  let manager = create_shard_manager("bot.js", {
+    token: "YOUR_BOT_TOKEN",
+    total_shards: 8,           // Total shards across all instances
+    shard_list: [0, 1, 2],    // Only spawn these specific shards
+    respawn: true
+  })
+
+  print("Shard manager created for shards 0, 1, 2")
+
+  let shards = spawn_shards()
+  print("Spawned " + str(length(shards)) + " shard(s)")
+}
+
+// ===========================================
+// EXAMPLE 4: Get Shard Info (from bot process)
+// ===========================================
+
+func example_get_shard_info() {
+  print("=== Get Shard Info Example ===")
+
+  // This function is called from within a shard process
+  // Not from the shard manager
+  let info = get_shard_info()
+
+  if info.sharded {
+    print("Running in sharded mode")
+    print("Shard ID: " + str(info.shard_id))
+    print("Total Shards: " + str(info.total_shards))
+    print("Guilds on this shard: " + str(info.guild_count))
+  } else {
+    print("Not running in sharded mode")
+    print("Total Guilds: " + str(info.guild_count))
+  }
+}
+
+// ===========================================
+// EXAMPLE 5: Broadcast Eval
+// ===========================================
+
+func example_broadcast_eval() {
+  print("=== Broadcast Eval Example ===")
+
+  // Execute code on all shards to get guild counts
+  let guild_counts = broadcast_eval("return client.guilds.cache.size")
+
+  print("Guild count per shard:")
+  for i in range(length(guild_counts)) {
+    print("Shard " + str(i) + ": " + str(guild_counts[i]) + " guilds")
+  }
+
+  // Calculate total guilds across all shards
+  let total_guilds = 0
+  for i in range(length(guild_counts)) {
+    total_guilds = total_guilds + guild_counts[i]
+  }
+  print("Total guilds across all shards: " + str(total_guilds))
+
+  // Get bot username from all shards (should be the same)
+  let usernames = broadcast_eval("return client.user.username")
+  print("Bot username: " + usernames[0])
+}
+
+// ===========================================
+// EXAMPLE 6: Fetch Client Values
+// ===========================================
+
+func example_fetch_client_values() {
+  print("=== Fetch Client Values Example ===")
+
+  // Fetch guild counts from all shards
+  let guild_counts = fetch_client_values("guilds.cache.size")
+  print("Guild counts: " + str(guild_counts))
+
+  // Fetch user counts from all shards
+  let user_counts = fetch_client_values("users.cache.size")
+  print("User counts: " + str(user_counts))
+
+  // Fetch ping from all shards
+  let pings = fetch_client_values("ws.ping")
+  print("Pings: " + str(pings))
+
+  // Calculate average ping
+  let total_ping = 0
+  for i in range(length(pings)) {
+    total_ping = total_ping + pings[i]
+  }
+  let avg_ping = total_ping / length(pings)
+  print("Average ping: " + str(avg_ping) + "ms")
+}
+
+// ===========================================
+// EXAMPLE 7: Respawn Shard
+// ===========================================
+
+func example_respawn_shard() {
+  print("=== Respawn Shard Example ===")
+
+  // Respawn shard 0 (useful if it crashes or needs restart)
+  let success = respawn_shard(0)
+
+  if success {
+    print("Shard 0 respawned successfully")
+  } else {
+    print("Failed to respawn shard 0")
+  }
+
+  // Wait for shard to be ready
+  wait(5)
+
+  // Check shard status
+  let stats = get_shard_stats()
+  print("Shard 0 status:")
+  print(stats[0])
+}
+
+// ===========================================
+// EXAMPLE 8: Complete Sharding Setup
+// ===========================================
+
+func example_complete_setup() {
+  print("=== Complete Sharding Setup ===")
+
+  // 1. Create shard manager
+  let manager = create_shard_manager("bot.js", {
+    token: get_argument("TOKEN", "YOUR_BOT_TOKEN"),
+    total_shards: "auto",
+    respawn: true
+  })
+
+  print("Shard manager created")
+
+  // 2. Spawn shards
+  let shards = spawn_shards()
+  print("Spawned " + str(length(shards)) + " shard(s)")
+
+  // 3. Wait for shards to be ready
+  print("Waiting for shards to be ready...")
+  wait(10)
+
+  // 4. Display shard statistics
+  print("\nShard Statistics:")
+  let stats = get_shard_stats()
+  let total_guilds = 0
+  let total_users = 0
+
+  for i in range(length(stats)) {
+    let stat = stats[i]
+    print("\nShard " + str(stat.shard_id) + ":")
+    print("  Ready: " + str(stat.ready))
+    print("  Guilds: " + str(stat.guild_count))
+    print("  Users: " + str(stat.user_count))
+    print("  Ping: " + str(stat.ping) + "ms")
+    print("  Memory: " + str(stat.memory_mb) + "MB")
+
+    total_guilds = total_guilds + stat.guild_count
+    total_users = total_users + stat.user_count
+  }
+
+  print("\nTotal Statistics:")
+  print("  Total Guilds: " + str(total_guilds))
+  print("  Total Users: " + str(total_users))
+  print("  Shards: " + str(length(stats)))
+
+  // 5. Periodic stats monitoring
+  print("\nStarting periodic stats monitoring...")
+  for i in range(12) {  // Monitor for 2 minutes (12 * 10 seconds)
+    wait(10)
+
+    let current_stats = get_shard_stats()
+    let current_guilds = 0
+    for j in range(length(current_stats)) {
+      current_guilds = current_guilds + current_stats[j].guild_count
+    }
+
+    print("Update " + str(i + 1) + ": " + str(current_guilds) + " total guilds")
+  }
+}
+
+// ===========================================
+// EXAMPLE 9: Bot File for Sharding
+// ===========================================
+// This is what your bot.js file should look like
+// when using sharding
+
+/*
+// bot.js - The bot file that runs on each shard
+on_ready(func() {
+  // Get shard info
+  let info = get_shard_info()
+
+  print("Bot ready on shard " + str(info.shard_id))
+  print("This shard handles " + str(info.guild_count) + " guilds")
+
+  // Set status with shard info
+  set_status("online")
+  set_activity("watching", "Shard " + str(info.shard_id) + "/" + str(info.total_shards))
+})
+
+on_message(func(message) {
+  if message.content == "!shardinfo" {
+    let info = get_shard_info()
+
+    send_message(message.channel_id,
+      "This message was handled by shard " + str(info.shard_id) +
+      " out of " + str(info.total_shards) + " total shards. " +
+      "This shard serves " + str(info.guild_count) + " guilds.")
+  }
+
+  if message.content == "!totalstats" {
+    // This command would need to be handled by the shard manager
+    // to aggregate stats across all shards
+    send_message(message.channel_id,
+      "This command requires shard manager access. " +
+      "Please use the shard manager process to get total stats.")
+  }
+})
+
+// Start the bot
+let token = get_argument("TOKEN", "YOUR_BOT_TOKEN")
+bot_start(token)
+*/
+
+// ===========================================
+// Run examples (comment out the ones you don't want to run)
+// ===========================================
+
+// Basic examples - choose one:
+// example_basic_sharding()
+// example_custom_shard_count()
+// example_shard_list()
+
+// From within a shard process:
+// example_get_shard_info()
+
+// Shard manager operations:
+// example_broadcast_eval()
+// example_fetch_client_values()
+// example_respawn_shard()
+
+// Complete setup:
+// example_complete_setup()
+
+print("Sharding examples loaded. Uncomment the examples you want to run.")

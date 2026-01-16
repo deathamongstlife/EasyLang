@@ -1,0 +1,57 @@
+# @module MathUtils
+
+# Example module showing math utility functions
+
+# Exported function: Calculate factorial
+export_factorial(n) {
+    if n <= 1 {
+        return 1
+    }
+    return n * export_factorial(n - 1)
+}
+
+# Exported function: Check if number is prime
+export_is_prime(num) {
+    if num < 2 {
+        return false
+    }
+
+    i = 2
+    while i * i <= num {
+        if num % i == 0 {
+            return false
+        }
+        i = i + 1
+    }
+
+    return true
+}
+
+# Exported function: Calculate Fibonacci number
+export_fibonacci(n) {
+    if n <= 1 {
+        return n
+    }
+    return export_fibonacci(n - 1) + export_fibonacci(n - 2)
+}
+
+# Exported function: Sum an array of numbers
+export_sum_array(arr) {
+    total = 0
+    for num in arr {
+        total = total + num
+    }
+    return total
+}
+
+# Private helper function (not exported)
+helper_double(x) {
+    return x * 2
+}
+
+# Exported function using helper
+export_double_and_add(a, b) {
+    return helper_double(a) + b
+}
+
+print("MathUtils module loaded")

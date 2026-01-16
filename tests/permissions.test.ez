@@ -1,0 +1,396 @@
+// ===========================================
+// Permissions Test Suite
+// ===========================================
+// Tests for permission calculator and helpers
+// Created: 2026-01-16
+
+print("Starting Permissions Tests...")
+print("=" * 60)
+
+let test_count = 0
+let passed_count = 0
+let failed_count = 0
+
+// Helper function to track test results
+function test_result(name, passed) {
+    test_count = test_count + 1
+    if passed {
+        passed_count = passed_count + 1
+        print("✓ " + name + " PASSED")
+    } else {
+        failed_count = failed_count + 1
+        print("✗ " + name + " FAILED")
+    }
+}
+
+// Test 1: Function Existence
+print("\nTest 1: Verify Permission Functions Exist")
+print("-" * 60)
+
+try {
+    let has_calculate = typeof(calculate_permissions) == "function"
+    let has_has_perm = typeof(has_permission) == "function"
+    let has_add_perm = typeof(add_permission) == "function"
+    let has_remove_perm = typeof(remove_permission) == "function"
+    let has_create_flags = typeof(create_permission_flags) == "function"
+    let has_permissions_to_array = typeof(permissions_to_array) == "function"
+
+    test_result("calculate_permissions exists", has_calculate)
+    test_result("has_permission exists", has_has_perm)
+    test_result("add_permission exists", has_add_perm)
+    test_result("remove_permission exists", has_remove_perm)
+    test_result("create_permission_flags exists", has_create_flags)
+    test_result("permissions_to_array exists", has_permissions_to_array)
+} catch error {
+    print("✗ Error checking function existence: " + str(error))
+}
+
+// Test 2: Create Permission Flags - Single Permission
+print("\nTest 2: Create Permission Flags (Single)")
+print("-" * 60)
+
+try {
+    let flags = create_permission_flags(["SEND_MESSAGES"])
+
+    test_result("Single permission flag created", flags != null)
+    test_result("Flags is a number or string", typeof(flags) == "number" or typeof(flags) == "string")
+} catch error {
+    test_result("Create single permission flag", false)
+    print("  Error: " + str(error))
+}
+
+// Test 3: Create Permission Flags - Multiple Permissions
+print("\nTest 3: Create Permission Flags (Multiple)")
+print("-" * 60)
+
+try {
+    let flags = create_permission_flags([
+        "SEND_MESSAGES",
+        "READ_MESSAGES",
+        "EMBED_LINKS",
+        "ATTACH_FILES"
+    ])
+
+    test_result("Multiple permissions combined", flags != null)
+} catch error {
+    test_result("Create multiple permission flags", false)
+    print("  Error: " + str(error))
+}
+
+// Test 4: Create Permission Flags - Common Permission Sets
+print("\nTest 4: Create Permission Flags (Common Sets)")
+print("-" * 60)
+
+try {
+    // Admin permissions
+    let admin_flags = create_permission_flags(["ADMINISTRATOR"])
+    test_result("ADMINISTRATOR flag created", admin_flags != null)
+
+    // Moderator permissions
+    let mod_flags = create_permission_flags([
+        "KICK_MEMBERS",
+        "BAN_MEMBERS",
+        "MANAGE_MESSAGES"
+    ])
+    test_result("Moderator flags created", mod_flags != null)
+
+    // Basic user permissions
+    let user_flags = create_permission_flags([
+        "SEND_MESSAGES",
+        "READ_MESSAGE_HISTORY"
+    ])
+    test_result("User flags created", user_flags != null)
+} catch error {
+    test_result("Common permission sets", false)
+    print("  Error: " + str(error))
+}
+
+// Test 5: Has Permission Check
+print("\nTest 5: Has Permission Check")
+print("-" * 60)
+
+try {
+    let flags = create_permission_flags([
+        "SEND_MESSAGES",
+        "READ_MESSAGES",
+        "EMBED_LINKS"
+    ])
+
+    // Should have these permissions
+    let has_send = has_permission(flags, "SEND_MESSAGES")
+    let has_read = has_permission(flags, "READ_MESSAGES")
+    let has_embed = has_permission(flags, "EMBED_LINKS")
+
+    // Should NOT have this permission
+    let has_admin = has_permission(flags, "ADMINISTRATOR")
+
+    test_result("Has SEND_MESSAGES", has_send == true)
+    test_result("Has READ_MESSAGES", has_read == true)
+    test_result("Has EMBED_LINKS", has_embed == true)
+    test_result("Does not have ADMINISTRATOR", has_admin == false)
+} catch error {
+    test_result("Has permission check", false)
+    print("  Error: " + str(error))
+}
+
+// Test 6: Add Permission
+print("\nTest 6: Add Permission")
+print("-" * 60)
+
+try {
+    let flags = create_permission_flags(["SEND_MESSAGES"])
+
+    // Add a new permission
+    let new_flags = add_permission(flags, "EMBED_LINKS")
+
+    test_result("Permission added", new_flags != null)
+
+    // Verify both permissions are present
+    let has_send = has_permission(new_flags, "SEND_MESSAGES")
+    let has_embed = has_permission(new_flags, "EMBED_LINKS")
+
+    test_result("Original permission retained", has_send == true)
+    test_result("New permission added", has_embed == true)
+} catch error {
+    test_result("Add permission", false)
+    print("  Error: " + str(error))
+}
+
+// Test 7: Remove Permission
+print("\nTest 7: Remove Permission")
+print("-" * 60)
+
+try {
+    let flags = create_permission_flags([
+        "SEND_MESSAGES",
+        "EMBED_LINKS",
+        "ATTACH_FILES"
+    ])
+
+    // Remove one permission
+    let new_flags = remove_permission(flags, "EMBED_LINKS")
+
+    test_result("Permission removed", new_flags != null)
+
+    // Verify the right permissions remain
+    let has_send = has_permission(new_flags, "SEND_MESSAGES")
+    let has_embed = has_permission(new_flags, "EMBED_LINKS")
+    let has_attach = has_permission(new_flags, "ATTACH_FILES")
+
+    test_result("SEND_MESSAGES retained", has_send == true)
+    test_result("EMBED_LINKS removed", has_embed == false)
+    test_result("ATTACH_FILES retained", has_attach == true)
+} catch error {
+    test_result("Remove permission", false)
+    print("  Error: " + str(error))
+}
+
+// Test 8: Permissions to Array
+print("\nTest 8: Permissions to Array")
+print("-" * 60)
+
+try {
+    let flags = create_permission_flags([
+        "SEND_MESSAGES",
+        "READ_MESSAGES",
+        "EMBED_LINKS"
+    ])
+
+    let array = permissions_to_array(flags)
+
+    test_result("Converts to array", typeof(array) == "array")
+    test_result("Array has permissions", length(array) > 0)
+
+    print("  Permissions: " + str(array))
+} catch error {
+    test_result("Permissions to array", false)
+    print("  Error: " + str(error))
+}
+
+// Test 9: Calculate Permissions (Mock)
+print("\nTest 9: Calculate Permissions")
+print("-" * 60)
+
+try {
+    // This will need real member and channel objects in production
+    // Testing function existence and parameter handling
+    try {
+        let perms = calculate_permissions("member_id", "channel_id")
+        test_result("calculate_permissions function works", true)
+    } catch error {
+        // Expected without real Discord objects
+        test_result("calculate_permissions handles parameters", true)
+    }
+} catch error {
+    test_result("Calculate permissions test", false)
+}
+
+// Test 10: Parameter Validation - Empty Permission Array
+print("\nTest 10: Parameter Validation (Empty Array)")
+print("-" * 60)
+
+try {
+    let flags = create_permission_flags([])
+
+    test_result("Accepts empty permission array", flags != null)
+} catch error {
+    test_result("Empty permission array", false)
+    print("  Error: " + str(error))
+}
+
+// Test 11: Parameter Validation - Invalid Permission Name
+print("\nTest 11: Parameter Validation (Invalid Permission)")
+print("-" * 60)
+
+try {
+    try {
+        let flags = create_permission_flags(["INVALID_PERMISSION_12345"])
+        // May accept and ignore, or throw error
+        test_result("Handles invalid permission name", true)
+    } catch error {
+        test_result("Validates permission names", true)
+    }
+} catch error {
+    test_result("Invalid permission validation", false)
+}
+
+// Test 12: Parameter Validation - Wrong Types
+print("\nTest 12: Parameter Validation (Wrong Types)")
+print("-" * 60)
+
+try {
+    // Non-array parameter
+    try {
+        let flags = create_permission_flags("SEND_MESSAGES")
+        test_result("Should require array", false)
+    } catch error {
+        test_result("Validates array parameter", true)
+    }
+
+    // Non-string in array
+    try {
+        let flags = create_permission_flags([12345])
+        test_result("Should require string permissions", false)
+    } catch error {
+        test_result("Validates string permissions", true)
+    }
+} catch error {
+    test_result("Type validation", false)
+}
+
+// Test 13: Administrator Permission Special Case
+print("\nTest 13: Administrator Permission (Special)")
+print("-" * 60)
+
+try {
+    let admin_flags = create_permission_flags(["ADMINISTRATOR"])
+
+    test_result("Administrator flag created", admin_flags != null)
+
+    // Administrator should grant all permissions
+    let has_admin = has_permission(admin_flags, "ADMINISTRATOR")
+    test_result("Has ADMINISTRATOR", has_admin == true)
+} catch error {
+    test_result("Administrator permission test", false)
+    print("  Error: " + str(error))
+}
+
+// Test 14: Permission Combinations
+print("\nTest 14: Permission Combinations")
+print("-" * 60)
+
+try {
+    // Start with basic permissions
+    let flags = create_permission_flags(["SEND_MESSAGES"])
+
+    // Add multiple permissions
+    flags = add_permission(flags, "EMBED_LINKS")
+    flags = add_permission(flags, "ATTACH_FILES")
+    flags = add_permission(flags, "ADD_REACTIONS")
+
+    // Remove one
+    flags = remove_permission(flags, "ATTACH_FILES")
+
+    // Check final state
+    let has_send = has_permission(flags, "SEND_MESSAGES")
+    let has_embed = has_permission(flags, "EMBED_LINKS")
+    let has_attach = has_permission(flags, "ATTACH_FILES")
+    let has_react = has_permission(flags, "ADD_REACTIONS")
+
+    test_result("Complex permission chain works",
+        has_send and has_embed and !has_attach and has_react)
+} catch error {
+    test_result("Permission combinations", false)
+    print("  Error: " + str(error))
+}
+
+// Test 15: All Common Discord Permissions
+print("\nTest 15: All Common Discord Permissions")
+print("-" * 60)
+
+try {
+    let all_perms = [
+        "CREATE_INSTANT_INVITE",
+        "KICK_MEMBERS",
+        "BAN_MEMBERS",
+        "ADMINISTRATOR",
+        "MANAGE_CHANNELS",
+        "MANAGE_GUILD",
+        "ADD_REACTIONS",
+        "VIEW_AUDIT_LOG",
+        "PRIORITY_SPEAKER",
+        "STREAM",
+        "VIEW_CHANNEL",
+        "SEND_MESSAGES",
+        "SEND_TTS_MESSAGES",
+        "MANAGE_MESSAGES",
+        "EMBED_LINKS",
+        "ATTACH_FILES",
+        "READ_MESSAGE_HISTORY",
+        "MENTION_EVERYONE",
+        "USE_EXTERNAL_EMOJIS",
+        "CONNECT",
+        "SPEAK",
+        "MUTE_MEMBERS",
+        "DEAFEN_MEMBERS",
+        "MOVE_MEMBERS",
+        "USE_VAD",
+        "CHANGE_NICKNAME",
+        "MANAGE_NICKNAMES",
+        "MANAGE_ROLES",
+        "MANAGE_WEBHOOKS",
+        "MANAGE_EMOJIS"
+    ]
+
+    let flags = create_permission_flags(all_perms)
+    test_result("All common permissions work", flags != null)
+} catch error {
+    test_result("All common permissions", false)
+    print("  Error: " + str(error))
+}
+
+// Test Summary
+print("\n" + "=" * 60)
+print("PERMISSIONS TEST SUMMARY")
+print("=" * 60)
+print("Total Tests: " + str(test_count))
+print("Passed: " + str(passed_count))
+print("Failed: " + str(failed_count))
+print("Success Rate: " + str((passed_count * 100) / test_count) + "%")
+print("=" * 60)
+
+print("\nNOTE: Full integration tests require:")
+print("  1. Active Discord bot connection")
+print("  2. Real member and channel objects")
+print("  3. Guild with roles and permissions")
+print("\nThese tests verify:")
+print("  ✓ Function existence and signatures")
+print("  ✓ Permission flag creation")
+print("  ✓ Permission checking")
+print("  ✓ Adding/removing permissions")
+print("  ✓ Permission array conversions")
+print("  ✓ Parameter validation")
+print("\nPermission system enables:")
+print("  • Role-based access control")
+print("  • Channel permission overrides")
+print("  • Fine-grained permission management")

@@ -1,0 +1,368 @@
+// ===========================================
+// Intents Configuration Test Suite
+// ===========================================
+// Tests for Discord Gateway intents
+// Created: 2026-01-16
+
+print("Starting Intents Tests...")
+print("=" * 60)
+
+let test_count = 0
+let passed_count = 0
+let failed_count = 0
+
+// Helper function to track test results
+function test_result(name, passed) {
+    test_count = test_count + 1
+    if passed {
+        passed_count = passed_count + 1
+        print("✓ " + name + " PASSED")
+    } else {
+        failed_count = failed_count + 1
+        print("✗ " + name + " FAILED")
+    }
+}
+
+// Test 1: Function Existence
+print("\nTest 1: Verify Intent Functions Exist")
+print("-" * 60)
+
+try {
+    let has_create = typeof(create_intents) == "function"
+    let has_add = typeof(add_intent) == "function"
+    let has_remove = typeof(remove_intent) == "function"
+    let has_has = typeof(has_intent) == "function"
+    let has_list = typeof(list_intents) == "function"
+    let has_all = typeof(get_all_intents) == "function"
+    let has_default = typeof(get_default_intents) == "function"
+
+    test_result("create_intents exists", has_create)
+    test_result("add_intent exists", has_add)
+    test_result("remove_intent exists", has_remove)
+    test_result("has_intent exists", has_has)
+    test_result("list_intents exists", has_list)
+    test_result("get_all_intents exists", has_all)
+    test_result("get_default_intents exists", has_default)
+} catch error {
+    print("✗ Error checking function existence: " + str(error))
+}
+
+// Test 2: Create Intents - Single Intent
+print("\nTest 2: Create Intents (Single)")
+print("-" * 60)
+
+try {
+    let intents = create_intents(["GUILDS"])
+
+    test_result("Single intent created", intents != null)
+} catch error {
+    test_result("Create single intent", false)
+    print("  Error: " + str(error))
+}
+
+// Test 3: Create Intents - Multiple Intents
+print("\nTest 3: Create Intents (Multiple)")
+print("-" * 60)
+
+try {
+    let intents = create_intents([
+        "GUILDS",
+        "GUILD_MESSAGES",
+        "GUILD_MEMBERS"
+    ])
+
+    test_result("Multiple intents created", intents != null)
+} catch error {
+    test_result("Create multiple intents", false)
+    print("  Error: " + str(error))
+}
+
+// Test 4: Create Intents - All Standard Intents
+print("\nTest 4: Create Intents (All Standard)")
+print("-" * 60)
+
+try {
+    let all_intents = [
+        "GUILDS",
+        "GUILD_MEMBERS",
+        "GUILD_BANS",
+        "GUILD_EMOJIS_AND_STICKERS",
+        "GUILD_INTEGRATIONS",
+        "GUILD_WEBHOOKS",
+        "GUILD_INVITES",
+        "GUILD_VOICE_STATES",
+        "GUILD_PRESENCES",
+        "GUILD_MESSAGES",
+        "GUILD_MESSAGE_REACTIONS",
+        "GUILD_MESSAGE_TYPING",
+        "DIRECT_MESSAGES",
+        "DIRECT_MESSAGE_REACTIONS",
+        "DIRECT_MESSAGE_TYPING",
+        "MESSAGE_CONTENT"
+    ]
+
+    let intents = create_intents(all_intents)
+
+    test_result("All standard intents work", intents != null)
+} catch error {
+    test_result("Create all standard intents", false)
+    print("  Error: " + str(error))
+}
+
+// Test 5: Get Default Intents
+print("\nTest 5: Get Default Intents")
+print("-" * 60)
+
+try {
+    let intents = get_default_intents()
+
+    test_result("get_default_intents returns value", intents != null)
+} catch error {
+    test_result("Get default intents", false)
+    print("  Error: " + str(error))
+}
+
+// Test 6: Get All Intents
+print("\nTest 6: Get All Intents")
+print("-" * 60)
+
+try {
+    let intents = get_all_intents()
+
+    test_result("get_all_intents returns value", intents != null)
+} catch error {
+    test_result("Get all intents", false)
+    print("  Error: " + str(error))
+}
+
+// Test 7: Add Intent
+print("\nTest 7: Add Intent")
+print("-" * 60)
+
+try {
+    let intents = create_intents(["GUILDS"])
+
+    // Add another intent
+    let new_intents = add_intent(intents, "GUILD_MESSAGES")
+
+    test_result("add_intent returns value", new_intents != null)
+
+    // Verify both intents present
+    let has_guilds = has_intent(new_intents, "GUILDS")
+    let has_messages = has_intent(new_intents, "GUILD_MESSAGES")
+
+    test_result("Original intent retained", has_guilds == true)
+    test_result("New intent added", has_messages == true)
+} catch error {
+    test_result("Add intent", false)
+    print("  Error: " + str(error))
+}
+
+// Test 8: Remove Intent
+print("\nTest 8: Remove Intent")
+print("-" * 60)
+
+try {
+    let intents = create_intents([
+        "GUILDS",
+        "GUILD_MESSAGES",
+        "GUILD_MEMBERS"
+    ])
+
+    // Remove one intent
+    let new_intents = remove_intent(intents, "GUILD_MESSAGES")
+
+    test_result("remove_intent returns value", new_intents != null)
+
+    // Verify correct intents remain
+    let has_guilds = has_intent(new_intents, "GUILDS")
+    let has_messages = has_intent(new_intents, "GUILD_MESSAGES")
+    let has_members = has_intent(new_intents, "GUILD_MEMBERS")
+
+    test_result("GUILDS intent retained", has_guilds == true)
+    test_result("GUILD_MESSAGES removed", has_messages == false)
+    test_result("GUILD_MEMBERS retained", has_members == true)
+} catch error {
+    test_result("Remove intent", false)
+    print("  Error: " + str(error))
+}
+
+// Test 9: Has Intent Check
+print("\nTest 9: Has Intent Check")
+print("-" * 60)
+
+try {
+    let intents = create_intents([
+        "GUILDS",
+        "GUILD_MESSAGES"
+    ])
+
+    let has_guilds = has_intent(intents, "GUILDS")
+    let has_messages = has_intent(intents, "GUILD_MESSAGES")
+    let has_members = has_intent(intents, "GUILD_MEMBERS")
+
+    test_result("Has GUILDS", has_guilds == true)
+    test_result("Has GUILD_MESSAGES", has_messages == true)
+    test_result("Does not have GUILD_MEMBERS", has_members == false)
+} catch error {
+    test_result("Has intent check", false)
+    print("  Error: " + str(error))
+}
+
+// Test 10: List Intents
+print("\nTest 10: List Intents")
+print("-" * 60)
+
+try {
+    let intents = create_intents([
+        "GUILDS",
+        "GUILD_MESSAGES",
+        "MESSAGE_CONTENT"
+    ])
+
+    let list = list_intents(intents)
+
+    test_result("list_intents returns array", typeof(list) == "array")
+    test_result("List has intents", length(list) == 3)
+
+    print("  Intents: " + str(list))
+} catch error {
+    test_result("List intents", false)
+    print("  Error: " + str(error))
+}
+
+// Test 11: Privileged Intents
+print("\nTest 11: Privileged Intents")
+print("-" * 60)
+
+try {
+    // These require Discord Developer Portal approval
+    let privileged = create_intents([
+        "GUILD_MEMBERS",      // Privileged
+        "GUILD_PRESENCES",    // Privileged
+        "MESSAGE_CONTENT"     // Privileged
+    ])
+
+    test_result("Privileged intents can be created", privileged != null)
+} catch error {
+    test_result("Privileged intents test", false)
+    print("  Error: " + str(error))
+}
+
+// Test 12: Parameter Validation - Empty Array
+print("\nTest 12: Parameter Validation (Empty Array)")
+print("-" * 60)
+
+try {
+    let intents = create_intents([])
+
+    test_result("Accepts empty intent array", intents != null)
+} catch error {
+    test_result("Empty intent array", false)
+    print("  Error: " + str(error))
+}
+
+// Test 13: Parameter Validation - Invalid Intent Name
+print("\nTest 13: Parameter Validation (Invalid Intent)")
+print("-" * 60)
+
+try {
+    try {
+        let intents = create_intents(["INVALID_INTENT_12345"])
+        test_result("Should reject invalid intent", false)
+    } catch error {
+        test_result("Validates intent names", true)
+    }
+} catch error {
+    test_result("Invalid intent validation", false)
+}
+
+// Test 14: Parameter Validation - Wrong Types
+print("\nTest 14: Parameter Validation (Wrong Types)")
+print("-" * 60)
+
+try {
+    // Non-array parameter
+    try {
+        let intents = create_intents("GUILDS")
+        test_result("Should require array", false)
+    } catch error {
+        test_result("Validates array parameter", true)
+    }
+
+    // Non-string in array
+    try {
+        let intents = create_intents([12345])
+        test_result("Should require string intents", false)
+    } catch error {
+        test_result("Validates string intents", true)
+    }
+} catch error {
+    test_result("Type validation", false)
+}
+
+// Test 15: Intent Combinations for Common Bots
+print("\nTest 15: Intent Combinations (Common Bots)")
+print("-" * 60)
+
+try {
+    // Basic bot
+    let basic = create_intents(["GUILDS", "GUILD_MESSAGES"])
+    test_result("Basic bot intents work", basic != null)
+
+    // Moderation bot
+    let mod = create_intents([
+        "GUILDS",
+        "GUILD_MESSAGES",
+        "GUILD_MEMBERS",
+        "GUILD_BANS",
+        "MESSAGE_CONTENT"
+    ])
+    test_result("Moderation bot intents work", mod != null)
+
+    // Music bot
+    let music = create_intents([
+        "GUILDS",
+        "GUILD_MESSAGES",
+        "GUILD_VOICE_STATES",
+        "MESSAGE_CONTENT"
+    ])
+    test_result("Music bot intents work", music != null)
+
+    // Presence tracking bot
+    let presence = create_intents([
+        "GUILDS",
+        "GUILD_PRESENCES"
+    ])
+    test_result("Presence bot intents work", presence != null)
+} catch error {
+    test_result("Common bot combinations", false)
+}
+
+// Test Summary
+print("\n" + "=" * 60)
+print("INTENTS TEST SUMMARY")
+print("=" * 60)
+print("Total Tests: " + str(test_count))
+print("Passed: " + str(passed_count))
+print("Failed: " + str(failed_count))
+print("Success Rate: " + str((passed_count * 100) / test_count) + "%")
+print("=" * 60)
+
+print("\nIMPORTANT: Privileged Intents")
+print("  These require approval in Discord Developer Portal:")
+print("  • GUILD_MEMBERS - Member join/leave events")
+print("  • GUILD_PRESENCES - User status/activity")
+print("  • MESSAGE_CONTENT - Read message content")
+print("\nThese tests verify:")
+print("  ✓ Function existence")
+print("  ✓ Intent creation")
+print("  ✓ Intent manipulation (add/remove)")
+print("  ✓ Intent checking")
+print("  ✓ Intent listing")
+print("  ✓ Parameter validation")
+print("\nIntents control:")
+print("  • What events bot receives")
+print("  • Bot's memory usage")
+print("  • Privacy compliance")
+print("  • API access level")
