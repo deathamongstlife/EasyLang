@@ -126,6 +126,14 @@ export function makeObject(properties: Map<string, RuntimeValue> = new Map()): O
   return { type: 'object', properties };
 }
 
+/**
+ * Helper function to create an ObjectValue from an array of key-value pairs
+ * This avoids TypeScript inference issues when creating Maps with mixed RuntimeValue types
+ */
+export function makeRuntimeObject(entries: [string, RuntimeValue][]): ObjectValue {
+  return makeObject(new Map(entries) as Map<string, RuntimeValue>);
+}
+
 export function makeFunction(
   name: string,
   parameters: string[],

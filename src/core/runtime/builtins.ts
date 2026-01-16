@@ -44,6 +44,15 @@ import { voiceBuiltins } from '../../discord/extensions/discord-voice';
 import { autoModBuiltins } from '../../discord/extensions/discord-automod';
 import { auditLogBuiltins } from '../../discord/extensions/discord-audit';
 import { extendedDiscordBuiltins } from '../../discord/extensions/discord-extended';
+import { pollBuiltins as newPollBuiltins } from '../../discord/extensions/polls';
+import { embedBuiltins } from '../../discord/extensions/embeds';
+import { stickerBuiltins } from '../../discord/extensions/stickers';
+import { threadBuiltins } from '../../discord/extensions/threads';
+import { comprehensiveApiBuiltins } from '../../discord/extensions/comprehensive-api';
+import { moderationRolesPermissionsBuiltins } from '../../discord/extensions/moderation-roles-permissions';
+import { registerAutocompleteHandler, respondAutocomplete } from '../../discord/commands/autocomplete';
+import { registerUserContextMenu, registerMessageContextMenu, createUserContextMenuCommand, createMessageContextMenuCommand } from '../../discord/commands/context-menus';
+import { createModalWithComponents, getModalFieldValue, createTextInput, createShortTextInput, createParagraphTextInput } from '../../discord/components/modals';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -1634,6 +1643,53 @@ export function createGlobalEnvironment(
   Object.entries(extendedDiscordBuiltins).forEach(([name, func]) => {
     env.define(name, func);
   });
+
+  // Register NEW comprehensive API features (scheduled events, stage, templates, invites, vanity URLs)
+  Object.entries(comprehensiveApiBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register moderation, roles, and permissions
+  Object.entries(moderationRolesPermissionsBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register enhanced poll functions
+  Object.entries(newPollBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register advanced embed functions
+  Object.entries(embedBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register sticker functions
+  Object.entries(stickerBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register thread functions
+  Object.entries(threadBuiltins).forEach(([name, func]) => {
+    env.define(name, func);
+  });
+
+  // Register autocomplete functions
+  env.define('register_autocomplete', registerAutocompleteHandler);
+  env.define('respond_autocomplete', respondAutocomplete);
+
+  // Register context menu functions
+  env.define('register_user_context_menu', registerUserContextMenu);
+  env.define('register_message_context_menu', registerMessageContextMenu);
+  env.define('create_user_context_menu_command', createUserContextMenuCommand);
+  env.define('create_message_context_menu_command', createMessageContextMenuCommand);
+
+  // Register modal functions
+  env.define('create_modal_with_components', createModalWithComponents);
+  env.define('get_modal_field_value', getModalFieldValue);
+  env.define('create_text_input', createTextInput);
+  env.define('create_short_text_input', createShortTextInput);
+  env.define('create_paragraph_text_input', createParagraphTextInput);
 
   return env;
 }
