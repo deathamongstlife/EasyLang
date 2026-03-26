@@ -1,5 +1,0 @@
-start bot with token "FAKE_TOKEN"
-
-when message says "!ping"
-    reply with "Pong from Go!"
-end when
