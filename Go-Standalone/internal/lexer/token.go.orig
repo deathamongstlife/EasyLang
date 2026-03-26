@@ -1,0 +1,92 @@
+package lexer
+
+type TokenType string
+
+const (
+	TokenEOF     TokenType = "EOF"
+	TokenIllegal TokenType = "ILLEGAL"
+	TokenIdent   TokenType = "IDENTIFIER"
+	TokenString  TokenType = "STRING"
+	TokenNumber  TokenType = "NUMBER"
+
+	// Symbols
+	TokenAssign TokenType = "="
+	TokenPlus   TokenType = "+"
+	TokenMinus  TokenType = "-"
+	TokenBang   TokenType = "!"
+	TokenEq     TokenType = "=="
+	TokenNotEq  TokenType = "!="
+
+	// Natural Language Keywords
+	TokenWhen    TokenType = "WHEN"
+	TokenBot     TokenType = "BOT"
+	TokenStarts  TokenType = "STARTS"
+	TokenMessage TokenType = "MESSAGE"
+	TokenSays    TokenType = "SAYS"
+	TokenReply   TokenType = "REPLY"
+	TokenWith    TokenType = "WITH"
+	TokenEmbed   TokenType = "EMBED"
+	TokenEnd     TokenType = "END"
+	TokenStart   TokenType = "START"
+	TokenToken   TokenType = "TOKEN"
+	TokenSet     TokenType = "SET"
+	TokenTo      TokenType = "TO"
+	TokenUser    TokenType = "USER"
+	TokenBan     TokenType = "BAN"
+	TokenKick    TokenType = "KICK"
+	TokenFor     TokenType = "FOR"
+	TokenTimeout TokenType = "TIMEOUT"
+	TokenMinutes TokenType = "MINUTES"
+	TokenAdd     TokenType = "ADD"
+	TokenRemove  TokenType = "REMOVE"
+	TokenRole    TokenType = "ROLE"
+	TokenFrom    TokenType = "FROM"
+	TokenSend    TokenType = "SEND"
+	TokenChannel TokenType = "CHANNEL"
+	TokenCreate  TokenType = "CREATE"
+	TokenThread  TokenType = "THREAD"
+)
+
+type Token struct {
+	Type    TokenType
+	Literal string
+	Line    int
+	Column  int
+}
+
+var keywords = map[string]TokenType{
+	"when":    TokenWhen,
+	"bot":     TokenBot,
+	"starts":  TokenStarts,
+	"message": TokenMessage,
+	"says":    TokenSays,
+	"reply":   TokenReply,
+	"with":    TokenWith,
+	"embed":   TokenEmbed,
+	"end":     TokenEnd,
+	"start":   TokenStart,
+	"token":   TokenToken,
+	"set":     TokenSet,
+	"to":      TokenTo,
+	"user":    TokenUser,
+	"ban":     TokenBan,
+	"kick":    TokenKick,
+	"for":     TokenFor,
+	"timeout": TokenTimeout,
+	"minutes": TokenMinutes,
+	"add":     TokenAdd,
+	"remove":  TokenRemove,
+	"role":    TokenRole,
+	"from":    TokenFrom,
+	"send":    TokenSend,
+	"channel": TokenChannel,
+	"create":  TokenCreate,
+	"thread":  TokenThread,
+}
+
+func LookupIdent(ident string) TokenType {
+	if tok, ok := keywords[ident]; ok {
+		return tok
+	}
+	return TokenIdent
+}

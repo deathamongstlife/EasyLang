@@ -1,0 +1,32 @@
+start bot with token "DISCORD_TOKEN_HERE"
+
+when bot starts
+    print("Logged in successfully via Native Go WS!")
+end when
+
+register slash command "ping" with description "Test slash commands"
+register user context "Check User"
+
+when slash command "ping" is used
+    reply with embed "Pong!" "Slash Commands work perfectly in Go!"
+end when
+
+when user context "Check User" is used
+    reply with "You used a context menu on someone!"
+end when
+
+when message says "!buttons"
+    reply with button "btn1" labeled "Click Me!" style "success"
+end when
+
+when button "btn1" is clicked
+    reply with "Buttons are working natively!"
+end when
+
+when message says "!menus"
+    reply with user menu "user_sel"
+end when
+
+when user menu "user_sel" is used
+    reply with "You picked someone from the dropdown!"
+end when

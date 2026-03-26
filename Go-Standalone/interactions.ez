@@ -1,0 +1,17 @@
+start bot with token get_argument("DISCORD_TOKEN", "")
+
+register slash command "ping" with description "Pong back!"
+register slash command "verify" with description "Get verified"
+
+when slash command "ping" is used
+    reply with embed "Pong!" "Powered by Go and Natural Language"
+end when
+
+when slash command "verify" is used
+    reply with button "btn_verify" labeled "Verify Me" style "success"
+end when
+
+when button "btn_verify" is clicked
+    add role "123456" to user interaction.user.id
+    reply with "You are now verified!"
+end when

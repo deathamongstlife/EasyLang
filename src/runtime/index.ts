@@ -23,6 +23,32 @@ import {
   SendCommand,
   ReplyCommand,
   ReactCommand,
+  StartBotCommand,
+  WhenMessageCommand,
+  WhenCommandUsedCommand,
+  LoadPackageCommand,
+  ReplyWithCommand,
+  ReplyWithEmbedCommand,
+  ReactWithCommand,
+  SendToCommand,
+  SetVariableCommand,
+  WhenBotStartsCommand,
+  WhenUserJoinsCommand,
+  WhenMessageStartsWithCommand,
+  WhenButtonClickedCommand,
+  BanCommand,
+  KickCommand,
+  TimeoutCommand,
+  AddRoleCommand,
+  RemoveRoleCommand,
+  CreateThreadCommand,
+  JoinVoiceCommand,
+  PlayAudioCommand,
+  RegisterSlashCommand,
+  ReplyWithButtonCommand,
+  ReplyWithMenuCommand,
+  IfUserHasRoleStatement,
+  IfUserHasPermissionStatement,
   BinaryExpression,
   UnaryExpression,
   CallExpression,
@@ -61,10 +87,12 @@ import {
 import { RuntimeError, TypeError, UndefinedFunctionError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { DiscordManager } from '../discord';
-import { send, reply, react } from '../discord/commands';
+import { send, reply, react, replyWithEmbed } from '../discord/commands';
 import { EventManager } from '../discord/events';
 import { PythonBridge } from '../python';
 import { PythonProxy } from '../python/proxy';
+import { JavaScriptBridge } from '../javascript';
+import { PackageResolver } from '../packages/resolver';
 import { Lexer } from '../lexer';
 import { Parser } from '../parser';
 
@@ -84,9 +112,10 @@ export class Runtime {
     this.discordManager = new DiscordManager();
     this.eventManager = new EventManager();
     this.pythonBridge = new PythonBridge();
-    this.globalEnv = createGlobalEnvironment(this.discordManager, this.pythonBridge);
+    const jsBridge = JavaScriptBridge.getInstance();
+    const resolver = PackageResolver.getInstance();
+    this.globalEnv = createGlobalEnvironment(this.discordManager, this.pythonBridge, jsBridge, resolver);
   }
-
   /**
    * Get a variable from the global environment (for testing purposes)
    */
@@ -155,8 +184,60 @@ export class Runtime {
         return this.evaluateSendCommand(node as SendCommand, env);
       case 'ReplyCommand':
         return this.evaluateReplyCommand(node as ReplyCommand, env);
+      case 'ReplyWithCommand':
+        return this.evaluateReplyWithCommand(node as ReplyWithCommand, env);
+      case 'ReplyWithEmbedCommand':
+        return this.evaluateReplyWithEmbedCommand(node as ReplyWithEmbedCommand, env);
       case 'ReactCommand':
         return this.evaluateReactCommand(node as ReactCommand, env);
+      case 'ReactWithCommand':
+        return this.evaluateReactWithCommand(node as ReactWithCommand, env);
+      case 'SendToCommand':
+        return this.evaluateSendToCommand(node as SendToCommand, env);
+      case 'SetVariableCommand':
+        return this.evaluateSetVariableCommand(node as SetVariableCommand, env);
+      case 'StartBotCommand':
+        return this.evaluateStartBotCommand(node as StartBotCommand, env);
+      case 'LoadPackageCommand':
+        return this.evaluateLoadPackageCommand(node as LoadPackageCommand, env);
+      case 'WhenMessageCommand':
+        return this.evaluateWhenMessageCommand(node as WhenMessageCommand, env);
+      case 'WhenCommandUsedCommand':
+        return this.evaluateWhenCommandUsedCommand(node as WhenCommandUsedCommand, env);
+      case 'WhenBotStartsCommand':
+        return this.evaluateWhenBotStartsCommand(node as WhenBotStartsCommand, env);
+      case 'WhenUserJoinsCommand':
+        return this.evaluateWhenUserJoinsCommand(node as WhenUserJoinsCommand, env);
+      case 'WhenMessageStartsWithCommand':
+        return this.evaluateWhenMessageStartsWithCommand(node as WhenMessageStartsWithCommand, env);
+      case 'WhenButtonClickedCommand':
+        return this.evaluateWhenButtonClickedCommand(node as WhenButtonClickedCommand, env);
+      case 'BanCommand':
+        return this.evaluateBanCommand(node as BanCommand, env);
+      case 'KickCommand':
+        return this.evaluateKickCommand(node as KickCommand, env);
+      case 'TimeoutCommand':
+        return this.evaluateTimeoutCommand(node as TimeoutCommand, env);
+      case 'AddRoleCommand':
+        return this.evaluateAddRoleCommand(node as AddRoleCommand, env);
+      case 'RemoveRoleCommand':
+        return this.evaluateRemoveRoleCommand(node as RemoveRoleCommand, env);
+      case 'CreateThreadCommand':
+        return this.evaluateCreateThreadCommand(node as CreateThreadCommand, env);
+      case 'JoinVoiceCommand':
+        return this.evaluateJoinVoiceCommand(node as JoinVoiceCommand, env);
+      case 'PlayAudioCommand':
+        return this.evaluatePlayAudioCommand(node as PlayAudioCommand, env);
+      case 'RegisterSlashCommand':
+        return this.evaluateRegisterSlashCommand(node as RegisterSlashCommand, env);
+      case 'ReplyWithButtonCommand':
+        return this.evaluateReplyWithButtonCommand(node as ReplyWithButtonCommand, env);
+      case 'ReplyWithMenuCommand':
+        return this.evaluateReplyWithMenuCommand(node as ReplyWithMenuCommand, env);
+      case 'IfUserHasRoleStatement':
+        return this.evaluateIfUserHasRoleStatement(node as IfUserHasRoleStatement, env);
+      case 'IfUserHasPermissionStatement':
+        return this.evaluateIfUserHasPermissionStatement(node as IfUserHasPermissionStatement, env);
       default:
         throw new RuntimeError(
           `Unknown statement type: ${node.type}`,
@@ -1049,6 +1130,598 @@ export class Runtime {
         node.position?.line,
         node.position?.column
       );
+    }
+  }
+
+  /**
+   * Evaluate a reply with command (Natural Language)
+   */
+  private async evaluateReplyWithCommand(node: ReplyWithCommand, env: Environment): Promise<RuntimeValue> {
+    const target = env.lookup('__context_message');
+    if (!target) {
+      throw new RuntimeError("Cannot 'reply with' outside of a message context", node.position?.line, node.position?.column);
+    }
+    const message = await this.evaluateExpression(node.message, env);
+
+    try {
+      return await reply(target, message);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new RuntimeError(
+        errorMessage,
+        node.position?.line,
+        node.position?.column
+      );
+    }
+  }
+
+  /**
+   * Evaluate a reply with embed command (Natural Language)
+   */
+  private async evaluateReplyWithEmbedCommand(node: ReplyWithEmbedCommand, env: Environment): Promise<RuntimeValue> {
+    const target = env.lookup('__context_message');
+    if (!target) {
+      throw new RuntimeError("Cannot 'reply with embed' outside of a message context", node.position?.line, node.position?.column);
+    }
+    const title = await this.evaluateExpression(node.title, env);
+    const description = await this.evaluateExpression(node.description, env);
+
+    try {
+      return await replyWithEmbed(target, title, description);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new RuntimeError(
+        errorMessage,
+        node.position?.line,
+        node.position?.column
+      );
+    }
+  }
+
+  /**
+   * Evaluate a start bot command (Natural Language)
+   */
+  private async evaluateStartBotCommand(node: StartBotCommand, env: Environment): Promise<RuntimeValue> {
+    const token = await this.evaluateExpression(node.token, env);
+    const botStartFunc = env.lookup('bot_start');
+    if (botStartFunc && botStartFunc.type === 'native-function') {
+      try {
+        const nativeFunc = botStartFunc as any; // Cast to bypass strict type checking of runtime value
+        const result = await nativeFunc.call([token], env);
+        // Add a slight delay to ensure bot connects properly
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return result;
+      } catch (err: any) {
+        throw new RuntimeError(`Failed to start bot: ${err.message}`, node.position?.line, node.position?.column);
+      }
+    }
+    throw new RuntimeError("bot_start builtin function not found", node.position?.line, node.position?.column);
+  }
+
+  /**
+   * Evaluate a load package command (Natural Language)
+   */
+  private async evaluateLoadPackageCommand(node: LoadPackageCommand, env: Environment): Promise<RuntimeValue> {
+    const packageName = node.packageName;
+    const alias = node.alias;
+
+    if (node.packageManager === 'python') {
+      try {
+        await this.pythonBridge.importModule(packageName);
+        const proxy = new PythonProxy(packageName, this.pythonBridge);
+        this.pythonProxies.set(packageName, proxy);
+        const proxyObject = proxy.createProxy();
+        const pythonValue = makePython(packageName, proxyObject);
+        env.declare(alias, pythonValue);
+        return pythonValue;
+      } catch (error) {
+        throw new RuntimeError(`Failed to load Python package '${packageName}': ${(error as Error).message}`, node.position?.line, node.position?.column);
+      }
+    } else if (node.packageManager === 'npm') {
+      const requireFunc = env.lookup('require');
+      if (requireFunc && requireFunc.type === 'native-function') {
+        try {
+          const nativeFunc = requireFunc as any;
+          const result = await nativeFunc.call([{ type: 'string', value: packageName }], env);
+          env.declare(alias, result);
+          return result;
+        } catch (error) {
+          throw new RuntimeError(`Failed to load NPM package '${packageName}': ${(error as Error).message}`, node.position?.line, node.position?.column);
+        }
+      }
+      throw new RuntimeError("NPM require functionality is not available in this environment", node.position?.line, node.position?.column);
+    }
+    
+    return { type: 'null', value: null } as any;
+  }
+
+  /**
+   * Evaluate a when message command (Natural Language)
+   */
+  private async evaluateWhenMessageCommand(node: WhenMessageCommand, env: Environment): Promise<RuntimeValue> {
+    // We register an event listener for 'messageCreate'
+    const eventName = 'messageCreate';
+    const conditionVal = await this.evaluateExpression(node.condition, env);
+    if (conditionVal.type !== 'string') {
+      throw new RuntimeError("When message condition must be a string", node.position?.line, node.position?.column);
+    }
+    const expectedText = (conditionVal as any).value;
+
+    const handler = async (...eventArgs: unknown[]) => {
+      const handlerEnv = env.extend();
+      const runtimeArgs = this.eventManager.convertEventArgs(eventName, eventArgs);
+      
+      if (runtimeArgs.length > 0) {
+        handlerEnv.define('__context_message', runtimeArgs[0]);
+        // Also define 'message' for standard access
+        handlerEnv.define('message', runtimeArgs[0]);
+      }
+      
+      const messageObj = runtimeArgs[0] as any;
+      if (messageObj && messageObj.type === 'object') {
+        // check if message is from a bot
+        const author = messageObj.properties.get('author');
+        const isBot = author && author.type === 'object' && author.properties.get('bot')?.value === true;
+        if (isBot) return; // skip bots
+
+        const content = messageObj.properties.get('content');
+        if (content && content.value === expectedText) {
+          // execute body
+          await this.evaluateBlockStatement(node.body, handlerEnv);
+        }
+      }
+    };
+
+    this.discordManager.registerEventHandler(eventName, handler);
+    return { type: 'null', value: null } as any;
+  }
+
+  /**
+   * Evaluate a when command used command (Natural Language Slash Commands)
+   */
+  private async evaluateWhenCommandUsedCommand(node: WhenCommandUsedCommand, env: Environment): Promise<RuntimeValue> {
+    const eventName = 'interactionCreate';
+    const commandNameVal = await this.evaluateExpression(node.commandName, env);
+    if (commandNameVal.type !== 'string') {
+      throw new RuntimeError("Command name must be a string", node.position?.line, node.position?.column);
+    }
+    const expectedCommand = (commandNameVal as any).value;
+
+    const handler = async (...eventArgs: unknown[]) => {
+      const handlerEnv = env.extend();
+      const runtimeArgs = this.eventManager.convertEventArgs(eventName, eventArgs);
+      
+      if (runtimeArgs.length > 0) {
+        const interactionObj = runtimeArgs[0] as any;
+        
+        // Ensure it's a command interaction
+        const isCommand = interactionObj.properties?.get('isCommand');
+        if (isCommand && isCommand.type === 'native-function') {
+          // Native checking is complex in this runtime, so let's rely on the commandName property
+          const cmdNameProp = interactionObj.properties.get('commandName');
+          if (cmdNameProp && cmdNameProp.value === expectedCommand) {
+            handlerEnv.define('__context_message', interactionObj); // use interaction as reply target
+            handlerEnv.define('interaction', interactionObj);
+            await this.evaluateBlockStatement(node.body, handlerEnv);
+          }
+        } else {
+          // Fallback if isCommand isn't wrapped perfectly
+          const cmdNameProp = interactionObj.properties?.get('commandName');
+          if (cmdNameProp && cmdNameProp.value === expectedCommand) {
+            handlerEnv.define('__context_message', interactionObj);
+            handlerEnv.define('interaction', interactionObj);
+            await this.evaluateBlockStatement(node.body, handlerEnv);
+          }
+        }
+      }
+    };
+
+    this.discordManager.registerEventHandler(eventName, handler);
+    return { type: 'null', value: null } as any;
+  }
+
+  /**
+   * Evaluate a when bot starts command
+   */
+  private async evaluateWhenBotStartsCommand(node: WhenBotStartsCommand, env: Environment): Promise<RuntimeValue> {
+    const handler = async () => {
+      const handlerEnv = env.extend();
+      await this.evaluateBlockStatement(node.body, handlerEnv);
+    };
+    this.discordManager.registerEventHandler('ready', handler);
+    return { type: 'null', value: null } as any;
+  }
+
+  /**
+   * Evaluate a when user joins server command
+   */
+  private async evaluateWhenUserJoinsCommand(node: WhenUserJoinsCommand, env: Environment): Promise<RuntimeValue> {
+    const eventName = 'guildMemberAdd';
+    const handler = async (...eventArgs: unknown[]) => {
+      const handlerEnv = env.extend();
+      const runtimeArgs = this.eventManager.convertEventArgs(eventName, eventArgs);
+      if (runtimeArgs.length > 0) {
+        handlerEnv.declare('user', runtimeArgs[0]);
+        handlerEnv.declare('member', runtimeArgs[0]);
+      }
+      await this.evaluateBlockStatement(node.body, handlerEnv);
+    };
+    this.discordManager.registerEventHandler(eventName, handler);
+    return { type: 'null', value: null } as any;
+  }
+
+  /**
+   * Evaluate a when message starts with command
+   */
+  private async evaluateWhenMessageStartsWithCommand(node: WhenMessageStartsWithCommand, env: Environment): Promise<RuntimeValue> {
+    const eventName = 'messageCreate';
+    const conditionVal = await this.evaluateExpression(node.condition, env);
+    if (conditionVal.type !== 'string') {
+      throw new RuntimeError("When message condition must be a string", node.position?.line, node.position?.column);
+    }
+    const expectedPrefix = (conditionVal as any).value;
+
+    const handler = async (...eventArgs: unknown[]) => {
+      const handlerEnv = env.extend();
+      const runtimeArgs = this.eventManager.convertEventArgs(eventName, eventArgs);
+      
+      if (runtimeArgs.length > 0) {
+        handlerEnv.define('__context_message', runtimeArgs[0]);
+        handlerEnv.define('message', runtimeArgs[0]);
+      }
+      
+      const messageObj = runtimeArgs[0] as any;
+      if (messageObj && messageObj.type === 'object') {
+        const author = messageObj.properties.get('author');
+        const isBot = author && author.type === 'object' && author.properties.get('bot')?.value === true;
+        if (isBot) return;
+
+        const content = messageObj.properties.get('content');
+        if (content && typeof content.value === 'string' && content.value.startsWith(expectedPrefix)) {
+          await this.evaluateBlockStatement(node.body, handlerEnv);
+        }
+      }
+    };
+
+    this.discordManager.registerEventHandler(eventName, handler);
+    return { type: 'null', value: null } as any;
+  }
+
+  /**
+   * Evaluate a when button is clicked command
+   */
+  private async evaluateWhenButtonClickedCommand(node: WhenButtonClickedCommand, env: Environment): Promise<RuntimeValue> {
+    const eventName = 'interactionCreate';
+    const buttonIdVal = await this.evaluateExpression(node.buttonId, env);
+    if (buttonIdVal.type !== 'string') {
+      throw new RuntimeError("Button id must be a string", node.position?.line, node.position?.column);
+    }
+    const expectedButtonId = (buttonIdVal as any).value;
+
+    const handler = async (...eventArgs: unknown[]) => {
+      const handlerEnv = env.extend();
+      const runtimeArgs = this.eventManager.convertEventArgs(eventName, eventArgs);
+      
+      if (runtimeArgs.length > 0) {
+        const interactionObj = runtimeArgs[0] as any;
+        const customIdProp = interactionObj.properties?.get('customId');
+        
+        // Very basic way to detect button in this custom runtime
+        if (customIdProp && customIdProp.value === expectedButtonId) {
+          handlerEnv.define('__context_message', interactionObj);
+          handlerEnv.define('interaction', interactionObj);
+          await this.evaluateBlockStatement(node.body, handlerEnv);
+        }
+      }
+    };
+
+    this.discordManager.registerEventHandler(eventName, handler);
+    return { type: 'null', value: null } as any;
+  }
+
+  /**
+   * Evaluate a send to command
+   */
+  private async evaluateSendToCommand(node: SendToCommand, env: Environment): Promise<RuntimeValue> {
+    const target = await this.evaluateExpression(node.target, env);
+    const message = await this.evaluateExpression(node.message, env);
+    try {
+      return await send(target, message);
+    } catch (error) {
+      throw new RuntimeError(`Failed to send message: ${(error as Error).message}`, node.position?.line, node.position?.column);
+    }
+  }
+
+  /**
+   * Evaluate a react with command
+   */
+  private async evaluateReactWithCommand(node: ReactWithCommand, env: Environment): Promise<RuntimeValue> {
+    const target = env.lookup('__context_message');
+    if (!target) {
+      throw new RuntimeError("Cannot 'react with' outside of a message context", node.position?.line, node.position?.column);
+    }
+    const emoji = await this.evaluateExpression(node.emoji, env);
+    try {
+      return await react(target, emoji);
+    } catch (error) {
+      throw new RuntimeError(`Failed to react: ${(error as Error).message}`, node.position?.line, node.position?.column);
+    }
+  }
+
+  /**
+   * Evaluate a set variable command
+   */
+  private async evaluateSetVariableCommand(node: SetVariableCommand, env: Environment): Promise<RuntimeValue> {
+    const value = await this.evaluateExpression(node.value, env);
+    // declare acts like let/var, we might need a fallback to assign if it exists, or just declare.
+    env.declare(node.name, value);
+    return value;
+  }
+
+  /**
+   * Helper function to extract Discord.js structures from RuntimeValues
+   */
+  private extractDiscordObject(val: RuntimeValue): any {
+    if (!val || val.type !== 'object') return null;
+    const rawProp = (val as any).properties?.get('__raw');
+    if (rawProp) return (rawProp as any).__rawValue;
+    return val;
+  }
+
+  /**
+   * Evaluate a ban command
+   */
+  private async evaluateBanCommand(node: BanCommand, env: Environment): Promise<RuntimeValue> {
+    const user = await this.evaluateExpression(node.user, env);
+    let reasonText = "No reason provided";
+    if (node.reason) {
+      const reasonVal = await this.evaluateExpression(node.reason, env);
+      reasonText = (reasonVal as any).value?.toString() || reasonText;
+    }
+
+    const contextMsgValue = env.lookup('__context_message');
+    if (!contextMsgValue) throw new RuntimeError("Cannot ban outside of a server context", node.position?.line, node.position?.column);
+    
+    const contextMsg = this.extractDiscordObject(contextMsgValue);
+    if (!contextMsg || !contextMsg.guild) throw new RuntimeError("Cannot find guild to ban user", node.position?.line, node.position?.column);
+
+    const targetNameOrId = (user as any).value?.toString();
+    try {
+      // Very basic lookup
+      let member = contextMsg.guild.members.cache.find((m: any) => m.user.username === targetNameOrId || m.id === targetNameOrId);
+      if (!member) {
+        // Try fetching
+        const members = await contextMsg.guild.members.fetch({ query: targetNameOrId, limit: 1 });
+        member = members.first();
+      }
+
+      if (!member) throw new Error("User not found");
+      await member.ban({ reason: reasonText });
+      return { type: 'null', value: null } as any;
+    } catch (err: any) {
+      throw new RuntimeError(`Failed to ban user: ${err.message}`, node.position?.line, node.position?.column);
+    }
+  }
+
+  /**
+   * Evaluate a kick command
+   */
+  private async evaluateKickCommand(node: KickCommand, env: Environment): Promise<RuntimeValue> {
+    const user = await this.evaluateExpression(node.user, env);
+    let reasonText = "No reason provided";
+    if (node.reason) {
+      const reasonVal = await this.evaluateExpression(node.reason, env);
+      reasonText = (reasonVal as any).value?.toString() || reasonText;
+    }
+
+    const contextMsgValue = env.lookup('__context_message');
+    if (!contextMsgValue) throw new RuntimeError("Cannot kick outside of a server context", node.position?.line, node.position?.column);
+    
+    const contextMsg = this.extractDiscordObject(contextMsgValue);
+    if (!contextMsg || !contextMsg.guild) throw new RuntimeError("Cannot find guild to kick user", node.position?.line, node.position?.column);
+
+    const targetNameOrId = (user as any).value?.toString();
+    try {
+      let member = contextMsg.guild.members.cache.find((m: any) => m.user.username === targetNameOrId || m.id === targetNameOrId);
+      if (!member) {
+        const members = await contextMsg.guild.members.fetch({ query: targetNameOrId, limit: 1 });
+        member = members.first();
+      }
+
+      if (!member) throw new Error("User not found");
+      await member.kick(reasonText);
+      return { type: 'null', value: null } as any;
+    } catch (err: any) {
+      throw new RuntimeError(`Failed to kick user: ${err.message}`, node.position?.line, node.position?.column);
+    }
+  }
+
+  /**
+   * Evaluate a timeout command
+   */
+  private async evaluateTimeoutCommand(node: TimeoutCommand, env: Environment): Promise<RuntimeValue> {
+    const user = await this.evaluateExpression(node.user, env);
+    const duration = await this.evaluateExpression(node.duration, env);
+    
+    if (duration.type !== 'number') {
+      throw new RuntimeError("Timeout duration must be a number (minutes)", node.position?.line, node.position?.column);
+    }
+    const ms = (duration as any).value * 60 * 1000;
+
+    const contextMsgValue = env.lookup('__context_message');
+    const contextMsg = this.extractDiscordObject(contextMsgValue);
+    if (!contextMsg || !contextMsg.guild) throw new RuntimeError("Cannot find guild to timeout user", node.position?.line, node.position?.column);
+
+    const targetNameOrId = (user as any).value?.toString();
+    try {
+      let member = contextMsg.guild.members.cache.find((m: any) => m.user.username === targetNameOrId || m.id === targetNameOrId);
+      if (!member) {
+        const members = await contextMsg.guild.members.fetch({ query: targetNameOrId, limit: 1 });
+        member = members.first();
+      }
+
+      if (!member) throw new Error("User not found");
+      await member.timeout(ms, "Timed out via EzLang");
+      return { type: 'null', value: null } as any;
+    } catch (err: any) {
+      throw new RuntimeError(`Failed to timeout user: ${err.message}`, node.position?.line, node.position?.column);
+    }
+  }
+
+  /**
+   * Evaluate add role command
+   */
+  private async evaluateAddRoleCommand(node: AddRoleCommand, env: Environment): Promise<RuntimeValue> {
+    const roleName = await this.evaluateExpression(node.role, env);
+    const user = await this.evaluateExpression(node.user, env);
+
+    const contextMsgValue = env.lookup('__context_message');
+    const contextMsg = this.extractDiscordObject(contextMsgValue);
+    if (!contextMsg || !contextMsg.guild) throw new RuntimeError("Cannot manage roles outside of a server", node.position?.line, node.position?.column);
+
+    try {
+      const roleStr = (roleName as any).value?.toString();
+      const userStr = (user as any).value?.toString();
+      
+      const roleObj = contextMsg.guild.roles.cache.find((r: any) => r.name === roleStr || r.id === roleStr);
+      if (!roleObj) throw new Error("Role not found");
+
+      let member = contextMsg.guild.members.cache.find((m: any) => m.user.username === userStr || m.id === userStr);
+      if (!member) throw new Error("User not found");
+
+      await member.roles.add(roleObj);
+      return { type: 'null', value: null } as any;
+    } catch (err: any) {
+      throw new RuntimeError(`Failed to add role: ${err.message}`, node.position?.line, node.position?.column);
+    }
+  }
+
+  /**
+   * Evaluate remove role command
+   */
+  private async evaluateRemoveRoleCommand(node: RemoveRoleCommand, env: Environment): Promise<RuntimeValue> {
+    const roleName = await this.evaluateExpression(node.role, env);
+    const user = await this.evaluateExpression(node.user, env);
+
+    const contextMsgValue = env.lookup('__context_message');
+    const contextMsg = this.extractDiscordObject(contextMsgValue);
+    if (!contextMsg || !contextMsg.guild) throw new RuntimeError("Cannot manage roles outside of a server", node.position?.line, node.position?.column);
+
+    try {
+      const roleStr = (roleName as any).value?.toString();
+      const userStr = (user as any).value?.toString();
+      
+      const roleObj = contextMsg.guild.roles.cache.find((r: any) => r.name === roleStr || r.id === roleStr);
+      if (!roleObj) throw new Error("Role not found");
+
+      let member = contextMsg.guild.members.cache.find((m: any) => m.user.username === userStr || m.id === userStr);
+      if (!member) throw new Error("User not found");
+
+      await member.roles.remove(roleObj);
+      return { type: 'null', value: null } as any;
+    } catch (err: any) {
+      throw new RuntimeError(`Failed to remove role: ${err.message}`, node.position?.line, node.position?.column);
+    }
+  }
+
+  /**
+   * Evaluate create thread command
+   */
+  private async evaluateCreateThreadCommand(node: CreateThreadCommand, env: Environment): Promise<RuntimeValue> {
+    const threadName = await this.evaluateExpression(node.name, env);
+    
+    const contextMsgValue = env.lookup('__context_message');
+    const contextMsg = this.extractDiscordObject(contextMsgValue);
+    if (!contextMsg || !contextMsg.channel) throw new RuntimeError("Cannot create thread outside of a channel context", node.position?.line, node.position?.column);
+
+    try {
+      if (typeof contextMsg.startThread === 'function') {
+        // Message thread
+        await contextMsg.startThread({
+          name: (threadName as any).value.toString(),
+          autoArchiveDuration: 60,
+        });
+      } else if (typeof contextMsg.channel.threads?.create === 'function') {
+        // Channel thread
+        await contextMsg.channel.threads.create({
+          name: (threadName as any).value.toString(),
+          autoArchiveDuration: 60,
+        });
+      } else {
+        throw new Error("Target does not support thread creation");
+      }
+      return { type: 'null', value: null } as any;
+    } catch (err: any) {
+      throw new RuntimeError(`Failed to create thread: ${err.message}`, node.position?.line, node.position?.column);
+    }
+  }
+
+  /**
+   * Evaluate join voice command
+   */
+  private async evaluateJoinVoiceCommand(node: JoinVoiceCommand, env: Environment): Promise<RuntimeValue> {
+    const channelValue = await this.evaluateExpression(node.channel, env);
+    
+    const contextMsgValue = env.lookup('__context_message');
+    const contextMsg = this.extractDiscordObject(contextMsgValue);
+    if (!contextMsg || !contextMsg.guild) throw new RuntimeError("Cannot join voice outside of a server", node.position?.line, node.position?.column);
+
+    try {
+      const channelStr = (channelValue as any).value?.toString();
+      const channel = contextMsg.guild.channels.cache.find((c: any) => (c.name === channelStr || c.id === channelStr) && c.isVoiceBased());
+      if (!channel) throw new Error("Voice channel not found");
+
+      // Attempt to require discordjs/voice if installed
+      let joinVoiceChannel;
+      try {
+        const voicePkg = require('@discordjs/voice');
+        joinVoiceChannel = voicePkg.joinVoiceChannel;
+      } catch (e) {
+        throw new Error("Voice dependencies are not installed. Run: npm install @discordjs/voice libsodium-wrappers ffmpeg-static");
+      }
+
+      joinVoiceChannel({
+        channelId: channel.id,
+        guildId: contextMsg.guild.id,
+        adapterCreator: contextMsg.guild.voiceAdapterCreator,
+      });
+
+      return { type: 'null', value: null } as any;
+    } catch (err: any) {
+      throw new RuntimeError(`Failed to join voice: ${err.message}`, node.position?.line, node.position?.column);
+    }
+  }
+
+  /**
+   * Evaluate play audio command
+   */
+  private async evaluatePlayAudioCommand(node: PlayAudioCommand, env: Environment): Promise<RuntimeValue> {
+    const fileValue = await this.evaluateExpression(node.file, env);
+    
+    const contextMsgValue = env.lookup('__context_message');
+    const contextMsg = this.extractDiscordObject(contextMsgValue);
+    if (!contextMsg || !contextMsg.guild) throw new RuntimeError("Cannot play audio outside of a server", node.position?.line, node.position?.column);
+
+    try {
+      let voicePkg;
+      try {
+        voicePkg = require('@discordjs/voice');
+      } catch (e) {
+        throw new Error("Voice dependencies are not installed. Run: npm install @discordjs/voice libsodium-wrappers ffmpeg-static");
+      }
+
+      const connection = voicePkg.getVoiceConnection(contextMsg.guild.id);
+      if (!connection) throw new Error("Bot is not in a voice channel. Use 'join voice channel' first.");
+
+      const player = voicePkg.createAudioPlayer();
+      const resource = voicePkg.createAudioResource((fileValue as any).value.toString());
+
+      player.play(resource);
+      connection.subscribe(player);
+
+      return { type: 'null', value: null } as any;
+    } catch (err: any) {
+      throw new RuntimeError(`Failed to play audio: ${err.message}`, node.position?.line, node.position?.column);
     }
   }
 

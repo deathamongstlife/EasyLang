@@ -1,0 +1,11 @@
+start bot with token "DISCORD_TOKEN_HERE"
+
+when message says "!panic"
+    ban user message.author.id for "Panic button pressed"
+    reply with "User has been banned."
+end when
+
+when message says "!give_role"
+    add role "1234567890" to user message.author.id
+    reply with "Gave you the role!"
+end when

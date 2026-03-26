@@ -1,0 +1,23 @@
+start bot with token get_argument("DISCORD_TOKEN", "")
+
+when bot starts
+    print("My completely new natural language bot is alive!")
+end when
+
+when user joins server
+    send "Welcome to the server!" to channel "general"
+end when
+
+when message starts with "!ban "
+    reply with "I will ban that user right away!"
+    react with "🔨"
+end when
+
+when button "verify_rules" is clicked
+    reply with embed "Verified" "Thanks for verifying. You now have access."
+end when
+
+when command "info" is used
+    set x to 100
+    reply with "The variable x is " + x
+end when

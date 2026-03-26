@@ -1,0 +1,9 @@
+start bot with token get_argument("DISCORD_TOKEN", "")
+
+when message says "!help"
+    reply with embed "Help Menu" "Here are the commands you can use:\n- !help: Shows this menu\n- !ping: Pongs you back"
+end when
+
+when command "info" is used
+    reply with embed "Bot Info" "I am a bot built with Natural Language syntax in EzLang!"
+end when

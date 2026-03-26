@@ -6,6 +6,7 @@
 import { RuntimeValue, isObject, isString, makeNull, makeBoolean } from '../runtime/values';
 import { RuntimeError, TypeError } from '../utils/errors';
 import { logger } from '../utils/logger';
+import { EmbedBuilder } from 'discord.js';
 
 /**
  * Send a message to a Discord channel
@@ -99,11 +100,52 @@ export async function reply(
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new RuntimeError(`Failed to reply to message: ${errorMessage}`);
   }
-}
+  }
 
-/**
- * React to a Discord message with an emoji
- *
+  export async function replyWithEmbed(
+  messageValue: RuntimeValue,
+  titleValue: RuntimeValue,
+  descriptionValue: RuntimeValue
+  ): Promise<RuntimeValue> {
+  if (!isObject(messageValue)) {
+    throw new TypeError('replyWithEmbed() expects a message/interaction object as first argument');
+  }
+
+  const messageProp = messageValue.properties.get('__raw');
+  let messageObj: any = null;
+
+  // Check if it's an interaction or message
+  if (messageProp && isObject(messageProp)) {
+    messageObj = (messageProp as unknown as { __rawValue: unknown }).__rawValue;
+  } else {
+    // Natural language context binds the raw discord.js interaction directly as the RuntimeValue in some cases
+    messageObj = messageValue as any;
+  }
+
+  if (!messageObj || typeof messageObj.reply !== 'function') {
+    throw new RuntimeError('Message does not support replies');
+  }
+
+  if (!isString(titleValue) || !isString(descriptionValue)) {
+    throw new TypeError('Embed requires string title and description');
+  }
+
+  try {
+    const embed = new EmbedBuilder()
+      .setTitle(titleValue.value)
+      .setDescription(descriptionValue.value)
+      .setColor(0x00d9ff);
+
+    await messageObj.reply({ embeds: [embed] });
+    return makeNull();
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new RuntimeError(`Failed to reply with embed: ${errorMessage}`);
+  }
+  }
+
+  /**
+  * React to a Discord message with an emoji *
  * Usage in EzLang:
  *   react message "👍"
  *   react message "🎉"

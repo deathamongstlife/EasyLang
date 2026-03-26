@@ -1,0 +1,30 @@
+start bot with token get_argument("DISCORD_TOKEN", "")
+
+when message says "!components"
+    reply with user menu "usr_select"
+    reply with role menu "role_select"
+    reply with channel menu "channel_select"
+    reply with mentionable menu "ment_select"
+end when
+
+register user context "Check User"
+when user context "Check User" is used
+    reply with "You right clicked a user!"
+end when
+
+when message says "!buttons"
+    reply with button "btn1" labeled "Action" style "danger"
+end when
+
+when button "btn1" is clicked
+    reply with modal "my_modal" titled "Tell us more"
+end when
+
+when message says "!voice"
+    join voice channel "Music"
+    play audio "./test.mp3"
+end when
+
+when message says "!ping"
+    reply with embed "Pong!" "Using Native Go WebSockets"
+end when

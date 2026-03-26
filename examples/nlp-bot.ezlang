@@ -1,0 +1,22 @@
+load npm package "axios" as axios
+load python package "math" as math
+
+start bot with token get_argument("DISCORD_TOKEN", "")
+
+when message says "!ping"
+    reply with "pong!"
+end when
+
+when message says "!joke"
+    var response = axios.get("https://official-joke-api.appspot.com/random_joke")
+    var data = response.data
+    var setup = data.setup
+    var punchline = data.punchline
+    reply with setup + " ... " + punchline
+end when
+
+when message says "!math"
+    var pi = math.pi
+    var sqrt16 = math.sqrt(16)
+    reply with "Python says pi is " + pi + " and sqrt of 16 is " + sqrt16
+end when

@@ -1,0 +1,6 @@
+load npm package "chalk" as chalk
+
+print("Testing Chalk via NPM Bridge...")
+print(chalk.blue("This text should be blue!"))
+print(chalk.red("This text should be red!"))
+print(chalk.green("This text should be green!"))

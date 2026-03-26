@@ -1,0 +1,38 @@
+load npm package "moment" as moment
+load npm package "lodash" as _
+load npm package "validator" as validator
+load npm package "cowsay" as cowsay
+
+print("====================================")
+print("  NPM PACKAGE CAPABILITY TEST")
+print("====================================")
+
+// 1. Test lodash (Utility)
+set numbers to [1, 2, 3, 4, 5]
+set reversed to _.reverse(numbers)
+print("Lodash reverse test: " + join(reversed, ", "))
+
+set chunked to _.chunk(numbers, 2)
+print("Lodash chunk test: " + length(chunked) + " chunks created")
+
+// 2. Test validator (Validation)
+set email to "test@example.com"
+set is_email to validator.isEmail(email)
+print("Validator isEmail('" + email + "'): " + is_email)
+
+set invalid_email to "not-an-email"
+set is_invalid to validator.isEmail(invalid_email)
+print("Validator isEmail('" + invalid_email + "'): " + is_invalid)
+
+// 3. Test cowsay (Fun/ASCII)
+// Note: cowsay.say is a function that returns a string
+set cow to cowsay.say({ text: "EzLang is powerful!" })
+print("Cowsay output:")
+print(cow)
+
+// 4. Test moment (Dates)
+set now to moment()
+print("Moment direct call result (now): " + now)
+
+print("====================================")
+print("All package tests completed!")

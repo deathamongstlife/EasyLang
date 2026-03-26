@@ -1,0 +1,7 @@
+include "./config.ez"
+
+start bot with token get_argument("DISCORD_TOKEN", "")
+
+when bot starts
+    print("Multi-file module architecture is working!")
+end when

@@ -1,0 +1,12 @@
+load npm package "axios" as axios
+
+start bot with token get_argument("DISCORD_TOKEN", "")
+
+when command "ping" is used
+    reply with "Pong! Powered by Natural Language!"
+end when
+
+when command "joke" is used
+    var response = axios.get("https://official-joke-api.appspot.com/random_joke")
+    reply with response.data.setup + " ... " + response.data.punchline
+end when

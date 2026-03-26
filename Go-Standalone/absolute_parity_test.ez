@@ -1,0 +1,24 @@
+start bot with token get_argument("DISCORD_TOKEN", "")
+
+register slash command "config" with description "Open config menu"
+register user context "Get Avatar"
+register message context "Bookmark Message"
+
+when slash command "config" is used
+    reply with user menu "config_user"
+end when
+
+when user menu "config_user" is used
+    set target to interaction_value
+    if user has permission "ADMINISTRATOR" then
+        reply with "You selected user: " + target
+    end if
+end when
+
+when user context "Get Avatar" is used
+    reply with "Here is their avatar..."
+end when
+
+when message says "!role"
+    reply with role menu "select_role"
+end when

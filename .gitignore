@@ -58,3 +58,11 @@ test-bot-complete.ez
 
 # Persistent component storage (runtime data)
 src/discord/persistent-storage/components.json
+
+# EzLang CLI & Bot
+.ez.pid
+ez-cli/bin/ez-engine
+REAPER-2.0/*.log
+REAPER-2.0/*.sqlite
+token.txt
+go*.tar.gz

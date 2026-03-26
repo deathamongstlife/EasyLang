@@ -1,0 +1,5 @@
+start bot with token "DISCORD_TOKEN_HERE"
+
+when message says "!ping"
+    reply with "Pong from the new Go engine! 🚀"
+end when

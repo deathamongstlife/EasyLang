@@ -1,0 +1,38 @@
+{
+  "name": "ezlang-official",
+  "version": "1.0.0",
+  "description": "The natural language Discord bot engine. Write bots in plain English, powered by a high-performance Go runtime.",
+  "main": "bin/ez.js",
+  "bin": {
+    "ez": "./bin/ez.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "natural-language",
+    "ezlang",
+    "interpreter",
+    "go",
+    "no-code"
+  ],
+  "author": "EzLang Team",
+  "license": "MIT",
+  "preferGlobal": true,
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "cowsay": "^1.6.0",
+    "discord-player": "^7.2.0",
+    "discord-together": "^1.4.2",
+    "enmap": "^6.1.6",
+    "lodash": "^4.17.23",
+    "mathjs": "^15.1.1",
+    "moment": "^2.30.1",
+    "validator": "^13.15.26"
+  }
+}

@@ -1,0 +1,16 @@
+start bot with token get_argument("DISCORD_TOKEN", "")
+
+when message says "!delete_me"
+    delete message
+end when
+
+when message says "!menus"
+    reply with menu "select_color" with options [
+        { label: "Red", value: "red" },
+        { label: "Blue", value: "blue" }
+    ]
+end when
+
+when menu "select_color" is used
+    reply with "You picked a color!"
+end when

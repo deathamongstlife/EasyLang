@@ -130,6 +130,59 @@ export interface ImportStatement extends Statement {
 }
 
 /**
+ * Natural Language: start bot with token "abc"
+ */
+export interface StartBotCommand extends Statement {
+  type: 'StartBotCommand';
+  token: Expression;
+}
+
+/**
+ * Natural Language: when message says "abc"
+ */
+export interface WhenMessageCommand extends Statement {
+  type: 'WhenMessageCommand';
+  condition: Expression;
+  body: BlockStatement;
+}
+
+/**
+ * Natural Language: when command "ping" is used
+ */
+export interface WhenCommandUsedCommand extends Statement {
+  type: 'WhenCommandUsedCommand';
+  commandName: Expression;
+  body: BlockStatement;
+}
+
+/**
+ * Natural Language: load [npm|python] package "xyz" as xyz
+ */
+export interface LoadPackageCommand extends Statement {
+  type: 'LoadPackageCommand';
+  packageManager: 'npm' | 'python';
+  packageName: string;
+  alias: string;
+}
+
+/**
+ * Natural Language: reply with "abc"
+ */
+export interface ReplyWithCommand extends Statement {
+  type: 'ReplyWithCommand';
+  message: Expression;
+}
+
+/**
+ * Natural Language: reply with embed "Title" "Description"
+ */
+export interface ReplyWithEmbedCommand extends Statement {
+  type: 'ReplyWithEmbedCommand';
+  title: Expression;
+  description: Expression;
+}
+
+/**
  * Discord send command: send channel message
  */
 export interface SendCommand extends Statement {
@@ -154,6 +207,201 @@ export interface ReactCommand extends Statement {
   type: 'ReactCommand';
   target: Expression;
   emoji: Expression;
+}
+
+/**
+ * Natural Language: react with "emoji"
+ */
+export interface ReactWithCommand extends Statement {
+  type: 'ReactWithCommand';
+  emoji: Expression;
+}
+
+/**
+ * Natural Language: send "message" to channel "id"
+ */
+export interface SendToCommand extends Statement {
+  type: 'SendToCommand';
+  message: Expression;
+  target: Expression;
+}
+
+/**
+ * Natural Language: set variable to expression
+ */
+export interface SetVariableCommand extends Statement {
+  type: 'SetVariableCommand';
+  name: string;
+  value: Expression;
+}
+
+/**
+ * Natural Language: when bot starts
+ */
+export interface WhenBotStartsCommand extends Statement {
+  type: 'WhenBotStartsCommand';
+  body: BlockStatement;
+}
+
+/**
+ * Natural Language: when user joins server
+ */
+export interface WhenUserJoinsCommand extends Statement {
+  type: 'WhenUserJoinsCommand';
+  body: BlockStatement;
+}
+
+/**
+ * Natural Language: when message starts with "text"
+ */
+export interface WhenMessageStartsWithCommand extends Statement {
+  type: 'WhenMessageStartsWithCommand';
+  condition: Expression;
+  body: BlockStatement;
+}
+
+/**
+ * Natural Language: when button "id" is clicked
+ */
+export interface WhenButtonClickedCommand extends Statement {
+  type: 'WhenButtonClickedCommand';
+  buttonId: Expression;
+  body: BlockStatement;
+}
+
+/**
+ * Moderation: ban user "name" [for "reason"]
+ */
+export interface BanCommand extends Statement {
+  type: 'BanCommand';
+  user: Expression;
+  reason?: Expression;
+}
+
+/**
+ * Moderation: kick user "name" [for "reason"]
+ */
+export interface KickCommand extends Statement {
+  type: 'KickCommand';
+  user: Expression;
+  reason?: Expression;
+}
+
+/**
+ * Moderation: timeout user "name" for <number> minutes
+ */
+export interface TimeoutCommand extends Statement {
+  type: 'TimeoutCommand';
+  user: Expression;
+  duration: Expression;
+}
+
+/**
+ * Roles: add role "Admin" to user "Bob"
+ */
+export interface AddRoleCommand extends Statement {
+  type: 'AddRoleCommand';
+  role: Expression;
+  user: Expression;
+}
+
+/**
+ * Roles: remove role "Muted" from user "Bob"
+ */
+export interface RemoveRoleCommand extends Statement {
+  type: 'RemoveRoleCommand';
+  role: Expression;
+  user: Expression;
+}
+
+/**
+ * Threads: create thread "Help"
+ */
+export interface CreateThreadCommand extends Statement {
+  type: 'CreateThreadCommand';
+  name: Expression;
+}
+
+/**
+ * Voice: join voice channel "id"
+ */
+export interface JoinVoiceCommand extends Statement {
+  type: 'JoinVoiceCommand';
+  channel: Expression;
+}
+
+/**
+ * Voice: play audio "music.mp3"
+ */
+export interface PlayAudioCommand extends Statement {
+  type: 'PlayAudioCommand';
+  file: Expression;
+}
+
+/**
+ * Slash Commands: register slash command "name" with description "desc"
+ */
+export interface RegisterSlashCommand extends Statement {
+  type: 'RegisterSlashCommand';
+  name: Expression;
+  description: Expression;
+  options: SlashCommandOption[];
+}
+
+export interface SlashCommandOption {
+  name: Expression;
+  description: Expression;
+  type: string; // "string", "number", "user", "role", "boolean"
+  required: boolean;
+}
+
+/**
+ * Components: reply with button "id" labeled "text" style "primary"
+ */
+export interface ReplyWithButtonCommand extends Statement {
+  type: 'ReplyWithButtonCommand';
+  message: Expression;
+  buttonId: Expression;
+  label: Expression;
+  style: string;
+}
+
+/**
+ * Components: reply with menu "id" with options [...]
+ */
+export interface ReplyWithMenuCommand extends Statement {
+  type: 'ReplyWithMenuCommand';
+  message: Expression;
+  menuId: Expression;
+  options: MenuOption[];
+}
+
+export interface MenuOption {
+  label: Expression;
+  value: Expression;
+  description?: Expression;
+}
+
+/**
+ * NLP Condition: if user has role "Admin"
+ */
+export interface IfUserHasRoleStatement extends Statement {
+  type: 'IfUserHasRoleStatement';
+  user: Expression;
+  role: Expression;
+  consequent: BlockStatement;
+  alternate: BlockStatement | null;
+}
+
+/**
+ * NLP Condition: if user has permission "BAN_MEMBERS"
+ */
+export interface IfUserHasPermissionStatement extends Statement {
+  type: 'IfUserHasPermissionStatement';
+  user: Expression;
+  permission: Expression;
+  consequent: BlockStatement;
+  alternate: BlockStatement | null;
 }
 
 /**
@@ -277,6 +525,32 @@ export function isStatement(node: ASTNode): node is Statement {
     node.type === 'ImportStatement' ||
     node.type === 'SendCommand' ||
     node.type === 'ReplyCommand' ||
-    node.type === 'ReactCommand'
+    node.type === 'ReactCommand' ||
+    node.type === 'StartBotCommand' ||
+    node.type === 'WhenMessageCommand' ||
+    node.type === 'WhenCommandUsedCommand' ||
+    node.type === 'LoadPackageCommand' ||
+    node.type === 'ReplyWithCommand' ||
+    node.type === 'ReplyWithEmbedCommand' ||
+    node.type === 'ReactWithCommand' ||
+    node.type === 'SendToCommand' ||
+    node.type === 'SetVariableCommand' ||
+    node.type === 'WhenBotStartsCommand' ||
+    node.type === 'WhenUserJoinsCommand' ||
+    node.type === 'WhenMessageStartsWithCommand' ||
+    node.type === 'WhenButtonClickedCommand' ||
+    node.type === 'BanCommand' ||
+    node.type === 'KickCommand' ||
+    node.type === 'TimeoutCommand' ||
+    node.type === 'AddRoleCommand' ||
+    node.type === 'RemoveRoleCommand' ||
+    node.type === 'CreateThreadCommand' ||
+    node.type === 'JoinVoiceCommand' ||
+    node.type === 'PlayAudioCommand' ||
+    node.type === 'RegisterSlashCommand' ||
+    node.type === 'ReplyWithButtonCommand' ||
+    node.type === 'ReplyWithMenuCommand' ||
+    node.type === 'IfUserHasRoleStatement' ||
+    node.type === 'IfUserHasPermissionStatement'
   );
 }
