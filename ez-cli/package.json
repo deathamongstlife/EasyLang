@@ -1,6 +1,6 @@
 {
   "name": "ezlang-official",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The natural language Discord bot engine. Write bots in plain English, powered by a high-performance Go runtime.",
   "main": "bin/ez.js",
   "bin": {
@@ -23,6 +23,12 @@
   "preferGlobal": true,
   "engines": {
     "node": ">=14.0.0"
+  },
+  "overrides": {
+    "node-domexception": "file:./.npm-fixes/node-domexception",
+    "prebuild-install": "file:./.npm-fixes/prebuild-install",
+    "undici": "^6.23.1",
+    "file-type": "^21.3.1"
   },
   "dependencies": {
     "chalk": "^4.1.2",

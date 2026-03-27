@@ -1,0 +1,8 @@
+{
+  "name": "prebuild-install",
+  "version": "1.0.0",
+  "main": "index.js",
+  "bin": {
+    "prebuild-install": "./index.js"
+  }
+}
